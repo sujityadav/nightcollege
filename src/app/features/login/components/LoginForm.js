@@ -7,6 +7,8 @@ import { ProgressSpinner } from 'primereact/progressspinner';
 import Cookies from 'js-cookie';
 import { setAuth } from '@/redux/authSlice';
 import { useDispatch } from "react-redux";
+import { Button } from 'primereact/button';
+
 
 export default function LoginForm() {
   const { register, handleSubmit, errors } = useLoginForm();
@@ -60,9 +62,9 @@ export default function LoginForm() {
         )}
       </div>
 
-      <button
+         <Button 
         type="submit"
-        className="bg-blue-500 hover:bg-blue-600 text-white py-2 px-4 rounded w-full flex justify-center items-center gap-2"
+        className="w-full flex justify-center items-center gap-2"
         disabled={loading}
       >
         {loading ? (
@@ -78,7 +80,7 @@ export default function LoginForm() {
         ) : (
           'Login'
         )}
-      </button>
+      </Button>
     </form>
   );
 }

@@ -21,7 +21,7 @@ export const LoginPage = () => {
               </p>
             </div>
 
-            <div className="mt-10">
+            <div className="mt-5">
               <LoginForm />
             </div>
           </div>
