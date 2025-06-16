@@ -1,7 +1,11 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+@layer tailwind-base, primereact, tailwind-utilities;
 
+@layer tailwind-base {
+  @tailwind base;
+}
 .bg_login
 {
   background: url(../../public/images/login_img.jpg);
