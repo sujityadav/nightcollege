@@ -75,7 +75,7 @@ export default function LoginForm() {
               fill="var(--surface-ground)"
               animationDuration=".5s"
             />
-            <span>Logging in...</span>
+            <span>please wait...</span>
           </>
         ) : (
           'Login'
