@@ -19,7 +19,7 @@ export default function Top({ ...pageProps }) {
   };
 
   return (
-    <header className="flex items-center justify-between bg-white shadow-sm h-[80px] px-5 sticky top-0 z-20 border-b border-[#BECDE3]">
+    <header className="flex items-center justify-between bg-transparent shadow-sm h-[80px] px-5 sticky top-0 z-20 border-b border-[#BECDE3]">
       {/* Sidebar toggle */}
       <button
         className="md:hidden text-gray-600"
@@ -35,9 +35,19 @@ export default function Top({ ...pageProps }) {
           <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" />
         </svg>
       </button>
+      <div>
+        <div className="flex space-x-[8px] items-center mb-1">
+          <Link href='' className="text-[#9CA1AB] text-[12px] xl:text-[0.729vw] leading-none">Home</Link>
+          <i className="pi pi-angle-right text-[8px] text-[#9CA1AB]"></i>
+           <Link href='' className="text-[#9CA1AB] text-[12px] xl:text-[0.729vw] leading-none">Page 1</Link>
+          <i className="pi pi-angle-right text-[8px] text-[#9CA1AB]"></i>
+          <Link href=''  className="text-[#374151] text-[12px] xl:text-[0.729vw] leading-none">Current Page</Link>
+          </div>
 
-      {/* Title */}
-      <div className="font-semibold text-lg">Dashboard</div>
+
+        {/* Title */}
+        <div className="text-[#374151] text-[18px] xl:text-[0.938vw] font-semibold leading-[1.2]">Dashboard</div>
+      </div>
 
       {/* Profile section */}
       <div

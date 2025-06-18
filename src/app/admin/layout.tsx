@@ -22,7 +22,7 @@ export default async function Layout({ children }: { children: React.ReactNode }
      <Top/>
 
         {/* Main content */}
-        <main className="flex-1 p-6 overflow-auto">
+        <main className="flex-1 overflow-auto">
           <StoreProvider>{children}</StoreProvider>
         </main>
       </div>

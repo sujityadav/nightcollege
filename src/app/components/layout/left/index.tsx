@@ -20,9 +20,8 @@ export default function Left() {
   return (
     <>
       <div
-        className={`fixed z-30 inset-y-0 left-0 xl:w-[220px] 3xl:w-[13.021vw] bg-white border-r border-[#BECDE3] shadow-[0px_24px_48px_-12px_rgba(16,24,40,0.25)] transform ${
-          sidebarOpen ? "translate-x-0" : "-translate-x-full"
-        } transition-transform duration-200 ease-in-out md:relative md:translate-x-0 md:shadow-none`}
+        className={`fixed z-30 inset-y-0 left-0 xl:w-[190px] 3xl:w-[10.417vw] bg-[#eaf5ff] border-r border-[#BECDE3] shadow-[0px_24px_48px_-12px_rgba(16,24,40,0.25)] transform ${sidebarOpen ? "translate-x-0" : "-translate-x-full"
+          } transition-transform duration-200 ease-in-out md:relative md:translate-x-0 md:shadow-none`}
       >
         <div className="flex items-center justify-between p-4 border-b">
           <div className="font-bold text-xl">Night College </div>
@@ -33,21 +32,43 @@ export default function Left() {
             <i className="pi pi-times text-xl"></i>
           </button>
         </div>
-<div className="left_menu">
+        <div className="left_menu">
 
 
-        <ul className="p-4 space-y-2">
-          {menuItems.map((item, index) => (
+          <ul className="p-4 space-y-2">
+            {menuItems.map((item, index) => (
+              <Link
+                key={index}
+                href={item.href}
+                className="flex items-center p-2 rounded hover:bgcolor space-x-2"
+              >
+                <i className={`${item.icon} text-gray-600`}></i>
+                <span>{item.label}</span>
+              </Link>
+            ))}
+          </ul>
+        </div>
+
+        <div className="absolute left-0 right-0 bottom-0 left_menu">
+          <ul className="p-4 space-y-2">
             <Link
-              key={index}
-              href={item.href}
+
+              href=''
               className="flex items-center p-2 rounded hover:bg-gray-200 space-x-2"
             >
-              <i className={`${item.icon} text-gray-600`}></i>
-              <span>{item.label}</span>
+              <i className="pi pi-cog"></i>
+              <span>Settings</span>
             </Link>
-          ))}
-        </ul>
+            <Link
+
+              href=''
+              className="flex items-center p-2 rounded hover:bg-gray-200 space-x-2"
+            >
+              <i className="pi pi-sign-out"></i>
+              <span>Logout</span>
+            </Link>
+
+          </ul>
         </div>
       </div>
     </>
