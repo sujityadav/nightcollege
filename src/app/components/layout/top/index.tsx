@@ -19,7 +19,7 @@ export default function Top({ ...pageProps }) {
   };
 
   return (
-    <header className="flex items-center justify-between bg-transparent shadow-sm h-[80px] px-5 sticky top-0 z-20 border-b border-[#BECDE3]">
+    <header className="flex items-center justify-between bg-white shadow-sm h-[80px] px-5 sticky top-0 z-20 border-b border-[#E5E7EB]">
       {/* Sidebar toggle */}
       <button
         className="md:hidden text-gray-600"

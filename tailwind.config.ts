@@ -7,9 +7,9 @@ module.exports = {
     "./app/**/*.{js,ts,jsx,tsx,mdx}",
     "./src/**/*.{js,jsx,ts,tsx}",
   ],
-    corePlugins: {
-    preflight: false,
-  },
+  //   corePlugins: {
+  //   preflight: false,
+  // },
  
   theme: {
     screens: {

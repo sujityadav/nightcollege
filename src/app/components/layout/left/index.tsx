@@ -4,6 +4,8 @@ import Link from "next/link";
 import "primereact/resources/themes/lara-light-blue/theme.css";
 import "primereact/resources/primereact.min.css";
 import "primeicons/primeicons.css";
+import Image from "next/image";
+
 
 export default function Left() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -19,13 +21,14 @@ export default function Left() {
 
   return (
     <>
+    
       <div
-        className={`fixed z-30 inset-y-0 left-0 xl:w-[190px] 3xl:w-[10.417vw] bg-[#eaf5ff] border-r border-[#BECDE3] shadow-[0px_24px_48px_-12px_rgba(16,24,40,0.25)] transform ${sidebarOpen ? "translate-x-0" : "-translate-x-full"
-          } transition-transform duration-200 ease-in-out md:relative md:translate-x-0 md:shadow-none`}
+        className={`fixed z-30 inset-y-0 left-0 xl:w-[210px] 3xl:w-[11.458vw] bg-[#fff] border-r border-[#BECDE3] custom-shadow transform ${sidebarOpen ? "translate-x-0" : "-translate-x-full"
+          } transition-transform duration-200 ease-in-out md:relative md:translate-x-0 `}
       >
-        <div className="flex items-center justify-between p-4 border-b">
-          <div className="font-bold text-xl">Night College </div>
-          <button
+        <div className=" p-4 border-b">
+         <Image src='/images/admin/admin-logo.png' width={157} height={60} alt='logo'/>
+                   <button
             className="md:hidden text-gray-600"
             onClick={() => setSidebarOpen(false)}
           >
@@ -35,7 +38,7 @@ export default function Left() {
         <div className="left_menu">
 
 
-          <ul className="p-4 space-y-2">
+          <ul className="p-4">
             {menuItems.map((item, index) => (
               <Link
                 key={index}

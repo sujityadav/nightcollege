@@ -19,8 +19,8 @@ export const SubSidebar: React.FC<SubSidebarProps> = ({ title, navItems }) => {
 
   return (
     <aside
-      className={`relative min-h-screen border-r bg-white transition-all duration-300 ${
-        collapsed ? 'w-6' : ' xl:w-[180px] 3xl:w-[9.375vw]'
+      className={`relative min-h-screen border-r border-[#C9D3DB] bg-white transition-all duration-300 ${
+        collapsed ? 'w-6' : ' xl:w-[230px] 3xl:w-[12.5vw]'
       }`}
     >
       <button
@@ -28,7 +28,7 @@ export const SubSidebar: React.FC<SubSidebarProps> = ({ title, navItems }) => {
         className="absolute -right-3 top-5 h-6 w-6  flex items-center justify-center border-none bg-transparent text-bgcolor"
       >
         <i
-          className={`pi pi-arrow-circle-left text-[20px] ${
+          className={`pi pi-arrow-circle-left text-[#23468a] text-[20px] ${
             collapsed ? 'rotate-180' : ''
           }`}
         ></i>
@@ -36,15 +36,15 @@ export const SubSidebar: React.FC<SubSidebarProps> = ({ title, navItems }) => {
 
       {!collapsed && (
         <div className="p-4">
-          <div className="border-b pb-2 mb-2 font-semibold">{title}</div>
-          <nav className="flex flex-col">
+          <div className="border-b border-[#E5E7EB] pb-2 mb-3 font-semibold">{title}</div>
+          <nav className="flex flex-col space-y-1">
             {navItems.map((item, index) => (
               <Link
                 key={item.href || index}
                 href={item.href}
-                className={`py-1 px-2 text-sm ${
+                className={`text-[#19212A] px-[14px] xl:px-[16px] 3xl:px-[0.833vw] py-[10px] xl:py-[10px] 3xl:py-[0.521vw] text-sm ${
                   pathname === item.href
-                    ? 'bg-blue-500 text-white'
+                    ? 'bg-[#193A6F] text-white'
                     : 'text-gray-700'
                 }`}
               >
