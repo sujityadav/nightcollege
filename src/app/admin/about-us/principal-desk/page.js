@@ -7,6 +7,7 @@ import { InputText } from 'primereact/inputtext';
 import TextEditor from '@/app/components/common/editor';
 import { Button } from 'primereact/button';
 import Link from 'next/link';
+import Image from 'next/image';
 
 export default function AboutUs() {
   const SideBarNavItems = [
@@ -53,12 +54,48 @@ export default function AboutUs() {
         <div className='bg-white card-shadow h-full p-[20px] xl:p-[25px] 3xl:p-[1.563vw]'>
           <div className=' px-[20px] xl:px-[250px] 3xl:px-[13.021vw]'>
             <div className='space-y-3'>
-              
+              <div className='flex flex-col gap-1'>
+                              <label className='text-[#212325] text-[14px] xl:text-[14px] 3xl:text-[0.729vw] font-[500]'>Name</label>
+                              <InputText type="text" placeholder="Enter your title" className='border rounded-md' />
+                            </div>
+
+                            <div className='flex flex-col gap-1'>
+                              <label className='text-[#212325] text-[14px] xl:text-[14px] 3xl:text-[0.729vw] font-[500]'>Qualification</label>
+                              <InputText type="text" placeholder="Enter your title" className='border rounded-md' />
+                            </div>
 
               <div className='flex flex-col gap-1'>
                 <label className='text-[#212325] text-[14px] xl:text-[14px] 3xl:text-[0.729vw] font-[500]'>Description</label>
                 <TextEditor />
               </div>
+              <div className='flex flex-col gap-1'>
+                <label className='text-[#212325] text-[14px] xl:text-[14px] 3xl:text-[0.729vw] font-[500]'>Photo Upload</label>
+                
+                      <div className="flex border-2 border-[#b9d1ffab] border-dashed bg-[#fffef5] p-4  justify-center group relative cursor-pointer">
+                        <input type="file" className="absolute left-0 right-0 top-0 bottom-0 opacity-0  cursor-pointer" />
+                        <div className="text-center">
+                          <Image src="/images/admin/svg/upload.svg" className="inline mb-3" width={40} height={40} alt='Upload' />
+                          <p className="text-[#6C768B] xl:text-[0.730vw] mb-3"><span className="font-semibold">Click to upload</span> or drag and drop</p>
+                          <p className="text-[0.750rem] xl:text-[0.625vw] text-[#6C768B] font-semibold mb-4">Max. File Size: 30MB</p>
+                          <button className="text-white text-[0.750rem] xl:text-[0.625vw] bg-[#4FB155] border border-[#4FB155] rounded xl:py-[0.417vw] py-2 xl:px-[0.417vw] px-2 inline-block group-hover:bg-[#3f8643] group-hover:border-[#3f8643] transition duration-300 ease-in-out">
+                            <i className="rdmark-table-search mr-2"></i>
+                            Browse File
+                          </button>
+                        </div>
+                      </div>
+
+                     
+              </div>
+               <div className='p-2 border flex gap-3 items-center'>
+                         <Image src="/images/admin/profile_default.png" className="inline mb-3" width={135} height={160} alt='Upload' />
+                         <div className='mt-2'>
+                          <div>
+                           <Link href='' className='cancelbtn text-[14px] xl:text-[14px] 3xl:text-[0.729vw] font-[500] p-[10px] xl:p-[12px] 3xl:p-[0.625vw] leading-[100%]'>
+                                  Remove Profile
+                          </Link>
+                          </div>
+                         </div>
+                      </div>
 
             </div>
 
