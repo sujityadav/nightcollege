@@ -58,7 +58,9 @@ box-shadow: 2px 0px 6px 0px rgba(0, 0, 0, 0.12);
  }
  .p-inputtext 
  {
-  padding:5px 12px
+  padding:5px 12px;
+  font-size: 14px;
+  border-radius: 0;
  } 
 input::placeholder, textarea::placeholder
  {
@@ -73,5 +75,130 @@ background: linear-gradient(180deg, var(--Button-Base-Default---1, #FEFEFE) 0%, 
 color:#3C4146;
 
  }
+/* custum search satart  */
+.custSearch .p-inputtext {
+  font-size: 14px;
+      padding: 7px 10px 10px 40px;
+  border-radius: 0px;
+  font-weight: 400;
+  color: #171A1F;
+}
+.custSearch .p-input-icon-left>i,
+  .custSearch .p-input-icon-right>i,
+  .custSearch .p-input-icon-left>svg,
+  .custSearch .p-input-icon-right>svg,
+  .custSearch .p-input-icon-left>.p-input-prefix,
+  .custSearch .p-input-icon-right>.p-input-suffix {
+    margin-top: -0.6rem;
+  }
+  .custSearch .p-input-icon-left>.p-inputtext {
+  padding-left: 2.1rem;
+}
+/* ***************** end********************* */
+.action-shadow-table {
+  box-shadow: -4px 0 6px -1px rgba(0, 0, 0, 0.1); /* Left shadow for right-aligned frozen column */
+  z-index: 1; /* Ensure it's above other cells */
+  background-color: #fff; /* Required to show shadow properly */
+}
+
+/***************************** data table ****************************************/
+/* Data Table start */
+.custTable.p-datatable .p-sortable-column .p-column-title,.custTable .p-datatable .p-sortable-column .p-sortable-column-icon, .p-datatable .p-sortable-column .p-sortable-column-badge{
+  font-weight: 500;
+}
+.custTable.p-datatable .p-datatable-thead > tr > th{
+  font-weight: 500;  
+}
+.custTable.p-datatable .p-datatable-tbody>tr>td {
+  color: #494E5F;
+  font-size: 15px;
+  font-weight: 400;
+  font-family: 'Open Sans', sans-serif;
+  padding: 0.429vw 1.042vw;
+  border-bottom: 1px solid #CDD3DE;
+}
 
 
+.custTable.p-datatable.p-datatable-thead .pi svg {
+  font-size: 12px;
+  width: 10px;
+  height: 10px;
+}
+
+.custTable.p-datatable .p-sortable-column-icon {
+   width: 10px;
+  height: 10px;
+}
+
+.custTable.p-datatable .p-datatable-tbody>tr:nth-child(even) {
+  background: #f9f9f9;
+}
+
+.custTable.p-datatable .p-datatable-thead>tr>th {
+     border-bottom: 1px solid #CDD3DE;
+    background: #EDEEF1;
+    color: #000;
+    font-size: 14px;
+    padding: 0.681vw 1vw;
+    /* font-family: 'inter', sans-serif; */
+    font-weight: 700;
+    line-height: 100%;
+}
+
+
+.custTable.p-datatable .p-column-header-content {
+  width: 100%;
+  justify-content: normal;
+  position: relative;
+}
+
+.action-shadow-table {
+  box-shadow: 0px 20px 25px -5px rgba(0, 0, 0, 0.1);
+}
+
+.custTable .p-datatable-tbody .p-checkbox .p-checkbox-box {
+  border: 1px solid #ced4da;
+  background: #ffffff;
+  /* width: 18px;
+  height: 18px; */
+  color: #495057;
+  border-radius: 4px;
+  transition: background-color 0.2s, color 0.2s, border-color 0.2s, box-shadow 0.2s;
+}
+
+.custTable .p-datatable-tbody .p-checkbox .p-checkbox-box .p-checkbox-icon {
+  transition-duration: 0.2s;
+  color: #ffffff;
+  font-size: 8px;
+}
+
+.custTable .p-datatable-thead .p-checkbox .p-checkbox-box {
+  border: 1px solid #ced4da;
+  background: #ffffff;
+  color: #495057;
+  border-radius: 4px;
+  transition: background-color 0.2s, color 0.2s, border-color 0.2s, box-shadow 0.2s;
+}
+
+.custTable .p-datatable-thead .p-checkbox .p-checkbox-box .p-checkbox-icon {
+  transition-duration: 0.2s;
+  color: #ffffff;
+  font-size: 8px;
+}
+
+
+/***************************** data table end ****************************************/
+
+.p-button.p-button-icon-only 
+{
+      padding: 5px 12px;
+}
+.p-calendar-w-btn-right .p-datepicker-trigger
+{
+  border-radius: 0;
+}
+.p-calendar .p-button 
+{
+          background: var(--bgcolor-primary);
+    border-color: var(--bgcolor-primary);
+}
