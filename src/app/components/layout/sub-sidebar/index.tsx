@@ -28,7 +28,7 @@ export const SubSidebar: React.FC<SubSidebarProps> = ({ title, navItems }) => {
         className="absolute -right-3 top-5 h-6 w-6  flex items-center justify-center border-none bg-transparent text-bgcolor"
       >
         <i
-          className={`pi pi-arrow-circle-left text-[#23468a] text-[20px] ${
+          className={`pi pi-play-circle text-[#af251c] text-[20px] ${
             collapsed ? 'rotate-180' : ''
           }`}
         ></i>
@@ -44,7 +44,7 @@ export const SubSidebar: React.FC<SubSidebarProps> = ({ title, navItems }) => {
                 href={item.href}
                 className={`text-[#19212A] px-[14px] xl:px-[16px] 3xl:px-[0.833vw] py-[10px] xl:py-[10px] 3xl:py-[0.521vw] text-sm ${
                   pathname === item.href
-                    ? 'bg-[#193A6F] text-white'
+                    ? 'bg-[#af251c] text-white'
                     : 'text-gray-700'
                 }`}
               >

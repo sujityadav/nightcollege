@@ -5,7 +5,7 @@
 
 @layer base {
   :root {
-    --bg-color-primary: #23468a;  /* White */
+    --bg-color-primary: #af251c;  /* White */
     
   }
   }
@@ -60,7 +60,7 @@ box-shadow: 2px 0px 6px 0px rgba(0, 0, 0, 0.12);
  }
  /* button, [type='submit'] {
    
-    background-color: #23468a;
+    background-color: #af251c;
     font-size: 16px;
     font-weight: 300;
     color:white;

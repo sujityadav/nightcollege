@@ -41,7 +41,7 @@ export default function Top({ ...pageProps }) {
           <i className="pi pi-angle-right text-[8px] text-[#9CA1AB]"></i>
            <Link href='' className="text-[#9CA1AB] text-[12px] xl:text-[0.729vw] leading-none">Page 1</Link>
           <i className="pi pi-angle-right text-[8px] text-[#9CA1AB]"></i>
-          <Link href=''  className="text-[#374151] text-[12px] xl:text-[0.729vw] leading-none">Current Page</Link>
+          <Link href=''  className="text-[#af251c] text-[12px] xl:text-[0.729vw] leading-none">Current Page</Link>
           </div>
 
 
