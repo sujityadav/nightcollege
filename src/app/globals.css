@@ -3,9 +3,17 @@
 @tailwind utilities;
 
 
+@layer primereact, tailwind-base, tailwind-utilities;
+
+@layer primereact {
+  @tailwind base;
+}
+
+
 @layer base {
   :root {
-    --bg-color-primary: #af251c;  /* White */
+    --bgcolor-primary: #af251c; 
+    
     
   }
   }
@@ -51,25 +59,13 @@ box-shadow: 2px 0px 6px 0px rgba(0, 0, 0, 0.12);
  .p-inputtext 
  {
   padding:5px 12px
- }
- input::placeholder, textarea::placeholder
+ } 
+input::placeholder, textarea::placeholder
  {
   font-size: 14px;
   color:#c7c7c7;
   font-weight: normal;
  }
- /* button, [type='submit'] {
-   
-    background-color: #af251c;
-    font-size: 16px;
-    font-weight: 300;
-    color:white;
-    padding: 12px 16px;
-    line-height: 100%;
-    border-radius: 0;
-    
-
-} */
  .cancelbtn 
  {
   border: 1px solid var(--Interface-Stroke-soft, #E5E7EB);

@@ -84,12 +84,12 @@ export default function AboutUs() {
                   </div>
                 </div>
               </div>
-              <div className='p-2 border flex gap-3 items-center'>
+              <div className='p-2 border flex gap-5 items-center'>
                 <Image src="/images/admin/profile_default.png" className="inline mb-3" width={135} height={160} alt='Upload' />
                 <div className='mt-2'>
                   <div>
-                    <Link href='' className='cancelbtn text-[14px] xl:text-[14px] 3xl:text-[0.729vw] font-[500] p-[10px] xl:p-[12px] 3xl:p-[0.625vw] leading-[100%]'>
-                      Remove Profile
+                    <Link href='' className='flex gap-2 item-center bg-[#A0AEC0] text-[#19212A] text-[14px] xl:text-[14px] 3xl:text-[0.729vw] font-[500] p-[10px] xl:p-[10px] 3xl:p-[0.521vw] leading-none'>
+                     <i className="pi pi-times-circle "></i> Remove Photo
                     </Link>
                   </div>
                 </div>
@@ -98,12 +98,13 @@ export default function AboutUs() {
             <div className='mt-[30px]'>
               <div className='flex justify-center gap-6'>
                 {/* <Button label="Save" /> */}
-                <Link href='' className='cancelbtn  px-[14px] xl:px-[18px] 3xl:px-[0.938vw] py-[10px] xl:py-[12px] 3xl:py-[0.625vw] leading-[100%]'>
+                 <Link href='' className='cancelbtn  px-[14px] xl:px-[18px] 3xl:px-[0.938vw] py-[10px] xl:py-[12px] 3xl:py-[0.625vw] leading-[100%]'>
                   Cancel
                 </Link>
-                <button type='submit' className='text-white border bg-[#af251c] border-[#af251c] px-[14px] xl:px-[18px] 3xl:px-[0.938vw] py-[10px] xl:py-[12px] 3xl:py-[0.625vw] leading-[100%]'>
+                <Button type='submit' className='text-white border bg-primarycolor border-[#af251c] px-[14px] xl:px-[18px] 3xl:px-[0.938vw] py-[10px] xl:py-[12px] 3xl:py-[0.625vw] leading-[100%] rounded-none'>
                   Save
-                </button>
+                </Button>
+               
               </div>
             </div>
           </div>

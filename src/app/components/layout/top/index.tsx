@@ -14,7 +14,7 @@ export default function Top({ ...pageProps }) {
 
   // Example user
   const user = {
-    name: "John Doe",
+    name: "Night College (Admin)",
     avatar: "" // You can add your avatar image URL here
   };
 
@@ -54,10 +54,12 @@ export default function Top({ ...pageProps }) {
         className="flex items-center space-x-2 cursor-pointer"
         onClick={(e) => op.current.toggle(e)}
       >
-        <div className="w-8 h-8 bg-gray-300 rounded-full flex items-center justify-center">
+        <div className="w-10 h-10 bg-gray-300 rounded-full flex items-center justify-center">
           <i className="pi pi-user text-white"></i>
+         
         </div>
         <span className="hidden sm:inline">{user.name}</span>
+         <i className="pi pi-chevron-circle-down text-[#6b7280] ml-2"></i>
       </div>
 
       {/* Overlay Panel */}
@@ -65,7 +67,7 @@ export default function Top({ ...pageProps }) {
         <div className="space-y-2">
           <Link href="#" className="flex items-center space-x-2 hover:text-blue-500">
             <i className="pi pi-user"></i>
-            <span>Profile</span>
+            <span>Change password</span>
           </Link>
           <Link href="#" className="flex items-center space-x-2 hover:text-blue-500">
             <i className="pi pi-cog"></i>

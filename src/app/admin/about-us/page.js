@@ -55,7 +55,7 @@ export default function AboutUs() {
             <div className='space-y-3'>
               <div className='flex flex-col gap-1'>
                 <label className='text-[#212325] text-[14px] xl:text-[14px] 3xl:text-[0.729vw] font-[500]'>Title</label>
-                <InputText type="text" placeholder="Enter your title" className='border rounded-md' />
+                <InputText type="text" placeholder="Enter your title" className='rounded-none' />
               </div>
 
               <div className='flex flex-col gap-1'>
@@ -72,9 +72,11 @@ export default function AboutUs() {
                  <Link href='' className='cancelbtn  px-[14px] xl:px-[18px] 3xl:px-[0.938vw] py-[10px] xl:py-[12px] 3xl:py-[0.625vw] leading-[100%]'>
                   Cancel
                 </Link>
-                <button type='submit' className='text-white border bg-[#af251c] border-[#af251c] px-[14px] xl:px-[18px] 3xl:px-[0.938vw] py-[10px] xl:py-[12px] 3xl:py-[0.625vw] leading-[100%]'>
+                <Button type='submit' className='text-white border bg-primarycolor border-[#af251c] px-[14px] xl:px-[18px] 3xl:px-[0.938vw] py-[10px] xl:py-[12px] 3xl:py-[0.625vw] leading-[100%] rounded-none p-button-raised'  > 
+                  
                   Save
-                </button>
+                </Button>
+                
                
               </div>
             </div>

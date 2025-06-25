@@ -18,8 +18,9 @@ export default function AboutUs() {
       <div className='p-[20px] xl:p-[25px] 3xl:p-[1.563vw] w-full'>
         <div className='mb-3'>
           <div>
-            <h2 className='text-[#19212A] text-[14px] xl:text-[22px] 3xl:text-[1.146vw] font-[700] m-0'>About Us</h2>
+            <h2 className='text-[#19212A] text-[14px] xl:text-[22px] 3xl:text-[1.146vw] font-[700] m-0'>Events</h2>
           </div>
+          <div></div>
 
         </div>
 
