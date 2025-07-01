@@ -11,16 +11,38 @@ import Image from 'next/image';
 import { Calendar } from 'primereact/calendar';
 
 export default function AddEvents() {
+
+    const SideBarNavItems = [
+    {
+      label: 'Rebranding',
+      href: '/admin/rebranding',
+    },
+    {
+      label: 'Contact Information',
+      href: '/admin/about-us/contact-info',
+    },
+    
+
+  ];
  
 const [date, setDate] = useState(null);
   return (
 
-    <div className="flex w-full">
-      
-      <div className='p-[20px] xl:p-[25px] 3xl:p-[1.563vw] w-full'>
+     <div className="grid grid-cols-12 md:grid-cols-10 lg:grid-cols-10 xl:grid-cols-12 2xl:grid-cols-7 items-start">
+        <div className='col-span-1'>
+    
+          <SubSidebar title="Rebranding" navItems={SideBarNavItems} />
+        </div>
+     
+      <div className='col-span-6 '>
+         <div className='p-[20px] xl:p-[25px] 3xl:p-[1.563vw] w-full'>
         <div className='mb-3'>
-          <div>
-            <h2 className='text-[#19212A] text-[14px] xl:text-[22px] 3xl:text-[1.146vw] font-[700] m-0'>Add Events</h2>
+          <div className='flex justify-between'>
+            <h2 className='text-[#19212A] text-[14px] xl:text-[22px] 3xl:text-[1.146vw] font-[700] m-0'>Add banner</h2>
+
+             <Link href='/admin/rebranding' className='cancelbtn  px-[14px] xl:px-[18px] 3xl:px-[0.938vw] py-[10px] xl:py-[12px] 3xl:py-[0.625vw] leading-[100%]'>
+                  Back
+                </Link>
           </div>
 
         </div>
@@ -29,37 +51,30 @@ const [date, setDate] = useState(null);
          <div className=' px-[20px] xl:px-[250px] 3xl:px-[13.021vw]'>
           <div className='space-y-3'>
               <div className='flex flex-col gap-1'>
-                <label className='text-[#212325] text-[14px] xl:text-[14px] 3xl:text-[0.729vw] font-[500]'>Event Title</label>
+                <label className='text-[#212325] text-[14px] xl:text-[14px] 3xl:text-[0.729vw] font-[500]'>Banner Title</label>
                 <InputText type="text" placeholder="Enter your title" className='border rounded-none' />
               </div>
 
               <div className='flex flex-col gap-1'>
-                <label className='text-[#212325] text-[14px] xl:text-[14px] 3xl:text-[0.729vw] font-[500]'>Small Description</label>
+                <label className='text-[#212325] text-[14px] xl:text-[14px] 3xl:text-[0.729vw] font-[500]'>Banner Description</label>
                 <InputText type="text" placeholder="Enter your title" className='border rounded-none' />
               </div>
-
-              <div className='flex flex-col gap-1'>
-                <label className='text-[#212325] text-[14px] xl:text-[14px] 3xl:text-[0.729vw] font-[500]'>Large Description</label>
-                <TextEditor />
-              </div>
+               <div className='flex flex-col gap-1'>
+                <label className='text-[#212325] text-[14px] xl:text-[14px] 3xl:text-[0.729vw] font-[500]'>Sort No.</label>
+                <InputText type="number" placeholder="Enter your sort number" className='border rounded-none' />
+              </div>              
               <div className='flex gap-5'> 
-                <div className='flex flex-col gap-1'>
+                <div className='flex flex-col gap-1 w-full'>
                 <label className='text-[#212325] text-[14px] xl:text-[14px] 3xl:text-[0.729vw] font-[500]'>from (Date)</label>
-               <div><Calendar value={date} onChange={(e) => setDate(e.value)}  showIcon /></div> 
-              </div>
-              <div className='flex flex-col gap-1'>
-                <label className='text-[#212325] text-[14px] xl:text-[14px] 3xl:text-[0.729vw] font-[500]'>To (Date)</label>
-                 <Calendar value={date} onChange={(e) => setDate(e.value)}  showIcon />
+               <div><Calendar value={date} onChange={(e) => setDate(e.value)} className='w-full'  showIcon /></div> 
               </div>
               <div className='flex flex-col gap-1 w-full'>
-                <label className='text-[#212325] text-[14px] xl:text-[14px] 3xl:text-[0.729vw] font-[500]'>Category</label>
-                <InputText type="text" placeholder="Enter your title" className='border rounded-none' />
+                <label className='text-[#212325] text-[14px] xl:text-[14px] 3xl:text-[0.729vw] font-[500]'>To (Date)</label>
+                 <Calendar value={date} onChange={(e) => setDate(e.value)}  className='w-full' showIcon />
               </div>
+           
               </div>
-              <div className='flex flex-col gap-1'>
-                <label className='text-[#212325] text-[14px] xl:text-[14px] 3xl:text-[0.729vw] font-[500]'>Location</label>
-                <InputText type="text" placeholder="Enter your title" className='border rounded-none' />
-              </div>
+             
               <div className='flex flex-col gap-1'>
                 <label className='text-[#212325] text-[14px] xl:text-[14px] 3xl:text-[0.729vw] font-[500]'>Photo Upload</label>
 
@@ -78,23 +93,16 @@ const [date, setDate] = useState(null);
               </div>
               <div className='p-2 border flex gap-5 items-center'>
                 <div>
-                    <Image src="/images/admin/profile_default.png" className="inline mb-3" width={135} height={160} alt='Upload' />
-                    <Link href='' className='flex gap-2 item-center bg-[#A0AEC0] text-[#19212A] text-[14px] xl:text-[14px] 3xl:text-[0.729vw] font-[500] p-[10px] xl:p-[10px] 3xl:p-[0.521vw] leading-none'>
-                     <i className="pi pi-times-circle "></i> Remove Photo
-                    </Link>
+                    <Image src="/images/admin/profile_banner.png" className="inline mb-3" width={300} height={150} alt='Upload' />
+                   
+                    
                 </div>
-                <div>
-                    <Image src="/images/admin/profile_default.png" className="inline mb-3" width={135} height={160} alt='Upload' />
-                    <Link href='' className='flex gap-2 item-center bg-[#A0AEC0] text-[#19212A] text-[14px] xl:text-[14px] 3xl:text-[0.729vw] font-[500] p-[10px] xl:p-[10px] 3xl:p-[0.521vw] leading-none'>
-                     <i className="pi pi-times-circle "></i> Remove Photo
-                    </Link>
-                </div>
-                <div>
-                    <Image src="/images/admin/profile_default.png" className="inline mb-3" width={135} height={160} alt='Upload' />
-                    <Link href='' className='flex gap-2 item-center bg-[#A0AEC0] text-[#19212A] text-[14px] xl:text-[14px] 3xl:text-[0.729vw] font-[500] p-[10px] xl:p-[10px] 3xl:p-[0.521vw] leading-none'>
-                     <i className="pi pi-times-circle "></i> Remove Photo
-                    </Link>
-                </div>
+                 <div>
+                      <Link href='' className='w-auto flex gap-2 item-center bg-[#A0AEC0] text-[#19212A] text-[14px] xl:text-[14px] 3xl:text-[0.729vw] font-[500] p-[10px] xl:p-[10px] 3xl:p-[0.521vw] leading-none'>
+ <i className="pi pi-times-circle "></i> Remove Photo
+                      </Link>
+                    </div>s
+               
                 
                 
                 
@@ -115,7 +123,10 @@ const [date, setDate] = useState(null);
          </div>
         </div>
       </div>
-    </div>
+          </div>
+        
+        </div>
+   
   );
 }
 

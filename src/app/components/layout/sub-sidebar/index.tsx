@@ -20,7 +20,7 @@ export const SubSidebar: React.FC<SubSidebarProps> = ({ title, navItems }) => {
   return (
     <aside
       className={`relative min-h-screen border-r border-[#C9D3DB] bg-white transition-all duration-300 ${
-        collapsed ? 'w-6' : ' xl:w-[230px] 3xl:w-[12.5vw]'
+        collapsed ? 'w-6' : ' xl:w-min-[230px] 3xl:w-min-[12.5vw]'
       }`}
     >
       <button

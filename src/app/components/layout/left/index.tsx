@@ -12,10 +12,10 @@ export default function Left() {
 
   // Menu array with PrimeReact icon class
   const menuItems = [
-    { label: "Rebranding", href: "#", icon: "pi pi-home" },
-    { label: "About Us", href: "#", icon: "pi pi-user" },
-    { label: "Events", href: "#", icon: "pi pi-cog" },
-    { label: "News", href: "#", icon: "pi pi-chart-bar" },
+    { label: "Rebranding", href: "/admin/rebranding", icon: "pi pi-home" },
+    { label: "About Us", href: "/admin/about-us", icon: "pi pi-user" },
+    { label: "Events", href: "/admin/events", icon: "pi pi-cog" },
+    { label: "News", href: "/admin/news", icon: "pi pi-chart-bar" },
     { label: "Logout", href: "#", icon: "pi pi-sign-out" },
   ];
 
