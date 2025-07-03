@@ -107,7 +107,7 @@ toast.current.show({severity:'success', summary: 'Success', detail:'Table saved 
 
               <div className='flex flex-col gap-1'>
                 <label className='text-[#212325] text-[14px] xl:text-[14px] 3xl:text-[0.729vw] font-[500]'>Description</label>
-               <TextEditor onChange={handleEditorChange} />
+               <TextEditor onChange={handleEditorChange} height="500px"  />
               </div>
 
             </div>

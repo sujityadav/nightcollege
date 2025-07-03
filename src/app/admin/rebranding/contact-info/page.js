@@ -21,6 +21,10 @@ export default function AddEvents() {
       label: 'Contact Information',
       href: '/admin/rebranding/contact-info',
     },
+     {
+     label: 'Flash Screen Popup',
+      href: '/admin/rebranding/home-popup',
+    },
     
 
   ];

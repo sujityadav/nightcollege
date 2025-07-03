@@ -49,6 +49,17 @@ export default function Top({ ...pageProps }) {
         <div className="text-[#374151] text-[18px] xl:text-[0.938vw] font-semibold leading-[1.2]">Dashboard</div>
       </div>
 
+
+      <div className="flex gap-5 items-center">
+
+     <div>
+
+      <Link href='' className="text-white border bg-primarycolor border-[#af251c] px-[14px] xl:px-[18px] 3xl:px-[0.938vw] py-[8px] xl:py-[10px] 3xl:py-[0.521vw] leading-[100%] rounded-none p-button-raised p-button p-component">NAAC</Link>
+     </div>
+     <div>
+
+      <Link href='' className="cancelbtn  px-[14px] xl:px-[18px] 3xl:px-[0.938vw] py-[8px] xl:py-[10px] 3xl:py-[0.521vw] leading-[100%]">File Manager</Link>
+     </div>
       {/* Profile section */}
       <div
         className="flex items-center space-x-2 cursor-pointer"
@@ -79,6 +90,7 @@ export default function Top({ ...pageProps }) {
           </Link>
         </div>
       </OverlayPanel>
+      </div>
     </header>
   );
 }

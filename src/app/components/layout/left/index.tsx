@@ -13,10 +13,19 @@ export default function Left() {
   // Menu array with PrimeReact icon class
   const menuItems = [
     { label: "Rebranding", href: "/admin/rebranding", icon: "pi pi-home" },
-    { label: "About Us", href: "/admin/about-us", icon: "pi pi-user" },
-    { label: "Events", href: "/admin/events", icon: "pi pi-cog" },
+    { label: "About Us", href: "/admin/about-us", icon: "pi pi-building-columns" },
+    { label: "Events", href: "/admin/events", icon: "pi pi-calendar" },
     { label: "News", href: "/admin/news", icon: "pi pi-chart-bar" },
-    { label: "Logout", href: "#", icon: "pi pi-sign-out" },
+    { label: "All Department", href: "/admin/all-departments", icon: "pi pi-building" },
+    { label: "All Committees", href: "/admin/all-committees", icon: "pi pi-th-large" },
+    { label: "Administration", href: "/admin/administration", icon: "pi pi-briefcase" },
+    { label: "Infrastructure Facilities ", href: "/admin/infrastructure-facilities ", icon: "pi pi-database" },
+    { label: "All Staff ", href: "/admin/staff ", icon: "pi pi-id-card" },
+ 
+    { label: "College Publication", href: "/admin/college-publication", icon: "pi pi-book" },
+    { label: "Alumni", href: "/admin/alumni", icon: "pi pi-id-card" },
+    { label: "Student Corner", href: "/admin/student-corner", icon: "pi pi-user" },
+    // { label: "Logout", href: "#", icon: "pi pi-sign-out" },
   ];
 
   return (

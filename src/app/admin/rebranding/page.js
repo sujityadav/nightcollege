@@ -78,7 +78,10 @@ export default function Rebranding() {
       label: 'Contact Information',
       href: '/admin/rebranding/contact-info',
     },
-    
+     {
+    label: 'Flash Screen Popup',
+      href: '/admin/rebranding/home-popup',
+    },
 
   ];
   return (

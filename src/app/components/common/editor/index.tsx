@@ -17,8 +17,9 @@ const editorOptions = {
     ["fontColor", "hiliteColor"],
     ["align", "horizontalRule", "list"],
     ["table", "link", "image", "imageGallery"],
-    ["showBlocks", "codeView"]
+    ["showBlocks", "codeView","fullScreen"]
   ],
+  defaultStyle: "font-family: Roboto, sans-serif; font-size: 14px;",
   fontSize: [12, 14, 16, 18, 20],
   imageRotation: false,
   imageUploadUrl: "http://localhost:8080/chazki-gateway/orders/upload",
@@ -53,12 +54,13 @@ const TextEditor: React.FC = ({onChange}) => {
   return (
     <div>
       <SunEditor
+      height="400px" 
         ref={editorRef}
         setOptions={editorOptions}
         onChange={onChangeHandler}
         defaultValue=""
       />
-      <div ref={contentRef} className="mt-4 p-2 border border-gray-300" />
+      {/* <div ref={contentRef} className="mt-4 p-2 border border-gray-300" /> */}
     </div>
   );
 };
