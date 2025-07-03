@@ -5,6 +5,7 @@ import "primereact/resources/themes/lara-light-blue/theme.css";
 import "primereact/resources/primereact.min.css";
 import "primeicons/primeicons.css";
 import Image from "next/image";
+import { ScrollPanel } from "primereact/scrollpanel";
 
 
 export default function Left() {
@@ -47,18 +48,20 @@ export default function Left() {
         <div className="left_menu">
 
 
-          <ul className="p-4">
+        {/* <ScrollPanel className="h-[800px]"> */}
+          <ul className="p-4 ">
             {menuItems.map((item, index) => (
               <Link
                 key={index}
                 href={item.href}
-                className="flex items-center p-2 rounded hover:bgcolor space-x-2"
+                className="flex items-center p-2 rounded hover:bg-primarycolor hover:text-white space-x-2"
               >
-                <i className={`${item.icon} text-gray-600`}></i>
+                <i className={`${item.icon}  hover:text-white text-[16px]` }></i>
                 <span>{item.label}</span>
               </Link>
             ))}
           </ul>
+          {/* </ScrollPanel> */}
         </div>
 
         <div className="absolute left-0 right-0 bottom-0 left_menu">

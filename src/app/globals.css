@@ -45,6 +45,10 @@ a
   font-size: 14px;
   color: #4c525f;
 }
+.left_menu ul li a:hover
+{
+  color: white !important;
+}
 .leftbar-bg
 {
   background: #0272A7;
