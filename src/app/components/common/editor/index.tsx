@@ -3,7 +3,7 @@ import React, { useEffect, useRef, useState } from "react";
 import dynamic from "next/dynamic";
 import "suneditor/dist/css/suneditor.min.css";
 
-// ✅ Correct dynamic import (with .default!)
+// ✅ Dynamic import with SSR disabled
 const SunEditor = dynamic(() => import("suneditor-react").then((mod) => mod.default), {
   ssr: false
 });
@@ -17,7 +17,7 @@ const editorOptions = {
     ["fontColor", "hiliteColor"],
     ["align", "horizontalRule", "list"],
     ["table", "link", "image", "imageGallery"],
-    ["showBlocks", "codeView","fullScreen"]
+    ["showBlocks", "codeView", "fullScreen"]
   ],
   defaultStyle: "font-family: Roboto, sans-serif; font-size: 14px;",
   fontSize: [12, 14, 16, 18, 20],
@@ -26,42 +26,41 @@ const editorOptions = {
   imageGalleryUrl: "http://localhost:8080/chazki-gateway/orders/gallery"
 };
 
-const TextEditor: React.FC = ({onChange}) => {
+interface TextEditorProps {
+  value?: string;
+  onChange: (content: string) => void;
+}
+
+const TextEditor: React.FC<TextEditorProps> = ({ value = "", onChange }) => {
   const editorRef = useRef<any>(null);
-  const contentRef = useRef<HTMLDivElement | null>(null);
-  const [value, setValue] = useState<string>("");
-
-  useEffect(() => {
-    if (editorRef.current) {
-      console.log("Editor instance:", editorRef.current);
-    }
-  }, []);
-
-  useEffect(() => {
-    if (contentRef.current) {
-      contentRef.current.innerHTML = value;
-    }
-  }, [value]);
-
+ const [editorLoaded, setEditorLoaded] = useState(false);
   const onChangeHandler = (content: string) => {
-    console.log("content",content)
-    setValue(content);
-    onChange(content); 
+    onChange(content);
   };
-
- 
-
+  const handleEditorReady = (editorInstance: any) => {
+    editorRef.current = editorInstance;
+    setEditorLoaded(true);
+  };
+useEffect(() => {
+    if (editorLoaded && editorRef.current) {
+      const currentContent = editorRef.current.getContents();
+      if (value !== currentContent) {
+        editorRef.current.setContents(value || "");
+      }
+    }
+  }, [value, editorLoaded]);
   return (
     <div>
       <SunEditor
-      height="400px" 
+       getSunEditorInstance={handleEditorReady}
         ref={editorRef}
+        height="400px"
         setOptions={editorOptions}
+        defaultValue={value} // ✅ Load existing content here
         onChange={onChangeHandler}
-        defaultValue=""
       />
-      {/* <div ref={contentRef} className="mt-4 p-2 border border-gray-300" /> */}
     </div>
   );
 };
+
 export default TextEditor;

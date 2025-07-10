@@ -1,16 +1,19 @@
-// models/DynamicData.ts
-
 import mongoose, { Schema, Document } from "mongoose";
 
 export interface IDynamicData extends Document {
-  data: any; // This allows any structure
+  Aboutusdata: any;
+  type: string;
 }
 
 const DynamicDataSchema: Schema = new Schema(
   {
     Aboutusdata: {
-      type: Schema.Types.Mixed, // <--- this allows ANY structure (object, array, primitive)
+      type: Schema.Types.Mixed,
       required: true
+    },
+    type: {
+      type: String,
+      required: true // optional: add if it's mandatory
     }
   },
   { timestamps: true }

@@ -7,6 +7,7 @@ import "./globals.css";
 // import "./menu.css";
 
 import { StoreProvider } from "../StoreProvider";
+import ConditionalLayoutWrapper from "./components/common/ConditionalLayoutWrapper";
 // import WebsiteTop from "./components/layout/website/top";
 
 
@@ -32,7 +33,9 @@ export default function RootLayout({
     <html lang="en">
       <body className={myroboto.className}>
         {/* <WebsiteTop/> */}
-        <StoreProvider>{children}</StoreProvider>
+          <StoreProvider>
+          <ConditionalLayoutWrapper>{children}</ConditionalLayoutWrapper>
+        </StoreProvider>
       </body>
     </html>
   );
