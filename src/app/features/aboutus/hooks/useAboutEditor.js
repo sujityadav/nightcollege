@@ -17,9 +17,15 @@ export const useAboutEditor = (type) => {
   const fetchInitialData = async () => {
     try {
       const result = await getAboutTable(user?.token,type);
+      console.log("result",result)
       if (result?.data) {
          const tableHtml = jsonToTableHtml(result.data.data[0].Aboutusdata);
+         if(tableHtml){
         setEditorContent(tableHtml);
+         }else{
+        setEditorContent(result.data.data[0].Aboutusdata.content);
+
+         }
         setExistingId(result.data._id); // for update
       }
     } catch (err) {
@@ -28,7 +34,6 @@ export const useAboutEditor = (type) => {
   };
   const handleSave = async (type) => {
     const tableData = extractTableData(editorContent);
-    if (!tableData.length) return;
    
     setIsLoading(true);
     try {

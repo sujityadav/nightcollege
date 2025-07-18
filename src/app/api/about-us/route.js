@@ -8,6 +8,8 @@ export async function POST(req) {
 
     const body = await req.json();
 
+    console.log("body",body)
+
     if (!body?.data) {
       return NextResponse.json(
         { success: false, message: "Missing 'data' in body" },
@@ -15,7 +17,7 @@ export async function POST(req) {
       );
     }
     const created = await AboutUs.create({
-      Aboutusdata: body.data,
+      Aboutusdata: body,
       type: body.type
     });
     return NextResponse.json(

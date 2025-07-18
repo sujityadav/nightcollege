@@ -9,10 +9,12 @@ export default function ConditionalLayoutWrapper({ children }: { children: React
   const pathname = usePathname();
 
   const isAdminRoute = pathname?.startsWith('/admin');
+  const isLoginRoute = pathname?.startsWith('/login');
+
 
   return (
     <>
-      {!isAdminRoute && <WebsiteTop />}
+      {!isAdminRoute && !isLoginRoute && <WebsiteTop />}
       {children}
     </>
   );

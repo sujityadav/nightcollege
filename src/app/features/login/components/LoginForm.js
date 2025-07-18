@@ -8,13 +8,14 @@ import Cookies from 'js-cookie';
 import { setAuth } from '@/redux/authSlice';
 import { useDispatch } from "react-redux";
 import { Button } from 'primereact/button';
+import { useRouter } from 'next/navigation';
 
 
 export default function LoginForm() {
   const { register, handleSubmit, errors } = useLoginForm();
   const [loading, setLoading] = useState(false);
   const dispatch = useDispatch();
-
+  const router = useRouter();
   const onSubmit = async (data) => {
     setLoading(true);
     try {
@@ -25,6 +26,7 @@ export default function LoginForm() {
         setLoading(false);
         dispatch(setAuth({ token, user: response.data.updatedUser }));
         Cookies.set("token", token, { expires: 7 });
+        router.push("/admin/about-us");
     }
     } catch (error) {
       console.error('Login error:', error);
