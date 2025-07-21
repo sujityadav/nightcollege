@@ -42,7 +42,7 @@ const AboutEditor = () => {
               loading={isLoading}
               className='text-white border bg-primarycolor border-[#af251c] px-[14px] py-[10px] leading-[100%] rounded-none p-button-raised'
             >
-              {isLoading ? 'Saving...' : 'Save'}
+              {isLoading ? 'please wait...' : 'Save'}
             </Button>
           </div>
         </div>

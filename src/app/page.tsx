@@ -1,13 +1,10 @@
 
-
-import { DashBoard } from "../app/features/dashboard/page";
-
-import { useSelector } from 'react-redux';
+import { Homepage } from './features/home-page/page';
 
 export default function Home() {
   return (
       <>
-       <DashBoard /> 
+       <Homepage /> 
     </>
   )
 }

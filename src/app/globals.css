@@ -8,7 +8,18 @@
 @layer primereact {
   @tailwind base;
 }
+@layer components {
 
+  /* padding All */
+  .px300 {
+    @apply px-[10px] lg:px-[200px] xl:px-[200px] 3xl:px-[15.625vw];
+  }
+  /* padding All */
+
+   .font15 {
+    @apply font-[12px] lg:font-[14px] xl:font-[14px] 3xl:font-[0.781vw];
+  }
+}
 
 @layer base {
   :root {
@@ -212,4 +223,49 @@ color:#3C4146;
 .sun-editor 
 {
  font-family: "Roboto", sans-serif !important;
+}
+
+.slick-dots {
+  position: absolute;
+  /* top: 50%; */
+  right: 2% !important;
+  /* transform: translateY(-50%); */
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  justify-content: right;
+  text-align: right !important;
+  bottom: 5% !important;
+
+  padding: 10px;
+}
+
+.slick-dots ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.slick-dots li {
+  margin: 10px 0;
+}
+
+.slick-dots li button {
+  font-size: 0;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background-color: var(--bgcolor-primary)!important;
+  opacity: 0.5;
+  border: none;
+  transition: all 0.3s ease;
+}
+.slick-dots li.slick-active button:before 
+{
+      color: #fff !important;
+}
+.slick-dots li.slick-active button {
+  opacity: 1;
+  transform: scale(1.4);
+  background-color: var(--bgcolor-primary) !important;
 }

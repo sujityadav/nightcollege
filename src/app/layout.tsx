@@ -4,7 +4,7 @@ import 'primereact/resources/themes/lara-light-blue/theme.css';
 import 'primereact/resources/primereact.min.css';
 import 'primeicons/primeicons.css';
 import "./globals.css";
-// import "./menu.css";
+import "./menu.css";
 
 import { StoreProvider } from "../StoreProvider";
 import ConditionalLayoutWrapper from "./components/common/ConditionalLayoutWrapper";
