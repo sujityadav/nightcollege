@@ -1,5 +1,5 @@
 'use client';
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import 'primereact/resources/themes/lara-light-blue/theme.css';
 import 'primereact/resources/primereact.min.css';
 import { SubSidebar } from '@/app/components/layout/sub-sidebar';
@@ -12,6 +12,8 @@ import { InputIcon } from "primereact/inputicon";
 import { Column } from "primereact/column";
 import { DataTable } from "primereact/datatable";
 import { Tag } from 'primereact/tag';
+import axios from 'axios';
+import { format } from 'date-fns';
 
 
 export default function EventList() {
@@ -240,6 +242,20 @@ export default function EventList() {
       type: "Festival",
     }
   ];
+  const [eventsData,setEventsData] = useState([]);
+
+  useEffect(() => {
+     const fetchEventList = async() =>{
+      const response = await axios.get("/api/events");
+      if(response?.data?.success){
+        setEventsData(response?.data?.data)
+      }
+     }
+     fetchEventList()
+  }, [])
+
+  console.log("eventsData",eventsData)
+  
 
 
   const actionTemplate = (product) => {
@@ -277,7 +293,7 @@ export default function EventList() {
   );
 };
 
-
+const formatDate = (value) => value ? format(new Date(value), 'dd MMM yyyy') : '-';
   return (
 
     <div className="grid grid-cols-1">
@@ -325,85 +341,41 @@ export default function EventList() {
 
           </div>
           <div className='overflow-auto'>
-            <DataTable value={eventlist}
-              className="custTable tableCust"
-              scrollable
-              showGridlines
-              responsiveLayout="scroll"
-              style={{ width: "100%" }}
-              paginator
-              paginatorTemplate="CurrentPageReport RowsPerPageDropdown PrevPageLink PageLinks NextPageLink"
-              currentPageReportTemplate="Rows per page {first}-{last} of {totalRecords}"
-              rows={10}
-              rowsPerPageOptions={[5, 10, 25, 50]}
-              onSelectionChange={(e) => setSelectedProducts(e.value)}
+           <DataTable
+  value={eventsData}
+  className="custTable tableCust"
+  scrollable
+  showGridlines
+  responsiveLayout="scroll"
+  style={{ width: "100%" }}
+  paginator
+  paginatorTemplate="CurrentPageReport RowsPerPageDropdown PrevPageLink PageLinks NextPageLink"
+  currentPageReportTemplate="Rows {first} - {last} of {totalRecords}"
+  rows={10}
+  rowsPerPageOptions={[5, 10, 25, 50]}
+  onSelectionChange={(e) => setSelectedProducts(e.value)}
+>
 
-            >
+  <Column field="Eventdata.data.title" header="Title" sortable />
+  <Column field="Eventdata.data.smallDescription" header="Description" />
+  <Column field="Eventdata.data.category" header="Category" />
+  <Column field="Eventdata.data.location" header="Location" />
+  
+  {/* Custom Body Templates for Date Columns */}
+  <Column
+    header="From"
+    body={(rowData) => formatDate(rowData?.Eventdata?.data?.fromDate)}
+  />
+  <Column
+    header="To"
+    body={(rowData) => formatDate(rowData?.Eventdata?.data?.toDate)}
+  />
 
-              <Column
-                field="id"
-                header="Sr.No."
-                sortable
-                style={{ minWidth: "3rem" }}
-                alignHeader='center'
-              ></Column>
-              <Column
-                field="eventtitle"
-                header="Event Title"
-                sortable
-                style={{ minWidth: "12rem" }}
-              ></Column>
-              <Column
-                field="smalldescription"
-                header="Small Description"
-                sortable
-                style={{ minWidth: "15rem" }}
-              ></Column>
-              <Column
-                field="largedescription"
-                header="Large Description"
-                sortable
-                style={{ minWidth: "16rem" }}
-              ></Column>
-              <Column
-                field="tags"
-                header="Tags"
-                sortable
-                body={TagsTemplate}
-              />
-              <Column
-                field="from"
-                header="from (Date)"
-                sortable
-                style={{ minWidth: "7rem" }}
-              ></Column>
-              <Column
-                field="to"
-                header="To (Date)"
-                sortable
-                style={{ minWidth: "7rem" }}
-              ></Column>
-              <Column
-                field="location"
-                header="Location"
-                sortable
-                style={{ minWidth: "9rem" }}
-              ></Column>
-              <Column
-                field="photos"
-                header="Event Photos"
-                sortable
-                style={{ minWidth: "12rem" }}
-              ></Column>
-
-              <Column
-                field="type"
-                header="Type"
-                sortable
-                style={{ minWidth: "8rem" }}
-              ></Column>
-
-              <Column
+  <Column
+    header="Created At"
+    body={(rowData) => formatDate(rowData?.createdAt)}
+  />
+   <Column
                 field="action"
                 header="Action"
                 className="action-shadow-table"
@@ -413,7 +385,8 @@ export default function EventList() {
                 body={actionTemplate}
                 style={{ minWidth: "4rem", background: "#fbf7dc", zIndex: 1, boxShadow: "-4px 0 6px -1px rgba(0, 0, 0, 0.1); " }}
               ></Column>
-            </DataTable>
+
+</DataTable>
           </div>
 
         </div>
