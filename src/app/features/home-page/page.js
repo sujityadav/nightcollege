@@ -1,14 +1,14 @@
 "use client";
 
 import React from "react";
-import WebsitebannerComponent from './components/main-banner/index.js'
+import  WebsitebannerComponent  from './components/main-banner/WebsitebannerComponent'
 
-export const Homepage = () => {
+ const Homepage = () => {
   return <>
   
   <div className="grid grid-cols-1">
-    <WebsitebannerComponent/>
+    <WebsitebannerComponent />
   </div>
-  
-  </>;
+    </>;
 };
+export default Homepage
