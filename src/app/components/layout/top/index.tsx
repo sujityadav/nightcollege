@@ -63,7 +63,7 @@ export default function Top({ ...pageProps }) {
       {/* Profile section */}
       <div
         className="flex items-center space-x-2 cursor-pointer"
-        onClick={(e) => op.current.toggle(e)}
+        // onClick={(e) => op.current.toggle(e)}
       >
         <div className="w-10 h-10 bg-gray-300 rounded-full flex items-center justify-center">
           <i className="pi pi-user text-white"></i>

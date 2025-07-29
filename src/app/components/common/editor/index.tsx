@@ -9,7 +9,7 @@ const SunEditor = dynamic(() => import("suneditor-react").then((mod) => mod.defa
 });
 
 const editorOptions = {
-  height: 200,
+  height: "200px",
   buttonList: [
     ["undo", "redo"],
     ["removeFormat"],
@@ -21,7 +21,7 @@ const editorOptions = {
   ],
   defaultStyle: "font-family: Roboto, sans-serif; font-size: 14px;",
   fontSize: [12, 14, 16, 18, 20],
-  imageRotation: false,
+  imageRotation: true,
   imageUploadUrl: "http://localhost:8080/chazki-gateway/orders/upload",
   imageGalleryUrl: "http://localhost:8080/chazki-gateway/orders/gallery"
 };
@@ -33,7 +33,7 @@ interface TextEditorProps {
 
 const TextEditor: React.FC<TextEditorProps> = ({ value = "", onChange }) => {
   const editorRef = useRef<any>(null);
- const [editorLoaded, setEditorLoaded] = useState(false);
+  const [editorLoaded, setEditorLoaded] = useState(false);
   const onChangeHandler = (content: string) => {
     onChange(content);
   };
@@ -41,7 +41,7 @@ const TextEditor: React.FC<TextEditorProps> = ({ value = "", onChange }) => {
     editorRef.current = editorInstance;
     setEditorLoaded(true);
   };
-useEffect(() => {
+  useEffect(() => {
     if (editorLoaded && editorRef.current) {
       const currentContent = editorRef.current.getContents();
       if (value !== currentContent) {
@@ -52,8 +52,10 @@ useEffect(() => {
   return (
     <div>
       <SunEditor
-       getSunEditorInstance={handleEditorReady}
-        ref={editorRef}
+        getSunEditorInstance={(sunEditor) => {
+          editorRef.current = sunEditor;
+          handleEditorReady?.(sunEditor); // optional callback
+        }}
         height="400px"
         setOptions={editorOptions}
         defaultValue={value} // ✅ Load existing content here

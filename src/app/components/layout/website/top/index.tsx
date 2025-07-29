@@ -247,7 +247,7 @@ export default function WebsiteTop() {
                       <label htmlFor={`showMega-${idx}`} className="mobile-item">{nav.label}</label>
                       <div className="mega-box">
                         <div className="content">
-                          {nav.sections.map((section, i) => (
+                          {nav?.sections && nav?.sections.map((section, i) => (
                             <div className="row" key={i}>
                               <header>{section.title}</header>
                               <ul className="mega-links mt-2">
@@ -267,7 +267,7 @@ export default function WebsiteTop() {
 
                 return (
                   <li key={idx}>
-                    <Link href={nav.href}>{nav.label}</Link>
+                    <Link href={nav.href ? nav.href : "#"}>{nav.label}</Link>
                   </li>
                 );
               })}

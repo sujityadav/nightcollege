@@ -5,7 +5,7 @@ import React from 'react'
 import 'primereact/resources/themes/lara-light-blue/theme.css';
 import 'primereact/resources/primereact.min.css';
 
-export const LoginPage = () => {
+ const LoginPage = () => {
   return (
     <main className="min-h-screen">
       <div className="grid grid-cols-12 items-center">
@@ -31,5 +31,5 @@ export const LoginPage = () => {
   );
 }
 
-
+export default LoginPage
 
