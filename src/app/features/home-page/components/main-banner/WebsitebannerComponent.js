@@ -8,17 +8,17 @@ import 'slick-carousel/slick/slick-theme.css';
 
 const slides = [
   {
-    image: '/images/login_img.jpg',
+    image: '/images/silder1.jpg',
     title: 'Slide One',
     description: 'This is the first slide description.',
   },
   {
-    image: '/images/silder1.jpg',
+      image: '/images/silder1.jpg',
     title: 'Slide Two',
     description: 'This is the second slide description.',
   },
   {
-    image: '/images/slide3.jpg',
+        image: '/images/silder1.jpg',
     title: 'Slide Three',
     description: 'This is the third slide description.',
   },
@@ -39,11 +39,11 @@ export default function WebsitebannerComponent() {
   };
 
   return (
-    <div className="w-full relative custom_silder_banner">
-      <Slider {...settings}>
+    <div className="w-full  custom_silder_banner">
+      <Slider {...settings} className='p-0 m-0'>
         {slides.map((slide, index) => (
-          <div key={index}>
-            <div className="relative h-[500px] w-full overflow-hidden">
+          <div key={index}  className='p-0 m-0'>
+            <div className="relative h-[300px] lg:h-[450px] xl:h-[500px] 3xl:h-[28.646vw] w-full overflow-hidden">
               <img
                 src={slide.image}
                 alt={slide.title}

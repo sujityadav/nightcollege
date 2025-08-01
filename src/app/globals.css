@@ -19,6 +19,13 @@
    .font15 {
     @apply font-[12px] lg:font-[14px] xl:font-[14px] 3xl:font-[0.781vw];
   }
+   .font20 {
+    @apply text-[20px] lg:text-[18px] xl:text-[20px] 3xl:text-[1.146vw];
+  }
+   .font26 {
+    @apply text-[16px] lg:text-[20px] xl:text-[24px] 3xl:text-[1.354vw];
+  }
+
 }
 
 @layer base {
@@ -30,10 +37,10 @@
   }
 
   @import url('https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100..900;1,100..900&display=swap');
+
 body 
 {
   margin: 0;
-  background-color: #F6F7F8;
 }
 a 
 {
@@ -48,6 +55,19 @@ a
   min-height: 100vh;
   background-size: cover;
 }
+/* website css */
+.about_us_bg 
+{
+ background-image: url(/images/about-us-bg.png);
+    background-size: contain;
+    background-position: right bottom;
+    background-repeat: no-repeat;
+    background-size: 30%;
+  
+}
+/* website css end */
+
+
 
 /* /left/ */
 .left_menu ul a 
@@ -224,7 +244,23 @@ color:#3C4146;
 {
  font-family: "Roboto", sans-serif !important;
 }
+@keyframes marquee {
+  0% {
+    transform: translateX(100%);
+  }
 
+  100% {
+    transform: translateX(-100%);
+  }
+}
+
+.animate-marquee {
+  animation: marquee 45s linear infinite;
+}
+
+.pause {
+  animation-play-state: paused;
+}
 .slick-dots {
   position: absolute;
   /* top: 50%; */
