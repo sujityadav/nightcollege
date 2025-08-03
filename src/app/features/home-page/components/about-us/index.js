@@ -41,7 +41,7 @@ export default function AboutUs() {
 
 
   return (
-    <div className="w-full bg-[#f8f8f8] py-[50px] about_us_bg">
+    <div className="w-full bg-[#f8f8f8] py50 about_us_bg">
       <div className="px300">
         <div className="grid grid-cols-1 md:grid-cols-2">
           <div className={roboto_slab.className}>
