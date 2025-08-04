@@ -39,7 +39,7 @@ export default function WebsitebannerComponent() {
   };
 
   return (
-    <div className="w-full  custom_silder_banner">
+    <div className="w-full relative custom_silder_banner">
       <Slider {...settings} className='p-0 m-0'>
         {slides.map((slide, index) => (
           <div key={index}  className='p-0 m-0'>
@@ -49,7 +49,7 @@ export default function WebsitebannerComponent() {
                 alt={slide.title}
                 className="w-full h-full object-cover"
               />
-              <div className="absolute bottom-0 left-0 w-full bg-gradient-to-t from-black to-transparent text-white px-6 py-4">
+              <div className="absolute bottom-0 left-0 w-full bg-gradient-to-t from-black to-transparent text-white px-6 py-4 z-[9999]">
                 <h3 className="text-xl font-bold">{slide.title}</h3>
                 <p className="text-sm">{slide.description}</p>
               </div>
