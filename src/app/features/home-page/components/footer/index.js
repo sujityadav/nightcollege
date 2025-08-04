@@ -1,9 +1,12 @@
 'use client';
 
 import Image from 'next/image';
-import { InputText } from 'primereact/inputtext';
-import { Button } from 'primereact/button';
-
+import { Roboto_Slab } from 'next/font/google';
+const roboto_slab = Roboto_Slab({
+  weight: ['100', '200', '300', '400', '500', '600', '700', '800', '900'],
+  subsets: ['latin'],
+  display: 'swap',
+});
 export default function Footer() {
   return (
     <footer className="bg-primarycolor text-white px-4 py-10 md:px-12 xl:px-20">
@@ -20,8 +23,9 @@ export default function Footer() {
               
             <h1 className="text-2xl font-bold uppercase">Night College of Arts & Commerce, Ichalkaranji</h1>
             <div className="mt-4 text-sm leading-6">
-              <p><i className="pi pi-map-marker mr-2" />Jl. P.B Sudirman, Denpasar</p>
-              <p><i className="pi pi-envelope mr-2" />support@uneza.com</p>
+              <p><i className="pi pi-map-marker mr-2" />18/324 Industrial Estate Ichalkaranji </p>
+              <p><i className="pi pi-phone mr-2" />0230(2437666)</p>
+              <p><i className="pi pi-envelope mr-2" />nightich@gmail.com</p>
             </div>
             </div>
           </div>
@@ -113,7 +117,7 @@ export default function Footer() {
             },
           ].map((col, i) => (
             <div key={i}>
-              <h4 className="font-semibold mb-3">{col.title}</h4>
+             <div className={roboto_slab.className}> <h4 className="font-semibold mb-4 font20 ">{col.title}</h4></div>
               <ul className="space-y-2">
                 {col.links.map((link, j) => (
                   <li key={j} className="hover:underline cursor-pointer">{link}</li>
