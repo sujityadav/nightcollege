@@ -77,15 +77,7 @@ export default function QuickLinks() {
                 <li><Link href=''>Library </Link></li>
                 <li><Link href=''>Cultural Activities </Link></li>
               </ul>
-               <ul class="list-disc space-y-3 w-[250px]">
-                <li><Link href=''>College at a Glance </Link></li>
-                <li><Link href=''>Goals & Mission </Link></li>
-                <li><Link href=''>Admission </Link></li>
-                <li><Link href=''>Academic/Administrative Calendar </Link></li>
-                <li><Link href=''>Golas & Mission </Link></li>
-                <li><Link href=''>Library </Link></li>
-                <li><Link href=''>Cultural Activities </Link></li>
-              </ul>
+               
           
 
 

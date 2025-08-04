@@ -9,6 +9,9 @@ import  Summary  from './components/summary/index'
 import  Events  from './components/events/index'
 import  QuickLinks  from './components/quick-links/index'
 import  DepartmentEvents  from './components/deparment-events/index'
+import  Placement  from './components/placement/index'
+import  CampusTour  from './components/campus-tour/index'
+import  Footer  from './components/footer/index'
 
 
  const Homepage = () => {
@@ -30,6 +33,9 @@ import  DepartmentEvents  from './components/deparment-events/index'
   <>
   <DepartmentEvents/>
   </>
+  <><CampusTour/></>
+  <><Placement/></>
+  <><Footer/></>
   </>
     </>;
 };
