@@ -48,7 +48,7 @@ export default function AddEvents() {
     try {
       setLoading(true);
       
-      const res = await axios.get(`/api/events/getbyId`, {
+      const res = await axios.get(`/api/news/getbyId`, {
         params:{id:id},
         headers: {
           Authorization: `Bearer ${user.token}`,
@@ -57,15 +57,15 @@ export default function AddEvents() {
 
       const event = res.data.data;
       reset({
-        title: event[0]?.Eventdata?.data?.title,
-        smallDescription: event[0]?.Eventdata?.data?.smallDescription,
-        largeDescription: event[0]?.Eventdata?.data?.largeDescription,
-        category: event[0]?.Eventdata?.data?.category,
-        location: event[0]?.Eventdata?.data?.location,
+        title: event[0]?.Newsdata?.data?.title,
+        smallDescription: event[0]?.Newsdata?.data?.smallDescription,
+        largeDescription: event[0]?.Newsdata?.data?.largeDescription,
+        category: event[0]?.Newsdata?.data?.category,
+        location: event[0]?.Newsdata?.data?.location,
       });
-      setEditorContent(event[0]?.Eventdata?.data?.largeDescription);
-      setFromDate(new Date(event[0]?.Eventdata?.data?.fromDate));
-      setToDate(new Date(event[0]?.Eventdata?.data?.toDate));
+      setEditorContent(event[0]?.Newsdata?.data?.largeDescription);
+      setFromDate(new Date(event[0]?.Newsdata?.data?.fromDate));
+      setToDate(new Date(event[0]?.Newsdata?.data?.toDate));
     } catch (err) {
       console.error('Failed to fetch event:', err);
     } finally {
@@ -84,7 +84,7 @@ export default function AddEvents() {
     };
 
     try {
-      const url = eventId ? `/api/events/${eventId}` : `/api/events`;
+      const url = eventId ? `/api/news/${eventId}` : `/api/news`;
       const method = eventId ? 'put' : 'post';
 
       const response = await axios({
@@ -104,7 +104,7 @@ export default function AddEvents() {
           detail: `Content ${eventId ? 'updated' : 'saved'} successfully ✅`,
           life: 3000,
         });
-        router.push("/admin/events");
+        router.push("/admin/news");
       }
     } catch (err) {
       console.error('Failed to submit:', err);
@@ -175,7 +175,7 @@ export default function AddEvents() {
             </div>
 
             <div className='mt-6 flex justify-center gap-6'>
-              <Link href="/admin/events" className='cancelbtn px-4 py-2'>Cancel</Link>
+              <Link href="/admin/news" className='cancelbtn px-4 py-2'>Cancel</Link>
               <Button
                 type='submit'
                 className='text-white bg-primarycolor border-[#af251c] px-4 py-2'
