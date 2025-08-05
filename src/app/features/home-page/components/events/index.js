@@ -18,11 +18,11 @@ const roboto_slab = Roboto_Slab({
 export default function Events() {
 
 
-  const ArrowStyle = "bg-[#9e1c1c] w-12 h-12 rounded-full flex items-center justify-center shadow-md hover:scale-105 transition-transform";
+  const ArrowStyle = "bg-[#9e1c1c] w-12 h-12 rounded-full flex items-center justify-center shadow-md hover:scale-105 transition-transform ";
 
   const NextArrow = ({ onClick }) => (
     <div
-      className="absolute top-1/2 -translate-y-1/2 right-[-50px] z-10 cursor-pointer"
+      className="absolute top-1/2 -translate-y-1/2 right-[-50px] z-10 cursor-pointer hidden md:block lg:block xl:block 2xl:block 3xl:block"
       onClick={onClick}
     >
       <div className={ArrowStyle}>
@@ -33,7 +33,7 @@ export default function Events() {
 
   const PrevArrow = ({ onClick }) => (
     <div
-      className="absolute top-1/2 -translate-y-1/2 left-[-50px] z-10 cursor-pointer"
+      className="absolute top-1/2 -translate-y-1/2 left-[-50px] z-10 cursor-pointer hidden md:block lg:block xl:block 2xl:block 3xl:block"
       onClick={onClick}
     >
       <div className={ArrowStyle}>
@@ -138,7 +138,7 @@ export default function Events() {
                       width={400}
                       height={280}
                       alt="event"
-                      className="3xl:w-full transition-transform duration-300 group-hover:scale-105"
+                      className="w-full 3xl:w-full transition-transform duration-300 group-hover:scale-105"
                     />
                     <div className="absolute bottom-[10px] left-4 bg-primarycolor p-2 text-center text-white rounded-sm">
                       <div className="flex flex-col">

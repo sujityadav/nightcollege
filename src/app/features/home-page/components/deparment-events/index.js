@@ -78,7 +78,7 @@ export default function DepartmentEvents() {
                   width={400}
                   height={280}
                   alt="event"
-                  className="3xl:w-full transition-transform duration-300 group-hover:scale-105"
+                  className="w-full 3xl:w-full transition-transform duration-300 group-hover:scale-105"
                 />
                  <div className="absolute top-[10px] right-3 bg-primarycolor rounded-md p-1 text-center text-white font14 px-3">
                       <div className="flex gap-1">
