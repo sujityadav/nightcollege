@@ -119,9 +119,9 @@ export default function DepartmentEvents() {
 
         {/* Read More Button */}
         <div className="mt20 text-center flex justify-center">
-          <Link href="" className="arrow-link mt-2">
-            Read More<span className="arrow"></span>
-          </Link>
+          <Link href="" className="my-button shadow-2xl px20 py10 bg-primarycolor rounded-sm cursor-pointer relative overflow-hidden">
+              <span className="text-center text-white font15 font-[500] my-auto">View More</span>
+            </Link>
         </div>
       </div>
     </div>

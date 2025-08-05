@@ -20,6 +20,9 @@
   .px300 {
     @apply px-[10px] lg:px-[140px] xl:px-[150px] 3xl:px-[15.625vw];
   }
+ .py10 {
+    @apply py-[10px] lg:py-[10px] xl:py-[10px] 3xl:py-[0.521vw];
+  }
  .py20 {
     @apply px-[15px] lg:px-[15px] xl:px-[20px] 3xl:px-[1.042vw];
   }
@@ -136,6 +139,89 @@ a
   max-width: 255px;
   background-color: var(--bgcolor-primary);
 }
+.my-button {
+  position: relative;
+  overflow: hidden;
+  padding: 10px 20px;
+  background: #9c160c;
+  color: white;
+  border-radius: 4px;
+  display: inline-block;
+  text-align: center;
+  cursor: pointer;
+  transition: transform 0.3s ease-out;
+  animation: bouncerino-out 0.5s;
+}
+
+.my-button::before {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 0%;
+  height: 0%;
+  background: #ffffff22;
+  transition: 0.5s ease-out;
+  border-radius: 100%;
+  opacity: 0;
+  z-index: 0;
+}
+
+.my-button:hover::before {
+  width: 500px;
+  height: 500px;
+  opacity: 1;
+  border-radius: 0;
+  animation: opacity-in 0.7s forwards ease-out;
+}
+
+.my-button:hover {
+  animation: bouncerino-in 0.5s forwards alternate ease-out;
+}
+
+.my-button span {
+  position: relative;
+  z-index: 1;
+}
+
+/* Keyframes */
+@keyframes bouncerino-in {
+  0% {
+    transform: scale(1);
+  }
+  40% {
+    transform: scale(1.09);
+  }
+  50% {
+    transform: scale(1.075);
+  }
+  70% {
+    transform: scale(1.08);
+  }
+  100% {
+    transform: scale(1.075);
+  }
+}
+
+@keyframes bouncerino-out {
+  0% {
+    transform: scale(1.075);
+  }
+  100% {
+    transform: scale(1.0);
+  }
+}
+
+@keyframes opacity-in {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
 .about_us_bg 
 {
  background-image: url(/images/about-us-bg.png);

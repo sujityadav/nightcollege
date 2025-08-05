@@ -54,9 +54,9 @@ export default function CampusTour() {
         </div>
 
                    <div className="mt-4 flex justify-center">
-                      <Link href="" className="arrow-link mt-2 group-hover:text-white">
-                        Read more<span className="arrow"></span>
-                      </Link>
+                      <Link href="" className="my-button shadow-2xl px20 py10 bg-primarycolor rounded-sm cursor-pointer relative overflow-hidden">
+              <span className="text-center text-white font15 font-[500] my-auto">View More</span>
+            </Link>
                     </div>
       </div>
     </div>
