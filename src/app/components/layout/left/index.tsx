@@ -17,12 +17,11 @@ export default function Left() {
     { label: "About Us", href: "/admin/about-us", icon: "pi pi-building-columns" },
     { label: "Events", href: "/admin/events", icon: "pi pi-calendar" },
     { label: "News", href: "/admin/news", icon: "pi pi-chart-bar" },
+     { label: "All Committees", href: "/admin/all-committees", icon: "pi pi-th-large" },
     { label: "All Department", href: "/admin/all-departments", icon: "pi pi-building" },
-    { label: "All Committees", href: "/admin/all-committees", icon: "pi pi-th-large" },
     { label: "Administration", href: "/admin/administration", icon: "pi pi-briefcase" },
     { label: "Infrastructure Facilities ", href: "/admin/infrastructure-facilities ", icon: "pi pi-database" },
     { label: "All Staff ", href: "/admin/staff ", icon: "pi pi-id-card" },
- 
     { label: "College Publication", href: "/admin/college-publication", icon: "pi pi-book" },
     { label: "Alumni", href: "/admin/alumni", icon: "pi pi-id-card" },
     { label: "Student Corner", href: "/admin/student-corner", icon: "pi pi-user" },
