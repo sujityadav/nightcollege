@@ -207,14 +207,14 @@ export default function WebsiteTop() {
       <CollegeBanner />
 
       <div>
-        <nav className="bg-[#F0F2F6] border-[#BECDE3] border-b  ease-linear duration-300 custom_header px300 font15">
+        <nav className="bg-primarycolor lg:bg-[#F0F2F6] border-[#BECDE3] border-b  ease-linear duration-300 custom_header px300 font15">
           <div className="wrapper">
             <input type="radio" name="slider" id="menu-btn" />
             <input type="radio" name="slider" id="close-btn" />
 
             <ul className="nav-links">
               <label htmlFor="close-btn" className="btn close-btn">
-                <i className="pi pi-times"></i>
+                <i className="pi pi-times text-primarycolor"></i>
               </label>
 
               {navigation.map((nav, idx) => {
