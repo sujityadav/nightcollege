@@ -78,7 +78,7 @@ export default function AboutUs() {
               the Re-assessment & accreditation by NAAC in Aug.2016.
             </p>
 
-            <div className="mt-10 divide-y divide-gray-200 w-[500px]">
+            <div className="mt-10 divide-y divide-gray-200 w-full xl:w-[400px] 3xl:w-[26.042vw]">
               {items.map((item, index) => (
                 <div key={item.id} className="flex gap-3 items-center py-3">
                   <div>

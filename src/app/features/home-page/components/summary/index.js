@@ -64,30 +64,31 @@ export default function Summary() {
   }, [startCount]);
 
   return (
-    <div ref={sectionRef} className="w-full py50 summay-bg">
-      <div className="px300">
-        <div className="flex flex-wrap  relative z-[9999] gap-2 text-white text-center w-full 3xl:justify-evenly">
-          {stats.map((stat, index) => (
-            <div
-              key={index}
-              className="rounded-sm flex flex-col flex-wrap justify-center items-center bg-primarycolor py-3 box btn-3 hover-border-3 3xl:w-[230px] xl:w-[200px]"
+   <div ref={sectionRef} className="w-full py-10 sm:py-12 md:py-16 summay-bg">
+  <div className="px-4 sm:px-6 md:px-10 lg:px-20 xl:px-40 2xl:px-60 3xl:px-[300px]">
+    <div className="flex flex-wrap justify-center gap-4 sm:gap-5 md:gap-6 text-white text-center w-full relative z-[9999]">
+      {stats.map((stat, index) => (
+        <div
+          key={index}
+          className="rounded-sm flex flex-col justify-center items-center bg-primarycolor py-4 px-4 w-full sm:w-[45%] md:w-[30%] xl:w-[180px] 3xl:w-[230px] box btn-3 hover-border-3"
+        >
+          <div className={roboto_slab.className}>
+            <h3
+              className="text-3xl md:text-4xl font-bold"
+              data-number={stat.number}
+              ref={(el) => (countRefs.current[index] = el)}
             >
-              <div className={roboto_slab.className}>
-                <h3
-                  className="font40 font-[700]"
-                  data-number={stat.number}
-                  ref={(el) => (countRefs.current[index] = el)}
-                >
-                  0
-                </h3>
-              </div>
-              <div>
-                <h3 className="font16 leading-[140%]">{stat.label}</h3>
-              </div>
-            </div>
-          ))}
+              0
+            </h3>
+          </div>
+          <div>
+            <h3 className="text-sm md:text-base leading-snug mt-1">{stat.label}</h3>
+          </div>
         </div>
-      </div>
+      ))}
     </div>
+  </div>
+</div>
+
   );
 }

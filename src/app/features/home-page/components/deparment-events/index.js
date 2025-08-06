@@ -68,7 +68,7 @@ export default function DepartmentEvents() {
         </div>
 
         {/* Grid layout */}
-        <div className="grid gap-6 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+        <div className="grid lg:gap:2 xl:gap-3 3xl:gap-6 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           {events.map((event) => (
             <div key={event.id} className="group cursor-pointer border">
               {/* Image Block */}

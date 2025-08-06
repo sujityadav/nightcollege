@@ -129,7 +129,7 @@ export default function Footer() {
 
         {/* Bottom note */}
         <div className="text-center text-xs mt-10 pt-6 border-t border-white/20">
-          © 2025 All rights reserved. Powered by <span className="underline">Sujit</span>.
+          © 2025 All rights reserved. Powered by <span className="underline">Sujit Yadav</span>.
         </div>
       </div>
     </footer>

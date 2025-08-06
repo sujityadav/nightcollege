@@ -24,7 +24,7 @@
     @apply py-[10px] lg:py-[10px] xl:py-[10px] 3xl:py-[0.521vw];
   }
  .py20 {
-    @apply px-[15px] lg:px-[15px] xl:px-[20px] 3xl:px-[1.042vw];
+    @apply py-[15px] lg:py-[15px] xl:py-[20px] 3xl:py-[1.042vw];
   }
   .py50 {
     @apply py-[30px] lg:py-[30px] xl:py-[40px] 3xl:py-[2.604vw];
