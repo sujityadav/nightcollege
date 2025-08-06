@@ -34,20 +34,20 @@ export default function Footer() {
           <div className="">
             {/* Social Icons */}
             
-            <div className='flex justify-end'>
+            <div className='flex justify-start lg:justify-end'>
               <div>
               <h3 className="text-lg font-semibold mb-3">Social Media</h3>
               <div className="flex gap-3 text-white">
-                <div className="bg-white/20 p-2 rounded-full hover:bg-white/40 cursor-pointer">
+                <div className="bg-white/20 w-[40px] h-[40px]  p-2 rounded-full hover:bg-white/40 cursor-pointer flex justify-center items-center">
                   <i className="pi pi-facebook" />
                 </div>
-                <div className="bg-white/20 p-2 rounded-full hover:bg-white/40 cursor-pointer">
+                <div className="bg-white/20 p-2 w-[40px] h-[40px]  rounded-full hover:bg-white/40 cursor-pointer flex justify-center items-center ">
                   <i className="pi pi-twitter" />
                 </div>
-                <div className="bg-white/20 p-2 rounded-full hover:bg-white/40 cursor-pointer">
+                <div className="bg-white/20  w-[40px] h-[40px]  p-2 rounded-full hover:bg-white/40 cursor-pointer flex justify-center items-center">
                   <i className="pi pi-instagram" />
                 </div>
-                <div className="bg-white/20 p-2 rounded-full hover:bg-white/40 cursor-pointer">
+                <div className="bg-white/20 w-[40px] h-[40px]   p-2 rounded-full hover:bg-white/40 cursor-pointer flex justify-center items-center">
                   <i className="pi pi-linkedin" />
                 </div>
               </div>

@@ -29,7 +29,7 @@ export default function QuickLinks() {
             </h1>
           </div>
         </div>
-        <div className='overflow-x-auto overflow-auto h-[280px] px-5 text-[#5a5a5a]'>
+        <div className='overflow-x-auto overflow-auto h-[280px] px-5 text-[#5a5a5a] style-2'>
           <div className="flex  gap-[40px] font15 quicklink">
          
               <ul class="list-disc space-y-3 w-[250px]">

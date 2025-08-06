@@ -113,6 +113,25 @@ a
 
 /* website css */
 
+.style-2::-webkit-scrollbar-track
+{
+	
+	border-radius: 8px;
+	background-color: #F5F5F5;
+}
+
+.style-2::-webkit-scrollbar
+{
+	width: 8px;
+	background-color: #F5F5F5;
+}
+
+.style-2::-webkit-scrollbar-thumb
+{
+	border-radius: 8px;
+	background-color: var(--bgcolor-primary);
+}
+
 .title h1 {
  
   letter-spacing: 0;
@@ -532,22 +551,19 @@ color:#3C4146;
 {
  font-family: "Roboto", sans-serif !important;
 }
-@keyframes marquee {
-  0% {
-    transform: translateX(100%);
+@layer utilities {
+  .animate-marquee {
+    animation: marquee 20s linear infinite;
   }
 
-  100% {
-    transform: translateX(-100%);
+  .pause {
+    animation-play-state: paused;
   }
-}
 
-.animate-marquee {
-  animation: marquee 45s linear infinite;
-}
-
-.pause {
-  animation-play-state: paused;
+  @keyframes marquee {
+    0% { transform: translateX(100%); }
+    100% { transform: translateX(-100%); }
+  }
 }
 .slick-dots {
   position: absolute;
