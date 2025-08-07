@@ -3,13 +3,14 @@ import { Roboto } from "next/font/google";
 import 'primereact/resources/themes/lara-light-blue/theme.css';
 import 'primereact/resources/primereact.min.css';
 import 'primeicons/primeicons.css';
-import "./globals.css";
+
 import "./menu.css";
 
 import { StoreProvider } from "../StoreProvider";
 import ConditionalLayoutWrapper from "./components/common/ConditionalLayoutWrapper";
+// import IncludeWidgetScript from "./components/IncludeWidgetScript/index"
 // import WebsiteTop from "./components/layout/website/top";
-
+import "./globals.css";
 
 const myroboto = Roboto({
   weight: ['100', '300', '400', '500', '700','900'],
@@ -31,10 +32,17 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
+       <head>
+        {/* ✅ Client component for script */}
+        {/* <IncludeWidgetScript /> */}
+      </head>
       <body className={myroboto.className}>
         {/* <WebsiteTop/> */}
           <StoreProvider>
-          <ConditionalLayoutWrapper>{children}</ConditionalLayoutWrapper>
+          <ConditionalLayoutWrapper>{children}
+        
+
+          </ConditionalLayoutWrapper>
         </StoreProvider>
       </body>
     </html>

@@ -96,6 +96,11 @@ body
 {
   margin: 0;
   color:#1B212F;
+ 
+}
+[class^="asw-"],
+[class*=" asw-"] {
+  font-size: 15px !important;
 }
 a 
 {
@@ -113,6 +118,31 @@ a
 
 /* website css */
 
+.goog-logo-link,
+.goog-te-gadget span {
+  /* display: none !important; */
+  display: flex;
+}
+
+.goog-te-gadget {
+  font-size: 14px !important;
+  color: #333;
+}
+
+.goog-te-combo {
+  padding: 5px;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+}
+.asw-menu-btn
+{
+  border: 3px solid white !important;
+    outline: 5px solid var(--bgcolor-primary) !important;
+}
+#asw-language
+{
+  display: none !important;
+}
 .style-2::-webkit-scrollbar-track
 {
 	

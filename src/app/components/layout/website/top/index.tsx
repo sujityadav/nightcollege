@@ -202,7 +202,7 @@ export default function WebsiteTop() {
 
   return (
     <>
-      <div className="bg-primarycolor p-2"></div>
+      
 
       <CollegeBanner />
 

@@ -1,12 +1,21 @@
 'use client';
 import Image from "next/image";
 import Link from "next/link";
-
+import GoogleTranslate from "../../../../components/GoogleTranslate/index";
 
 export default function CollegeBanner() {
 
   return (
     <>
+    <div className="bg-primarycolor py10 px300">
+      <div className="flex justify-between  h-full items-center w-full">
+        <div className="flex gap-2 lg:gap-5">
+          <Link href='' className="leading-none text-white font14 flex items-center"><i className="pi pi-phone font14 mr-2"></i> 0230 2437666</Link>
+          <Link href='' className="leading-none text-white font14  flex items-center"><i className="pi  pi-envelope font14 mr-2"></i>nightich@gmail.com</Link>
+        </div>
+        <div className="flex gap-2 justify-end  items-center"><p className="text-white font12">Translation </p><><GoogleTranslate /> </><i className="pi pi-chevron-down text-white font12 mr-2"></i></div>
+      </div>
+    </div>
       <div className="bg-white px300 m-auto py-2">
         <div className="grid grid-cols-1 md:grid-cols-10 lg:grid-cols-10 xl:grid-cols-12 2xl:grid-cols-12 items-start">
           <div className="col-span-1 xl:col-span-10 3xl:col-span-10">
