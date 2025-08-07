@@ -7,11 +7,11 @@ export default function CollegeBanner() {
 
   return (
     <>
-    <div className="bg-primarycolor py10 px300">
+    <div className="bg-primarycolor py10 px300 ">
       <div className="flex justify-between  h-full items-center w-full">
         <div className="flex gap-2 lg:gap-5">
-          <Link href='' className="leading-none text-white font14 flex items-center"><i className="pi pi-phone font14 mr-2"></i> 0230 2437666</Link>
-          <Link href='' className="leading-none text-white font14  flex items-center"><i className="pi  pi-envelope font14 mr-2"></i>nightich@gmail.com</Link>
+          <Link href="tel:02302437666" className="leading-none text-white font14 flex items-center"><i className="pi pi-phone font14 mr-2"></i> 0230 2437666</Link>
+          <Link href="mailto:nightich@gmail.com" className="leading-none text-white font14  flex items-center"><i className="pi  pi-envelope font14 mr-2"></i>nightich@gmail.com</Link>
         </div>
         <div className="flex gap-2 justify-end  items-center"><p className="text-white font12">Translation </p><><GoogleTranslate /> </><i className="pi pi-chevron-down text-white font12 mr-2"></i></div>
       </div>

@@ -117,7 +117,18 @@ a
 }
 
 /* website css */
-
+/* .header-top:before 
+{
+      content: "";
+    height: 100%;
+    position: absolute;
+    width: 32%;
+    background: #ff7350;
+    top: 0;
+    z-index: -1;
+    left: -25px;
+    transform: skew(30deg);
+} */
 .goog-logo-link,
 .goog-te-gadget span {
   /* display: none !important; */
