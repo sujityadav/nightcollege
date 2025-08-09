@@ -28,7 +28,7 @@ export default function AddEvents() {
   const toast = useRef(null);
   const router = useRouter();
   const searchParams = useSearchParams();
-  const eventId = searchParams.get('id'); // <-- read id from query
+  const comityId = searchParams.get('id'); // <-- read id from query
 
   // Sync editor content manually
   const handleEditorChange = (value) => {
@@ -38,17 +38,17 @@ export default function AddEvents() {
 
   // Fetch data if in update mode
   useEffect(() => {
-    if (eventId) {
+    if (comityId) {
       setIsUpdateMode(true);
-      fetchEventData(eventId);
+      fetchEventData(comityId);
     }
-  }, [eventId]);
+  }, [comityId]);
 
   const fetchEventData = async (id) => {
     try {
       setLoading(true);
       
-      const res = await axios.get(`/api/events/getbyId`, {
+      const res = await axios.get(`/api/commities/getbyId`, {
         params:{id:id},
         headers: {
           Authorization: `Bearer ${user.token}`,
@@ -57,15 +57,12 @@ export default function AddEvents() {
 
       const event = res.data.data;
       reset({
-        title: event[0]?.Eventdata?.data?.title,
-        smallDescription: event[0]?.Eventdata?.data?.smallDescription,
-        largeDescription: event[0]?.Eventdata?.data?.largeDescription,
-        category: event[0]?.Eventdata?.data?.category,
-        location: event[0]?.Eventdata?.data?.location,
+        title: event[0]?.CommitiesData?.data?.title,
+        smallDescription: event[0]?.CommitiesData?.data?.smallDescription,
+        largeDescription: event[0]?.CommitiesData?.data?.largeDescription,
       });
-      setEditorContent(event[0]?.Eventdata?.data?.largeDescription);
-      setFromDate(new Date(event[0]?.Eventdata?.data?.fromDate));
-      setToDate(new Date(event[0]?.Eventdata?.data?.toDate));
+      setEditorContent(event[0]?.CommitiesData?.data?.largeDescription);
+      
     } catch (err) {
       console.error('Failed to fetch event:', err);
     } finally {
@@ -74,18 +71,19 @@ export default function AddEvents() {
   };
 
   const onSubmit = async (formData) => {
+
     formData.fromDate = fromDate;
     formData.toDate = toDate;
     formData.largeDescription = editorContent;
 
     const payload = {
       data: formData,
-      ...(eventId && { _id: eventId }),
+      ...(comityId && { _id: comityId }),
     };
 
     try {
-      const url = eventId ? `/api/events/${eventId}` : `/api/events`;
-      const method = eventId ? 'put' : 'post';
+      const url = comityId ? `/api/commities/${comityId}` : `/api/commities`;
+      const method = comityId ? 'put' : 'post';
 
       const response = await axios({
         method,
@@ -100,11 +98,11 @@ export default function AddEvents() {
       if (response?.data?.success) {
         toast.current.show({
           severity: 'success',
-          summary: eventId ? 'Updated' : 'Saved',
-          detail: `Content ${eventId ? 'updated' : 'saved'} successfully ✅`,
+          summary: comityId ? 'Updated' : 'Saved',
+          detail: `Content ${comityId ? 'updated' : 'saved'} successfully ✅`,
           life: 3000,
         });
-        router.push("/admin/events");
+        router.push("/admin/all-committees");
       }
     } catch (err) {
       console.error('Failed to submit:', err);
@@ -144,7 +142,7 @@ export default function AddEvents() {
            
 
             <div className='mt-6 flex justify-center gap-6'>
-              <Link href="/admin/events" className='cancelbtn px-4 py-2'>Cancel</Link>
+              <Link href="/admin/commities" className='cancelbtn px-4 py-2'>Cancel</Link>
               <Button
                 type='submit'
                 className='text-white bg-primarycolor border-[#af251c] px-4 py-2 rounded-none'

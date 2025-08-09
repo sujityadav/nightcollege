@@ -24,7 +24,7 @@ export default function EventList() {
   const toast = useRef(null);
   useEffect(() => {
     const fetchEventList = async () => {
-      const response = await axios.get("/api/events");
+      const response = await axios.get("/api/commities");
       if (response?.data?.success) {
         setEventsData(response?.data?.data)
       }
@@ -35,7 +35,7 @@ export default function EventList() {
 
   const handleDelete = async (id) => {
     try {
-      const response = await axios.delete(`/api/events/${id}`);
+      const response = await axios.delete(`/api/commities/${id}`);
       if (response?.data?.success) {
         setEventsData(eventsData.filter(item => item._id !== id));
         toast.current.show({
@@ -60,7 +60,7 @@ export default function EventList() {
     return (
       <div className="flex  justify-center items-center gap-4 ">
 
-        <Link href={`/admin/events/add-events?id=${product?._id}`} className="leading-none" >
+        <Link href={`/admin/all-committees/add-committee?id=${product?._id}`} className="leading-none" >
           <i className="pi pi-pen-to-square text-[18px] xl:text-[0.938vw]"></i>
         </Link>
         <Link href={""} onClick={() => handleDelete(product?._id)} className="leading-none" >            <i className="pi pi-trash text-[18px] xl:text-[0.938vw]"></i>
@@ -154,20 +154,10 @@ export default function EventList() {
               onSelectionChange={(e) => setSelectedProducts(e.value)}
             >
 
-              <Column field="Eventdata.data.title" header="Title" sortable />
-              <Column field="Eventdata.data.smallDescription" header="Description" />
-              <Column field="Eventdata.data.category" header="Category" />
-              <Column field="Eventdata.data.location" header="Location" />
+              <Column field="CommitiesData.data.title" header="Title" sortable />
+              <Column field="CommitiesData.data.smallDescription" header="Description" />
 
-              {/* Custom Body Templates for Date Columns */}
-              <Column
-                header="From"
-                body={(rowData) => formatDate(rowData?.Eventdata?.data?.fromDate)}
-              />
-              <Column
-                header="To"
-                body={(rowData) => formatDate(rowData?.Eventdata?.data?.toDate)}
-              />
+             
 
               <Column
                 header="Created At"
