@@ -1,12 +1,12 @@
 import { NextResponse } from "next/server";
-import  Commities  from "../../../models/commities";
+import  InnerDepartments  from "../../../models/innerdepartments";
 import { connectDB } from "../../../lib/mongodb";
 export async function GET(req) {
   try {
     await connectDB();
      const { searchParams } = new URL(req.url);
     const id = searchParams.get("id");
-    const entries = await Commities.find({_id:id}).sort({ createdAt: -1 }); // latest first
+    const entries = await InnerDepartments.find({_id:id}).sort({ createdAt: -1 }); // latest first
 
     return NextResponse.json(
       { success: true, data: entries },

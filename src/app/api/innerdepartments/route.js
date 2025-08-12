@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { connectDB } from "../../lib/mongodb";
-import  Commities  from "../../models/commities";
+import  InnerDepartments  from "../../models/innerdepartments";
+import { Types } from "mongoose";
 export async function POST(req) {
   try {
     await connectDB();
@@ -14,8 +15,8 @@ export async function POST(req) {
         { status: 400 }
       );
     }
-    const created = await Commities.create({
-      CommitiesData: body,
+    const created = await InnerDepartments.create({
+      InnerDepartmentsData: body,
     });
     return NextResponse.json(
       { success: true, message: "Data stored", entry: created },
@@ -32,7 +33,12 @@ export async function POST(req) {
 export async function GET(req) {
   try {
     await connectDB();
-    const entries = await Commities.find().sort({ createdAt: -1 }); // latest first
+     const { searchParams } = new URL(req.url);
+    const departmentId = searchParams.get("departmentId");
+    console.log("departmentId", departmentId)
+    const entries = await InnerDepartments.find({
+  "InnerDepartmentsData.data.depatmentId": departmentId
+}).sort({ createdAt: -1 });
 
     return NextResponse.json(
       { success: true, data: entries },

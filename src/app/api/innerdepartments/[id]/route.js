@@ -1,15 +1,15 @@
 import { NextResponse } from "next/server";
 import { connectDB } from "../../../lib/mongodb";
-import Commities from "../../../models/commities";
+import InnerDepartments from "../../../models/innerdepartments";
 export async function PUT(req, { params }) {
   try {
     await connectDB();
     const { id } = params;
     const body = await req.json();
      console.log("body", body.data);
-    const updated = await Commities.findByIdAndUpdate(
+    const updated = await InnerDepartments.findByIdAndUpdate(
   id,
-  { 'CommitiesData.data': body.data }, // ✅ correct path
+  { 'InnerDepartmentsData.data': body.data }, // ✅ correct path
   { new: true, runValidators: true }
 );
 
@@ -27,16 +27,16 @@ export async function DELETE(req, { params }) {
   try {
     await connectDB();
     const { id } = params;
-    const updated = await Commities.findByIdAndDelete(
+    const updated = await InnerDepartments.findByIdAndDelete(
   id,
 );
 
     if (!updated) {
-      return NextResponse.json({ success: false, message: 'Commities not found' }, { status: 404 });
+      return NextResponse.json({ success: false, message: 'InnerDepartments not found' }, { status: 404 });
     }
 
-    return NextResponse.json({ success: true, message: 'Commities updated', data: updated }, { status: 200 });
+    return NextResponse.json({ success: true, message: 'InnerDepartments updated', data: updated }, { status: 200 });
   } catch (error) {
-    return NextResponse.json({ success: false, message: 'Error updating Commities', error: error.message }, { status: 500 });
+    return NextResponse.json({ success: false, message: 'Error updating InnerDepartments', error: error.message }, { status: 500 });
   }
 }
