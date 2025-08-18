@@ -56,7 +56,7 @@ export default function Left() {
                 className="flex items-center p-2 rounded hover:bg-primarycolor hover:text-white space-x-2"
               >
                 <i className={`${item.icon}  hover:text-white text-[16px]` }></i>
-                <span>{item.label}</span>
+                <span className="font14">{item.label}</span>
               </Link>
             ))}
           </ul>

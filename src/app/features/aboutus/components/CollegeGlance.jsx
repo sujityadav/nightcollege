@@ -19,7 +19,7 @@ const CollegeGlance = () => {
   return (
     <div className='bg-white card-shadow h-full p-[20px] xl:p-[25px] 3xl:p-[1.563vw]'>
       <Toast ref={toast} />
-      <div className='px-[20px] xl:px-[250px] 3xl:px-[13.021vw]'>
+        <div className=' px-[20px] lg:px-[100px] xl:px-[150px] 3xl:px-[13.021vw]'>
         <div className='space-y-3'>
           <div className='flex flex-col gap-1'>
             <label className='text-[#212325] text-[14px] font-[500]'>Title</label>

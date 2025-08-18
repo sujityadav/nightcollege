@@ -26,11 +26,11 @@ export const SubSidebar: React.FC<SubSidebarProps> = ({
   const pathname = usePathname();
 
   return (
-    <aside
-      className={`relative min-h-screen border-r border-[#C9D3DB] bg-white transition-all duration-300 ${
-        collapsed ? 'w-6' : ' xl:w-min-[230px] 3xl:w-min-[12.5vw]'
-      }`}
-    >
+<aside
+  className={`relative min-h-screen border-r border-[#C9D3DB] bg-white transition-all duration-300 
+    ${collapsed ? 'w-6' : 'w-[260px]'}
+  `}
+>
       <button
         onClick={() => setCollapsed(!collapsed)}
         className="absolute -right-3 top-5 h-6 w-6 flex items-center justify-center border-none bg-transparent text-bgcolor"
@@ -43,7 +43,7 @@ export const SubSidebar: React.FC<SubSidebarProps> = ({
       </button>
 
       {!collapsed && (
-        <div className="p-4">
+        <div className="p-4  ">
           <div className="border-b border-[#E5E7EB] pb-2 mb-3 font-semibold">{title}</div>
           <nav className="flex flex-col space-y-1">
             {navItems.map((item, index) => {
