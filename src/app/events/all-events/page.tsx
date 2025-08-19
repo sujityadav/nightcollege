@@ -1,4 +1,4 @@
-import Page from '../features/all-events/page'
+import Page from '../../features/events/page'
 export default function AllEvents() {
   return (
       <div className=''>
