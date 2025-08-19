@@ -126,7 +126,7 @@ export default function AddStaff() {
           <div className='px-[250px] space-y-3'>
 
             <div className='flex flex-col gap-1'>
-              <label>Staff Name</label>
+              <label>Name</label>
               <InputText {...register('name', { required: true })} placeholder="Enter staff name" />
               {errors.name && <span className="text-red-500 text-sm">This field is required</span>}
             </div>
@@ -150,7 +150,7 @@ export default function AddStaff() {
             </div>
 
             <div className='flex flex-col gap-1'>
-              <label>Staff Photo</label>
+              <label>Photo</label>
               <div className="flex border-2 border-dashed p-4 justify-center group relative cursor-pointer bg-[#fffef5]">
                 <input type="file" className="absolute inset-0 opacity-0 cursor-pointer" onChange={onFileChange} />
                 <div className="text-center">

@@ -10,6 +10,7 @@ import { StoreProvider } from "../StoreProvider";
 import ConditionalLayoutWrapper from "./components/common/ConditionalLayoutWrapper";
 // import IncludeWidgetScript from "./components/IncludeWidgetScript/index"
 // import WebsiteTop from "./components/layout/website/top";
+import Footer from './components/layout/website/footer/index'
 import "./globals.css";
 
 const myroboto = Roboto({
@@ -40,9 +41,10 @@ export default function RootLayout({
         {/* <WebsiteTop/> */}
           <StoreProvider>
           <ConditionalLayoutWrapper>{children}
-        
+      
 
           </ConditionalLayoutWrapper>
+              <><Footer /></>
         </StoreProvider>
       </body>
     </html>

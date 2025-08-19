@@ -60,7 +60,7 @@ export default function EventList() {
     return (
       <div className="flex  justify-center items-center gap-4 ">
 
-        <Link href={`/admin/all-staf/add-stafs?id=${product._id}`} className="leading-none" >
+        <Link href={`/admin/all-staff/add-staff?id=${product._id}`} className="leading-none" >
           <i className="pi pi-pen-to-square text-[18px] xl:text-[0.938vw]"></i>
         </Link>
         <Link href={""} onClick={() => handleDelete(product?._id)} className="leading-none" >            <i className="pi pi-trash text-[18px] xl:text-[0.938vw]"></i>
@@ -99,11 +99,11 @@ export default function EventList() {
       <div className='p-[20px] xl:p-[25px] 3xl:p-[1.563vw] w-full'>
         <div className='flex justify-between mb-5'>
           <div>
-            <h2 className='text-[#19212A] text-[14px] xl:text-[22px] 3xl:text-[1.146vw] font-[700] m-0'>Departments</h2>
+            <h2 className='text-[#19212A] text-[14px] xl:text-[22px] 3xl:text-[1.146vw] font-[700] m-0'>All Staff</h2>
           </div>
           <div>
-            <Link href='/admin/all-staf/add-stafs' className='text-white border bg-primarycolor border-[#af251c] px-[14px] xl:px-[16px] 3xl:px-[0.833vw] py-[8px] xl:py-[10px] 3xl:py-[0.521vw] leading-[100%] rounded-none p-button-raised flex gap-2 items-center'>
-              <i className='pi pi-plus text-[14px]'></i> Add Departments
+            <Link href='/admin/all-staff/add-staff' className='text-white border bg-primarycolor border-[#af251c] px-[14px] xl:px-[16px] 3xl:px-[0.833vw] py-[8px] xl:py-[10px] 3xl:py-[0.521vw] leading-[100%] rounded-none p-button-raised flex gap-2 items-center'>
+              <i className='pi pi-plus text-[14px]'></i> Add Staff
             </Link>
           </div>
 
@@ -114,7 +114,7 @@ export default function EventList() {
             <div className="md:flex items-center gap-2 justify-between">
               <div className='flex items-center gap-4'>
                 <div className="text-[#101828] text-[16px] xl:text-[0.833vw] font-medium">
-                  All Departments
+                 All Staff
                 </div>
                 <div className="bg-[#F6F7F9] px-[12px] xl:px-[0.625vw] py-[4px] xl:py-[0.208vw] text-[#6C768B] text-[12px] xl:text-[0.625vw] rounded-[16px] xl:rounded-[0.833vw] font-medium">
                   Display 1 to 10 of 50
