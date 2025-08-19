@@ -12,6 +12,7 @@ import ConditionalLayoutWrapper from "./components/common/ConditionalLayoutWrapp
 // import WebsiteTop from "./components/layout/website/top";
 import Footer from './components/layout/website/footer/index'
 import "./globals.css";
+import BackToTopButton from "./components/back-to-top";
 
 const myroboto = Roboto({
   weight: ['100', '300', '400', '500', '700','900'],
@@ -45,6 +46,7 @@ export default function RootLayout({
 
           </ConditionalLayoutWrapper>
               <><Footer /></>
+              <BackToTopButton/>
         </StoreProvider>
       </body>
     </html>
