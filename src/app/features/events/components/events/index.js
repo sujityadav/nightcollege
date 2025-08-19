@@ -81,7 +81,12 @@ export default function Events() {
         {/* Header Section */}
         <div className="flex flex-col md:flex-row justify-between items-center md:items-center gap-4 pb20">
           <div className='title  '>
-          <div className={roboto_slab.className}> <h1 className="font-[700] font26 text-[#1B212F] leading-[140%]"> Latest Events </h1> </div> </div> <div> <Dropdown value={selectedYear} onChange={(e) => setSelectedYear(e.value)} options={Year} optionLabel="name" placeholder="Select a year" className="w-14rem" /> </div> </div>
+            <div className={roboto_slab.className}> <h1 className="font-[700] font26 text-[#1B212F] leading-[140%]"> Latest Events </h1>
+            </div>
+          </div>
+          <div> <Dropdown value={selectedYear} onChange={(e) => setSelectedYear(e.value)} options={Year} optionLabel="name" placeholder="Select a year" className="w-14rem" /> </div>
+
+        </div>
 
         {/* Events Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2  lg:grid-cols-3 3xl:grid-cols-4 gap-6">
@@ -125,11 +130,11 @@ export default function Events() {
         </div>
 
         {/* View More Button */}
-         <div className='my30 text-center flex justify-center'>
-           <Link href="" className="my-button shadow-2xl px20 py10 bg-primarycolor rounded-sm cursor-pointer relative overflow-hidden">
-              <span className="text-center text-white font15 font-[500] my-auto">Load More</span>
-            </Link>
-          </div>
+        <div className='my30 text-center flex justify-center'>
+          <Link href="" className="my-button shadow-2xl px20 py10 bg-primarycolor rounded-sm cursor-pointer relative overflow-hidden">
+            <span className="text-center text-white font15 font-[500] my-auto">Load More</span>
+          </Link>
+        </div>
       </div>
     </div>
   );
