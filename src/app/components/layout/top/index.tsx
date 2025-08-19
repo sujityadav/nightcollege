@@ -58,7 +58,7 @@ export default function Top({ ...pageProps }) {
      </div>
      <div>
 
-      <Link href='' className="cancelbtn  px-[14px] xl:px-[18px] 3xl:px-[0.938vw] py-[8px] xl:py-[10px] 3xl:py-[0.521vw] leading-[100%]">File Manager</Link>
+      <Link href='/admin/file-manager' className="cancelbtn  px-[14px] xl:px-[18px] 3xl:px-[0.938vw] py-[8px] xl:py-[10px] 3xl:py-[0.521vw] leading-[100%]">File Manager</Link>
      </div>
       {/* Profile section */}
       <div
