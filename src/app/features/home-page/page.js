@@ -11,7 +11,7 @@ import QuickLinks from './components/quick-links/index'
 import DepartmentEvents from './components/deparment-events/index'
 import Placement from './components/placement/index'
 import CampusTour from './components/campus-tour/index'
-import Footer from './components/footer/index'
+
 
 
 const Homepage = () => {
@@ -35,7 +35,7 @@ const Homepage = () => {
       </>
       <><CampusTour /></>
       <><Placement /></>
-      <><Footer /></>
+    
     </>
   </>;
 };

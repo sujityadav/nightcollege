@@ -1,7 +1,7 @@
 'use client';
 import Image from "next/image";
 import Link from "next/link";
-import GoogleTranslate from "../../../../components/GoogleTranslate/index";
+// import GoogleTranslate from "../../../../components/GoogleTranslate/index";
 
 export default function CollegeBanner() {
 
@@ -13,7 +13,7 @@ export default function CollegeBanner() {
           <Link href="tel:02302437666" className="leading-none text-white font14 flex items-center"><i className="pi pi-phone font14 mr-2"></i> 0230 2437666</Link>
           <Link href="mailto:nightich@gmail.com" className="leading-none text-white font14  flex items-center"><i className="pi  pi-envelope font14 mr-2"></i>nightich@gmail.com</Link>
         </div>
-        <div className="flex gap-2 justify-end  items-center"><p className="text-white font12">Translation </p><><GoogleTranslate /> </><i className="pi pi-chevron-down text-white font12 mr-2"></i></div>
+        {/* <div className="flex gap-2 justify-end  items-center"><p className="text-white font12">Translation </p><><GoogleTranslate /> </><i className="pi pi-chevron-down text-white font12 mr-2"></i></div> */}
       </div>
     </div>
       <div className="bg-white px300 m-auto py-2">
