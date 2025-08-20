@@ -99,11 +99,11 @@ export default function EventList() {
       <div className='p-[20px] xl:p-[25px] 3xl:p-[1.563vw] w-full'>
         <div className='flex justify-between mb-5'>
           <div>
-            <h2 className='text-[#19212A] text-[14px] xl:text-[22px] 3xl:text-[1.146vw] font-[700] m-0'>Departments</h2>
+            <h2 className='text-[#19212A] text-[14px] xl:text-[22px] 3xl:text-[1.146vw] font-[700] m-0'>Faculty</h2>
           </div>
           <div>
             <Link href='/admin/all-departments/add-departments' className='text-white border bg-primarycolor border-[#af251c] px-[14px] xl:px-[16px] 3xl:px-[0.833vw] py-[8px] xl:py-[10px] 3xl:py-[0.521vw] leading-[100%] rounded-none p-button-raised flex gap-2 items-center'>
-              <i className='pi pi-plus text-[14px]'></i> Add Departments
+              <i className='pi pi-plus text-[14px]'></i> Add Faculty
             </Link>
           </div>
 
