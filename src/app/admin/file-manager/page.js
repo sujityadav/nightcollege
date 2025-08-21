@@ -6,6 +6,7 @@ import { IconField } from "primereact/iconfield";
 import { InputIcon } from "primereact/inputicon";
 import { Dropdown } from 'primereact/dropdown';
 import Image from 'next/image';
+import { Sidebar } from 'primereact/sidebar';
 
 export default function FileManager() {
   const [selectedYear, setSelectedYear] = useState(null);
@@ -28,7 +29,7 @@ export default function FileManager() {
     { name: 'Examinations', created: 'Jun 14, 2021' },
     { name: 'Alumni', created: 'Jul 22, 2021' },
   ];
-
+   const [visibleRight, setVisibleRight] = useState(false);
   return (
     <div className="grid grid-cols-1">
       <div className='p-[20px] xl:p-[25px] 3xl:p-[1.563vw] w-full'>
@@ -37,9 +38,9 @@ export default function FileManager() {
             <h2 className='text-[#19212A] text-[14px] xl:text-[22px] 3xl:text-[1.146vw] font-[700] m-0'>All Documents</h2>
           </div>
           <div>
-            <Link href='/admin/all-committees/add-committee' className='text-white border bg-primarycolor border-[#af251c] px-[14px] xl:px-[16px] 3xl:px-[0.833vw] py-[8px] xl:py-[10px] 3xl:py-[0.521vw] leading-[100%] rounded-none p-button-raised flex gap-2 items-center'>
+            <div  onClick={() => setVisibleRight(true)}  className='cursor-pointer text-white border bg-primarycolor border-[#af251c] px-[14px] xl:px-[16px] 3xl:px-[0.833vw] py-[8px] xl:py-[10px] 3xl:py-[0.521vw] leading-[100%] rounded-none p-button-raised flex gap-2 items-center'>
               <i className='pi pi-plus text-[14px]'></i> Add Folder
-            </Link>
+            </div>
           </div>
         </div>
         <div className='bg-white border card-shadow '>
@@ -56,7 +57,7 @@ export default function FileManager() {
 
               <div className="flex gap-3 items-center">
                 <div>
-                  <Dropdown value={selectedYear} onChange={(e) => setSelectedYear(e.value)} options={Year} optionLabel="name" placeholder="Select a year" className="w-14rem" />
+                  {/* <Dropdown value={selectedYear} onChange={(e) => setSelectedYear(e.value)} options={Year} optionLabel="name" placeholder="Select a year" className="w-14rem" /> */}
                 </div>
                 <div className="col custSearch">
                   <IconField iconPosition="left">
@@ -69,7 +70,7 @@ export default function FileManager() {
           </div>
 
           <div className='overflow-auto p20'>
-            <div className="grid grid-cols-1 md:grid-cols-4 lg:grid-cols-6 3xl:grid-cols-6 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-4 lg:grid-cols-5 3xl:grid-cols-6 gap-6">
               {folders.map((folder, index) => (
                 <div key={index} className='border p-3 rounded-md bg-gray-50 shadow-md'>
                   <Link href=''>
@@ -99,6 +100,11 @@ export default function FileManager() {
 
         </div>
       </div>
+      <Sidebar visible={visibleRight} position="right" onHide={() => setVisibleRight(false)} className='w-[500px]'>
+
+           <h2>Add Folder </h2>     
+                
+</Sidebar>
     </div>
   );
 }

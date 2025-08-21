@@ -103,7 +103,7 @@ export default function EventList() {
           </div>
           <div>
             <Link href='/admin/administration/add-administration' className='text-white border bg-primarycolor border-[#af251c] px-[14px] xl:px-[16px] 3xl:px-[0.833vw] py-[8px] xl:py-[10px] 3xl:py-[0.521vw] leading-[100%] rounded-none p-button-raised flex gap-2 items-center'>
-              <i className='pi pi-plus text-[14px]'></i> Add Administration
+              <i className='pi pi-plus text-[14px]'></i> Add
             </Link>
           </div>
 
