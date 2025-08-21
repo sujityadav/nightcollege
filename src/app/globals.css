@@ -135,6 +135,8 @@ a
  
 } */
 /* website css */
+
+
 /* .header-top:before 
 {
       content: "";
@@ -431,6 +433,83 @@ a
     opacity: 0.3;
     -ms-filter: "progid:DXImageTransform.Microsoft.Alpha(Opacity=50)";
     z-index: 1;
+}
+
+/* GalleriaAdvancedDemo.css */
+
+/* Styles for indicator text */
+.galleria-demo .custom-indicator-galleria .indicator-text {
+    color: #e9ecef;
+    cursor: pointer;
+}
+
+.galleria-demo .custom-indicator-galleria .p-highlight .indicator-text {
+    color: var(--bgcolor-primary);
+}
+
+/* Fullscreen custom galleria layout */
+.galleria-demo .custom-galleria.fullscreen {
+    display: flex;
+    flex-direction: column;
+}
+
+.galleria-demo .custom-galleria.fullscreen .p-galleria-content {
+    flex-grow: 1;
+    justify-content: center;
+}
+
+/* Galleria content container */
+.galleria-demo .custom-galleria .p-galleria-content {
+    position: relative;
+}
+
+/* Thumbnails position */
+.galleria-demo .custom-galleria .p-galleria-thumbnail-wrapper {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+}
+
+.galleria-demo .custom-galleria .p-galleria-thumbnail-items-container {
+    width: 100%;
+}
+
+/* Custom galleria footer */
+.galleria-demo .custom-galleria .custom-galleria-footer {
+    display: flex;
+    align-items: center;
+    background-color: rgb(217 127 122);
+    color: #ffffff;
+}
+
+.galleria-demo .custom-galleria .custom-galleria-footer > button {
+    background-color: transparent;
+    color: #ffffff;
+    border: 0 none;
+    border-radius: 0;
+    margin: .2rem 0;
+}
+
+.galleria-demo .custom-galleria .custom-galleria-footer > button.fullscreen-button {
+    margin-left: auto;
+}
+
+.galleria-demo .custom-galleria .custom-galleria-footer > button:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+/* Title container text */
+.galleria-demo .custom-galleria .title-container > span {
+    font-size: .9rem;
+    padding-left: .829rem;
+}
+
+.galleria-demo .custom-galleria .title-container > span.title {
+    font-weight: bold;
+}
+.custom-galleria.fullscreen {
+  max-width: 100% !important;
 }
 /* website css end */
 
