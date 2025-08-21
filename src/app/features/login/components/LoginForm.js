@@ -72,13 +72,7 @@ export default function LoginForm() {
         
         {loading ? (
           <>
-            <ProgressSpinner
-              style={{ width: '20px', height: '20px' }}
-              strokeWidth="4"
-              fill="var(--surface-ground)"
-              animationDuration=".5s"
-            />
-            <span>please wait...</span>
+              <span>Please wait...</span>
           </>
         ) : (
           'Login'
