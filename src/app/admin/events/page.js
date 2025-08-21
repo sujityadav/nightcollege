@@ -14,12 +14,16 @@ import axios from 'axios';
 import { format } from 'date-fns';
 import { useRouter } from 'next/navigation';
 import { Toast } from 'primereact/toast';
-import { ConfirmPopup, confirmPopup } from 'primereact/confirmpopup'; // ✅ import
+import { ConfirmDialog } from 'primereact/confirmdialog';   // <-- changed import
 
 export default function EventList() {
   const router = useRouter();
   const [eventsData, setEventsData] = useState([]);
   const toast = useRef(null);
+
+  // Dialog state
+  const [deleteDialogVisible, setDeleteDialogVisible] = useState(false);
+  const [deleteId, setDeleteId] = useState(null);
 
   useEffect(() => {
     const fetchEventList = async () => {
@@ -54,23 +58,10 @@ export default function EventList() {
     }
   };
 
-  // ✅ Confirmation before delete
-  const confirmDelete = (event, id) => {
-    confirmPopup({
-      target: event.currentTarget,
-      message: 'Are you sure you want to delete this event?',
-      icon: 'pi pi-exclamation-triangle',
-      acceptClassName: 'p-button-danger',
-      accept: () => handleDelete(id),
-      reject: () => {
-        toast.current.show({
-          severity: 'info',
-          summary: 'Cancelled',
-          detail: 'Event not deleted',
-          life: 2000,
-        });
-      }
-    });
+  // Open ConfirmDialog
+  const confirmDelete = (id) => {
+    setDeleteId(id);
+    setDeleteDialogVisible(true);
   };
 
   const actionTemplate = (product) => {
@@ -80,9 +71,8 @@ export default function EventList() {
           <i className="pi pi-pen-to-square text-[18px] xl:text-[0.938vw]"></i>
         </Link>
 
-        {/* Delete with confirm */}
         <button
-          onClick={(e) => confirmDelete(e, product?._id)}
+          onClick={() => confirmDelete(product?._id)}
           className="leading-none text-red-600"
         >
           <i className="pi pi-trash text-[18px] xl:text-[0.938vw]"></i>
@@ -119,8 +109,29 @@ export default function EventList() {
   return (
     <div className="grid grid-cols-1">
       <Toast ref={toast} />
-      {/* ✅ ConfirmPopup container */}
-      <ConfirmPopup />
+
+      {/* ConfirmDialog */}
+      <ConfirmDialog 
+        visible={deleteDialogVisible} 
+        onHide={() => setDeleteDialogVisible(false)} 
+        message="Are you sure you want to delete this event?" 
+        header="Confirm Deletion" 
+        icon="pi pi-exclamation-triangle"
+        acceptClassName="p-button-danger"
+        accept={() => {
+          handleDelete(deleteId);
+          setDeleteDialogVisible(false);
+        }}
+        reject={() => {
+          toast.current.show({
+            severity: 'info',
+            summary: 'Cancelled',
+            detail: 'Event not deleted',
+            life: 2000,
+          });
+          setDeleteDialogVisible(false);
+        }}
+      />
 
       <div className='p-[20px] xl:p-[25px] 3xl:p-[1.563vw] w-full'>
         <div className='flex justify-between mb-5'>
