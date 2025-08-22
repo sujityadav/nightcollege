@@ -3,7 +3,6 @@ import React, { useEffect, useRef, useState } from 'react';
 import 'primereact/resources/themes/lara-light-blue/theme.css';
 import 'primereact/resources/primereact.min.css';
 import { InputText } from 'primereact/inputtext';
-import { Button } from 'primereact/button';
 import Link from 'next/link';
 import { IconField } from "primereact/iconfield";
 import { InputIcon } from "primereact/inputicon";
@@ -14,6 +13,7 @@ import { format } from 'date-fns';
 import { useRouter } from 'next/navigation';
 import { Toast } from 'primereact/toast';
 import Image from 'next/image';
+import { confirmDialog, ConfirmDialog } from 'primereact/confirmdialog';
 
 export default function AlumniList() {
   const router = useRouter();
@@ -41,7 +41,7 @@ export default function AlumniList() {
         setAlumniData(alumniData.filter(item => item._id !== id));
         toast.current.show({
           severity: 'success',
-          summary: 'Success',
+          summary: 'Deleted',
           detail: 'Alumni deleted successfully',
           life: 3000,
         });
@@ -57,13 +57,37 @@ export default function AlumniList() {
     }
   };
 
+  const confirmDelete = (id) => {
+    confirmDialog({
+      message: 'Are you sure you want to delete this alumni record?',
+      header: 'Delete Confirmation',
+      icon: 'pi pi-exclamation-triangle',
+      acceptLabel: 'Yes, Delete',
+      rejectLabel: 'Cancel',
+      acceptClassName: 'p-button-danger',
+      accept: () => handleDelete(id),
+      reject: () => {
+        toast.current.show({
+          severity: 'info',
+          summary: 'Cancelled',
+          detail: 'Delete cancelled',
+          life: 2000,
+        });
+      },
+    });
+  };
+
   const actionTemplate = (rowData) => {
     return (
       <div className="flex justify-center items-center gap-4">
         <Link href={`/admin/alumni/add-alumni?id=${rowData?._id}`} className="leading-none">
           <i className="pi pi-pen-to-square text-[18px]"></i>
         </Link>
-        <button onClick={() => handleDelete(rowData?._id)} className="leading-none">
+        <button
+          type="button"
+          onClick={() => confirmDelete(rowData?._id)}
+          className="leading-none bg-transparent border-0 cursor-pointer text-red-500"
+        >
           <i className="pi pi-trash text-[18px]"></i>
         </button>
       </div>
@@ -89,6 +113,8 @@ export default function AlumniList() {
   return (
     <div className="grid grid-cols-1">
       <Toast ref={toast} />
+      <ConfirmDialog /> {/* 🔥 Needed for confirmation popup */}
+
       <div className='p-[20px] xl:p-[25px] w-full'>
         <div className='flex justify-between mb-5'>
           <div>

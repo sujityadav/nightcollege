@@ -8,25 +8,35 @@ import { IconField } from "primereact/iconfield";
 import { InputIcon } from "primereact/inputicon";
 import { Column } from "primereact/column";
 import { DataTable } from "primereact/datatable";
-import { Tag } from 'primereact/tag';
 import axios from 'axios';
 import { format } from 'date-fns';
 import { Toast } from 'primereact/toast';
-import { ConfirmPopup, confirmPopup } from 'primereact/confirmpopup';
+import { ConfirmDialog } from 'primereact/confirmdialog';
 
 export default function NewsList() {
   const [newsData, setNewsData] = useState([]);
+  const [deleteId, setDeleteId] = useState(null); // store selected id for delete
+  const [visible, setVisible] = useState(false); // confirm dialog visibility
   const toast = useRef(null);
 
   useEffect(() => {
     const fetchNewsList = async () => {
-      const response = await axios.get("/api/news");
-      if (response?.data?.success) {
-        setNewsData(response?.data?.data)
+      try {
+        const response = await axios.get("/api/news");
+        if (response?.data?.success) {
+          setNewsData(response?.data?.data);
+        }
+      } catch (error) {
+        toast.current.show({
+          severity: 'error',
+          summary: 'Error',
+          detail: 'Failed to fetch news',
+          life: 3000,
+        });
       }
-    }
-    fetchNewsList()
-  }, [])
+    };
+    fetchNewsList();
+  }, []);
 
   const handleDelete = async (id) => {
     try {
@@ -35,7 +45,7 @@ export default function NewsList() {
         setNewsData(newsData.filter(item => item._id !== id));
         toast.current.show({
           severity: 'success',
-          summary: 'Success',
+          summary: 'Deleted',
           detail: 'News deleted successfully',
           life: 3000,
         });
@@ -51,23 +61,10 @@ export default function NewsList() {
     }
   };
 
-  // Confirmation before delete
-  const confirmDelete = (event, id) => {
-    confirmPopup({
-      target: event.currentTarget,
-      message: 'Are you sure you want to delete this news?',
-      icon: 'pi pi-exclamation-triangle',
-      acceptClassName: 'p-button-danger',
-      accept: () => handleDelete(id),
-      reject: () => {
-        toast.current.show({
-          severity: 'info',
-          summary: 'Cancelled',
-          detail: 'Delete action cancelled',
-          life: 3000,
-        });
-      }
-    });
+  // Trigger delete confirmation dialog
+  const confirmDelete = (id) => {
+    setDeleteId(id);
+    setVisible(true);
   };
 
   const actionTemplate = (rowData) => {
@@ -77,8 +74,9 @@ export default function NewsList() {
           <i className="pi pi-pen-to-square text-[18px] xl:text-[0.938vw]"></i>
         </Link>
         <button
-          onClick={(e) => confirmDelete(e, rowData?._id)}
+          onClick={() => confirmDelete(rowData?._id)}
           className="leading-none bg-transparent border-0 cursor-pointer"
+          type="button"
         >
           <i className="pi pi-trash text-[18px] xl:text-[0.938vw] text-red-500"></i>
         </button>
@@ -86,28 +84,54 @@ export default function NewsList() {
     );
   };
 
-  const formatDate = (value) => value ? format(new Date(value), 'dd MMM yyyy') : '-';
+  const formatDate = (value) =>
+    value ? format(new Date(value), 'dd MMM yyyy') : '-';
 
   return (
     <div className="grid grid-cols-1">
       <Toast ref={toast} />
-      <ConfirmPopup />
+      {/* ConfirmDialog modal */}
+      <ConfirmDialog
+        visible={visible}
+        onHide={() => setVisible(false)}
+        message="Are you sure you want to delete this news?"
+        header="Delete Confirmation"
+        icon="pi pi-exclamation-triangle"
+        acceptLabel="Yes, Delete"
+        rejectLabel="Cancel"
+        acceptClassName="p-button-danger"
+        accept={() => {
+          handleDelete(deleteId);
+          setVisible(false);
+        }}
+        reject={() => {
+          toast.current.show({
+            severity: 'info',
+            summary: 'Cancelled',
+            detail: 'Delete action cancelled',
+            life: 2000,
+          });
+          setVisible(false);
+        }}
+      />
 
-      <div className='p-[20px] xl:p-[25px] 3xl:p-[1.563vw] w-full'>
-        <div className='flex justify-between mb-5'>
-          <h2 className='text-[#19212A] text-[14px] xl:text-[22px] 3xl:text-[1.146vw] font-[700] m-0'>News</h2>
+      <div className="p-[20px] xl:p-[25px] 3xl:p-[1.563vw] w-full">
+        <div className="flex justify-between mb-5">
+          <h2 className="text-[#19212A] text-[14px] xl:text-[22px] 3xl:text-[1.146vw] font-[700] m-0">
+            News
+          </h2>
           <Link
-            href='/admin/news/add-news'
-            className='text-white border bg-primarycolor border-[#af251c] px-[14px] xl:px-[16px] 3xl:px-[0.833vw] py-[8px] xl:py-[10px] 3xl:py-[0.521vw] leading-[100%] rounded-none p-button-raised flex gap-2 items-center'
+            href="/admin/news/add-news"
+            className="text-white border bg-primarycolor border-[#af251c] px-[14px] xl:px-[16px] 3xl:px-[0.833vw] py-[8px] xl:py-[10px] 3xl:py-[0.521vw] leading-[100%] rounded-none p-button-raised flex gap-2 items-center"
           >
-            <i className='pi pi-plus text-[14px]'></i> Add News
+            <i className="pi pi-plus text-[14px]"></i> Add News
           </Link>
         </div>
 
-        <div className='bg-white border card-shadow'>
-          <div className='px-[20px] xl:px-[1.042vw] py-[14px] xl:py-[0.729vw] border-b border-[#EAEDF3]'>
+        <div className="bg-white border card-shadow">
+          <div className="px-[20px] xl:px-[1.042vw] py-[14px] xl:py-[0.729vw] border-b border-[#EAEDF3]">
             <div className="md:flex items-center gap-2 justify-between">
-              <div className='flex items-center gap-4'>
+              <div className="flex items-center gap-4">
                 <div className="text-[#101828] text-[16px] xl:text-[0.833vw] font-medium">
                   All News
                 </div>
@@ -124,14 +148,14 @@ export default function NewsList() {
             </div>
           </div>
 
-          <div className='overflow-auto'>
+          <div className="overflow-auto">
             <DataTable
               value={newsData}
               className="custTable tableCust"
               scrollable
               showGridlines
               responsiveLayout="scroll"
-              style={{ width: "100%" }}
+              style={{ width: '100%' }}
               paginator
               paginatorTemplate="CurrentPageReport RowsPerPageDropdown PrevPageLink PageLinks NextPageLink"
               currentPageReportTemplate="Rows {first} - {last} of {totalRecords}"
@@ -142,11 +166,9 @@ export default function NewsList() {
               <Column field="Newsdata.data.smallDescription" header="Description" />
               <Column field="Newsdata.data.category" header="Category" />
               <Column field="Newsdata.data.location" header="Location" />
-
               <Column header="From" body={(rowData) => formatDate(rowData?.Newsdata?.data?.fromDate)} />
               <Column header="To" body={(rowData) => formatDate(rowData?.Newsdata?.data?.toDate)} />
               <Column header="Created At" body={(rowData) => formatDate(rowData?.createdAt)} />
-
               <Column
                 field="action"
                 header="Action"
@@ -156,10 +178,10 @@ export default function NewsList() {
                 align="center"
                 body={actionTemplate}
                 style={{
-                  minWidth: "4rem",
-                  background: "#fbf7dc",
+                  minWidth: '4rem',
+                  background: '#fbf7dc',
                   zIndex: 1,
-                  boxShadow: "-4px 0 6px -1px rgba(0, 0, 0, 0.1)"
+                  boxShadow: '-4px 0 6px -1px rgba(0, 0, 0, 0.1)',
                 }}
               />
             </DataTable>

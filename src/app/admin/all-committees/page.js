@@ -8,7 +8,6 @@ import { IconField } from "primereact/iconfield";
 import { InputIcon } from "primereact/inputicon";
 import { Column } from "primereact/column";
 import { DataTable } from "primereact/datatable";
-import { Tag } from 'primereact/tag';
 import axios from 'axios';
 import { format } from 'date-fns';
 import { Toast } from 'primereact/toast';
@@ -20,13 +19,22 @@ export default function EventList() {
 
   useEffect(() => {
     const fetchEventList = async () => {
-      const response = await axios.get("/api/commities");
-      if (response?.data?.success) {
-        setEventsData(response?.data?.data)
+      try {
+        const response = await axios.get("/api/commities");
+        if (response?.data?.success) {
+          setEventsData(response?.data?.data);
+        }
+      } catch (error) {
+        toast.current.show({
+          severity: 'error',
+          summary: 'Error',
+          detail: 'Failed to fetch committees',
+          life: 3000,
+        });
       }
-    }
-    fetchEventList()
-  }, [])
+    };
+    fetchEventList();
+  }, []);
 
   const handleDelete = async (id) => {
     try {
@@ -35,7 +43,7 @@ export default function EventList() {
         setEventsData(eventsData.filter(item => item._id !== id));
         toast.current.show({
           severity: 'success',
-          summary: 'Success',
+          summary: 'Deleted',
           detail: 'Committee deleted successfully',
           life: 3000,
         });
@@ -54,28 +62,37 @@ export default function EventList() {
   const confirmDelete = (id) => {
     confirmDialog({
       message: 'Are you sure you want to delete this committee?',
-      header: 'Confirmation',
+      header: 'Delete Confirmation',
       icon: 'pi pi-exclamation-triangle',
-      acceptLabel: 'Yes',
-      rejectLabel: 'No',
+      acceptLabel: 'Yes, Delete',
+      rejectLabel: 'Cancel',
       acceptClassName: 'p-button-danger',
       accept: () => handleDelete(id),
+      reject: () => {
+        toast.current.show({
+          severity: 'info',
+          summary: 'Cancelled',
+          detail: 'Delete cancelled',
+          life: 2000,
+        });
+      },
     });
   };
 
-  const actionTemplate = (product) => {
+  const actionTemplate = (rowData) => {
     return (
       <div className="flex justify-center items-center gap-4">
         <Link
-          href={`/admin/all-committees/add-committee?id=${product?._id}`}
+          href={`/admin/all-committees/add-committee?id=${rowData?._id}`}
           className="leading-none"
         >
           <i className="pi pi-pen-to-square text-[18px] xl:text-[0.938vw]"></i>
         </Link>
 
         <button
-          onClick={() => confirmDelete(product?._id)}
-          className="leading-none text-red-500"
+          type="button"
+          onClick={() => confirmDelete(rowData?._id)}
+          className="leading-none bg-transparent border-0 cursor-pointer text-red-500"
         >
           <i className="pi pi-trash text-[18px] xl:text-[0.938vw]"></i>
         </button>
@@ -89,9 +106,9 @@ export default function EventList() {
   return (
     <div className="grid grid-cols-1">
       <Toast ref={toast} />
-      <ConfirmDialog /> {/* 🔥 Required for confirmation popup */}
+      <ConfirmDialog /> {/* 🔥 Required for confirmation dialog */}
 
-      <div className="p-[20px] xl:p-[25px] 3xl:p-[1.563vw] w-full">
+      <div className="p-[20px] xl:p-[25px] w-full">
         <div className="flex justify-between mb-5">
           <h2 className="text-[#19212A] text-[14px] xl:text-[22px] font-[700] m-0">
             Committees
@@ -115,7 +132,7 @@ export default function EventList() {
 
               <div className="col custSearch">
                 <IconField iconPosition="left">
-                  <InputIcon className="pi pi-search"></InputIcon>
+                  <InputIcon className="pi pi-search" />
                   <InputText placeholder="Search" />
                 </IconField>
               </div>
