@@ -6,11 +6,12 @@ import "primereact/resources/primereact.min.css";
 import "primeicons/primeicons.css";
 import Image from "next/image";
 import { ScrollPanel } from "primereact/scrollpanel";
+import { usePathname } from "next/navigation";
 
 
 export default function Left() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
-
+  const pathname = usePathname();
   // Menu array with PrimeReact icon class
   const menuItems = [
     { label: "Rebranding", href: "/admin/rebranding", icon: "pi pi-home" },
@@ -49,16 +50,21 @@ export default function Left() {
 
         {/* <ScrollPanel className="h-[800px]"> */}
           <ul className="p-4 ">
-            {menuItems.map((item, index) => (
-              <Link
-                key={index}
-                href={item.href}
-                className="flex items-center p-2 rounded hover:bg-primarycolor hover:text-white space-x-2"
-              >
-                <i className={`${item.icon}  hover:text-white text-[16px]` }></i>
-                <span className="font14">{item.label}</span>
-              </Link>
-            ))}
+           {menuItems.map((item, index) => {
+        const isActive = pathname === item.href;
+        return (
+          <Link
+            key={index}
+            href={item.href}
+            className={`flex items-center p-2 rounded space-x-2 transition-colors
+              ${isActive ? "bg-primarycolor active-slide" : "hover:bg-primarycolor hover:text-white"}
+            `}
+          >
+            <i className={`${item.icon} text-[16px]`}></i>
+            <span className={`${isActive && "text-[#fff]" }font14`}>{item.label}</span>
+          </Link>
+        );
+      })}
           </ul>
           {/* </ScrollPanel> */}
         </div>

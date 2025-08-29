@@ -32,10 +32,30 @@ export async function POST(req) {
 export async function GET(req) {
   try {
     await connectDB();
-    const entries = await Events.find().sort({ createdAt: -1 }); // latest first
+        const { searchParams } = new URL(req.url);
+    const search = searchParams.get("search") || "";
+    const page = parseInt(searchParams.get("page")) || 1;
+    const limit = parseInt(searchParams.get("limit")) || 10;
 
-    return NextResponse.json(
-      { success: true, data: entries },
+    let query = {};
+    if (search) {
+      query = {
+        $or: [
+          { "Eventdata.data.title": { $regex: search, $options: "i" } },
+          { "Eventdata.data.smallDescription": { $regex: search, $options: "i" } },
+          { "Eventdata.data.category": { $regex: search, $options: "i" } },
+          { "Eventdata.data.location": { $regex: search, $options: "i" } },
+        ],
+      };
+    }
+      const totalRecords = await Events.countDocuments(query);
+    const entries = await Events.find(query)
+      .sort({ createdAt: -1 })
+      .skip((page - 1) * limit)
+      .limit(limit);
+
+     return NextResponse.json(
+      { success: true, data: entries, totalRecords },
       { status: 200 }
     );
   } catch (error) {

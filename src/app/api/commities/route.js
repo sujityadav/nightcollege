@@ -32,12 +32,31 @@ export async function POST(req) {
 export async function GET(req) {
   try {
     await connectDB();
-    const entries = await Commities.find().sort({ createdAt: -1 }); // latest first
+    const { search, page = 1, limit = 10, sortField = "createdAt", sortOrder = -1 } =
+      Object.fromEntries(new URL(req.url).searchParams);
+
+    let query = {};
+    if (search) {
+      query = {
+        $or: [
+          { "CommitiesData.data.title": { $regex: search, $options: "i" } },
+          { "CommitiesData.data.smallDescription": { $regex: search, $options: "i" } },
+        ],
+      };
+    }
+
+    const skip = (parseInt(page) - 1) * parseInt(limit);
+   const totalRecords = await Commities.countDocuments(query);
+     const data = await Commities.find(query)
+      .sort({ [sortField]: parseInt(sortOrder) })
+      .skip(skip)
+      .limit(parseInt(limit));
 
     return NextResponse.json(
-      { success: true, data: entries },
+      { success: true, data, totalRecords },
       { status: 200 }
     );
+  
   } catch (error) {
     return NextResponse.json(
       { success: false, message: "Failed to fetch data", error: error.message },

@@ -747,3 +747,7 @@ color:#3C4146;
   transform: scale(1.4);
   background-color: var(--bgcolor-primary) !important;
 }
+
+.active-slide {
+  color: #fff !important; 
+}
