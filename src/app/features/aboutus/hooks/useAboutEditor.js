@@ -3,8 +3,12 @@ import { useSelector } from 'react-redux';
 import { extractTableData } from '../../../utils/extractTableData';
 import { saveAboutTable, getAboutTable } from '../actions/saveAboutTable';
 import { jsonToTableHtml } from "../../../utils/jsonToTableHtml";
+import  storeImage  from '../../../utils/imagStoreService';
+import imageGetService from '@/app/utils/imageGetService';
 export const useAboutEditor = (type) => {
   const [editorContent, setEditorContent] = useState('');
+  const [imageArray, setImageArray] = useState([]);
+
   const [isLoading, setIsLoading] = useState(false);
   const [existingId, setExistingId] = useState(null); // For edit mode
   const toast = useRef(null);
@@ -14,14 +18,28 @@ export const useAboutEditor = (type) => {
     setEditorContent(content);
   };
 
+
   const fetchInitialData = async () => {
     try {
       const result = await getAboutTable(user?.token,type);
-      console.log("result",result)
       if (result?.data) {
          const tableHtml = jsonToTableHtml(result.data.data[0].Aboutusdata);
+
+         const response = await imageGetService(result.data.data[0]?._id);
+         console.log("response",response)
+          const image = {
+            url: "http://localhost:3000/" + response?.imageData?.url,
+            name:response?.imageData?.name,
+            size: response?.imageData?.size,
+          }
+         setImageArray([])
+        console.log("image",image)
+        setImageArray((prev) => [...prev, image]);
+
          if(tableHtml){
+
         setEditorContent(tableHtml);
+
          }else{
         setEditorContent(result.data.data[0].Aboutusdata.content);
 
@@ -37,7 +55,7 @@ export const useAboutEditor = (type) => {
    
     setIsLoading(true);
     try {
-      await saveAboutTable(
+    const response =  await saveAboutTable(
         {
           data: tableData,
           content: editorContent,
@@ -46,6 +64,13 @@ export const useAboutEditor = (type) => {
         },
         user?.token
       );
+      console.log("response",response)
+      if(response?.data?.entry?._id){
+        imageArray.map(async(file)=>{
+         const uploadedFile = await storeImage(file.name, response?.data?.entry?._id);
+          console.log("uploadedFile",uploadedFile)
+        })
+      }
 
       toast.current.show({
         severity: 'success',
@@ -76,6 +101,8 @@ export const useAboutEditor = (type) => {
     handleSave,
     isLoading,
     toast,
-    setEditorContent
+    setEditorContent,
+    setImageArray,
+    imageArray
   };
 };

@@ -32,10 +32,35 @@ export async function POST(req) {
 export async function GET(req) {
   try {
     await connectDB();
-    const entries = await Alumni.find().sort({ createdAt: -1 }); // latest first
+
+    const { searchParams } = new URL(req.url);
+    const page = parseInt(searchParams.get("page")) || 1;
+    const limit = parseInt(searchParams.get("limit")) || 10;
+    const sortField = searchParams.get("sortField") || "createdAt";
+    const sortOrder = parseInt(searchParams.get("sortOrder")) || -1;
+    const search = searchParams.get("search") || "";
+
+    // search filter
+    let filter = {};
+    if (search) {
+      filter = {
+        $or: [
+          { "AlumniData.data.fullName": { $regex: search, $options: "i" } },
+          { "AlumniData.data.course": { $regex: search, $options: "i" } },
+          { "AlumniData.data.company": { $regex: search, $options: "i" } },
+        ]
+      };
+    }
+
+    const totalRecords = await Alumni.countDocuments(filter);
+
+    const entries = await Alumni.find(filter)
+      .sort({ [sortField]: sortOrder })
+      .skip((page - 1) * limit)
+      .limit(limit);
 
     return NextResponse.json(
-      { success: true, data: entries },
+      { success: true, data: entries, totalRecords },
       { status: 200 }
     );
   } catch (error) {

@@ -14,7 +14,9 @@ const AboutEditor = () => {
     handleSave,
     isLoading,
     toast,
-    setEditorContent
+    setEditorContent,
+    setImageArray,
+    imageArray
   } = useAboutEditor("about");
 
 
@@ -30,7 +32,10 @@ const AboutEditor = () => {
 
           <div className='flex flex-col gap-1'>
             <label className='text-[#212325] text-[14px] font-[500]'>Description</label>
-            <TextEditor value={editorContent} setEditorContent={setEditorContent} onChange={handleEditorChange} />
+            <TextEditor type="about"  value={editorContent}  onImageUploadSuccess={(image) => {
+    setImageArray((prev) => [...prev, image]);
+    
+  }} setEditorContent={setEditorContent} imageArray={imageArray} onChange={handleEditorChange} />
           </div>
         </div>
 
