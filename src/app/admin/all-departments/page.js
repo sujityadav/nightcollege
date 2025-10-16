@@ -8,7 +8,6 @@ import { IconField } from "primereact/iconfield";
 import { InputIcon } from "primereact/inputicon";
 import { Column } from "primereact/column";
 import { DataTable } from "primereact/datatable";
-import { Tag } from 'primereact/tag';
 import axios from 'axios';
 import { format } from 'date-fns';
 import { useRouter } from 'next/navigation';
@@ -18,27 +17,52 @@ import { confirmDialog, ConfirmDialog } from 'primereact/confirmdialog';
 export default function EventList() {
   const router = useRouter();
   const [eventsData, setEventsData] = useState([]);
+  const [totalRecords, setTotalRecords] = useState(0);
+  const [loading, setLoading] = useState(false);
+  const [lazyParams, setLazyParams] = useState({
+    first: 0,
+    rows: 10,
+    page: 1,
+    sortField: 'createdAt',
+    sortOrder: -1,
+  });
+  const [globalFilter, setGlobalFilter] = useState('');
   const toast = useRef(null);
+  // 🔥 Fetch data from API with query params
+  const fetchEventList = async () => {
+    try {
+      setLoading(true);
+      const response = await axios.get("/api/departments", {
+        params: {
+          page: lazyParams.page,
+          limit: lazyParams.rows,
+          sortField: lazyParams.sortField,
+          sortOrder: lazyParams.sortOrder,
+          search: globalFilter,
+        },
+      });
+
+      if (response?.data?.success) {
+        setEventsData(response.data.data);
+        setTotalRecords(response.data.totalRecords);
+      }
+    } catch (error) {
+      console.error("Failed to fetch departments:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    const fetchEventList = async () => {
-      try {
-        const response = await axios.get("/api/departments");
-        if (response?.data?.success) {
-          setEventsData(response?.data?.data);
-        }
-      } catch (error) {
-        console.error("Failed to fetch departments:", error);
-      }
-    };
     fetchEventList();
-  }, []);
+  }, [lazyParams, globalFilter]);
 
+  // 🔥 Delete department
   const handleDelete = async (id) => {
     try {
       const response = await axios.delete(`/api/departments/${id}`);
       if (response?.data?.success) {
-        setEventsData(eventsData.filter(item => item._id !== id));
+        fetchEventList(); // refresh after delete
         toast.current.show({
           severity: 'success',
           summary: 'Deleted',
@@ -102,7 +126,7 @@ export default function EventList() {
   return (
     <div className="grid grid-cols-1">
       <Toast ref={toast} />
-      <ConfirmDialog /> {/* 🔥 Needed for confirmation popup */}
+      <ConfirmDialog />
 
       <div className='p-[20px] xl:p-[25px] 3xl:p-[1.563vw] w-full'>
         <div className='flex justify-between mb-5'>
@@ -127,14 +151,18 @@ export default function EventList() {
                   All Departments
                 </div>
                 <div className="bg-[#F6F7F9] px-[12px] xl:px-[0.625vw] py-[4px] xl:py-[0.208vw] text-[#6C768B] text-[12px] xl:text-[0.625vw] rounded-[16px] xl:rounded-[0.833vw] font-medium">
-                  {eventsData.length} Records
+                  {totalRecords} Records
                 </div>
               </div>
 
               <div className="col custSearch">
                 <IconField iconPosition="left">
                   <InputIcon className="pi pi-search"></InputIcon>
-                  <InputText placeholder="Search" />
+                  <InputText
+                    placeholder="Search"
+                    value={globalFilter}
+                    onChange={(e) => setGlobalFilter(e.target.value)}
+                  />
                 </IconField>
               </div>
             </div>
@@ -143,15 +171,22 @@ export default function EventList() {
           <div className='overflow-auto'>
             <DataTable
               value={eventsData}
+              lazy
+              loading={loading}
+              totalRecords={totalRecords}
+              onPage={(e) => setLazyParams({ ...lazyParams, ...e, page: e.page + 1 })}
+              onSort={(e) => setLazyParams({ ...lazyParams, ...e })}
+              first={lazyParams.first}
+              rows={lazyParams.rows}
+              sortField={lazyParams.sortField}
+              sortOrder={lazyParams.sortOrder}
               className="custTable tableCust"
               scrollable
               showGridlines
               responsiveLayout="scroll"
-              style={{ width: "100%" }}
               paginator
               paginatorTemplate="CurrentPageReport RowsPerPageDropdown PrevPageLink PageLinks NextPageLink"
               currentPageReportTemplate="Rows {first} - {last} of {totalRecords}"
-              rows={10}
               rowsPerPageOptions={[5, 10, 25, 50]}
             >
               <Column
@@ -167,17 +202,8 @@ export default function EventList() {
                   </a>
                 )}
               />
-
-              <Column
-                field="DepartmentsData.data.smallDescription"
-                header="Description"
-              />
-
-              <Column
-                header="Created At"
-                body={(rowData) => formatDate(rowData?.createdAt)}
-              />
-
+              <Column field="DepartmentsData.data.smallDescription" header="Description" />
+              <Column header="Created At" body={(rowData) => formatDate(rowData?.createdAt)} />
               <Column
                 header="Action"
                 body={actionTemplate}

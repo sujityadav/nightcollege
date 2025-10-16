@@ -24,3 +24,5 @@ export const getAboutTable = async (token,type) => {
     },
   });
 };
+
+

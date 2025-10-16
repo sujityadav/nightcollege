@@ -32,15 +32,62 @@ export async function POST(req) {
 export async function GET(req) {
   try {
     await connectDB();
-    const entries = await Departments.find().sort({ createdAt: -1 }); // latest first
+
+    // Get query params from request URL
+    const { searchParams } = new URL(req.url);
+
+    const page = parseInt(searchParams.get("page")) || 1;
+    const limit = parseInt(searchParams.get("limit")) || 10;
+    const sortBy = searchParams.get("sortBy") || "createdAt";
+    const order = searchParams.get("order") === "asc" ? 1 : -1;
+    const search = searchParams.get("search") || "";
+
+    // Build filter for search (example: searching by "name")
+    let filter = {};
+    if (search) {
+      filter = {
+        name: { $regex: search, $options: "i" }, // case-insensitive search
+      };
+    }
+
+    // Count total documents
+    const total = await Departments.countDocuments(filter);
+
+    // Fetch paginated + sorted + searched data
+    const entries = await Departments.find(filter)
+      .sort({ [sortBy]: order })
+      .skip((page - 1) * limit)
+      .limit(limit);
 
     return NextResponse.json(
-      { success: true, data: entries },
+      {
+        status: "SUCCESS",
+        result: {
+          data: entries,
+          pagination: {
+            total,
+            page,
+            limit,
+            totalPages: Math.ceil(total / limit),
+          },
+          sort: {
+            sortBy,
+            order: order === 1 ? "asc" : "desc",
+          },
+          search: search || null,
+        },
+      },
       { status: 200 }
     );
   } catch (error) {
     return NextResponse.json(
-      { success: false, message: "Failed to fetch data", error: error.message },
+      {
+        status: "FAILURE",
+        result: {
+          message: "Failed to fetch data",
+          error: error.message,
+        },
+      },
       { status: 500 }
     );
   }

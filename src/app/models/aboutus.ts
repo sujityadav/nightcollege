@@ -14,6 +14,9 @@ const DynamicDataSchema: Schema = new Schema(
     type: {
       type: String,
       required: true // optional: add if it's mandatory
+    },
+    img:{
+      type: String
     }
   },
   { timestamps: true }
