@@ -1,233 +1,186 @@
 'use client';
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react';
 import 'primereact/resources/themes/lara-light-blue/theme.css';
 import 'primereact/resources/primereact.min.css';
 import { SubSidebar } from '@/app/components/layout/sub-sidebar';
 import { InputText } from 'primereact/inputtext';
-import TextEditor from '@/app/components/common/editor';
-import { Button } from 'primereact/button';
-import Link from 'next/link';
+import { DataTable } from 'primereact/datatable';
+import { Column } from 'primereact/column';
+import { InputSwitch } from 'primereact/inputswitch';
 import { IconField } from "primereact/iconfield";
 import { InputIcon } from "primereact/inputicon";
-import { Column } from "primereact/column";
-import { DataTable } from "primereact/datatable";
-import { Tag } from 'primereact/tag';
-import { InputSwitch } from 'primereact/inputswitch';
+import { Button } from 'primereact/button';
+import Link from 'next/link';
 import Image from 'next/image';
-
+import axios from 'axios';
 
 export default function Rebranding() {
-     const [checked, setChecked] = useState(true);
-  const list = [
-    {
-      id: 1,
-      title: "Sport Events",
-      smalldescription: "META",
-      sortno:'1',
-      description: "Infrastructure upgrade for META's global data centers.",
-      from: "01/06/2025",
-      to: "31/06/2025",
-    
-    },
-   {
-      id: 2,
-      title: "Sport Events",
-      smalldescription: "META",
-      sortno:'2',
-      description: "Infrastructure upgrade for META's global data centers.",
-      from: "01/06/2025",
-      to: "31/06/2025",
-    
-    },
-  ];
+  const [data, setData] = useState([]);
+  const [checked, setChecked] = useState(true);
+  const [loading, setLoading] = useState(false);
+  const [totalRecords, setTotalRecords] = useState(0);
+  const [lazyParams, setLazyParams] = useState({
+    first: 0,
+    rows: 10,
+    page: 1,
+    sortField: null,
+    sortOrder: null,
+    search: ''
+  });
 
-
-  const actionTemplate = (product) => {
-    return (
-      <div className="flex  justify-center items-center gap-4 ">
-
-        <Link href={""} className="leading-none" >
-          <i className="pi pi-pen-to-square text-[18px] xl:text-[0.938vw]"></i>
-        </Link>
-        <Link href={""} className="leading-none" >            <i className="pi pi-trash text-[18px] xl:text-[0.938vw]"></i>
-        </Link>
-      </div>
-    );
-  };
-  const StatusTemplate = (rowData) => {
-  return (
-    <div className="flex flex-wrap gap-2">
-           <InputSwitch checked={checked} onChange={(e) => setChecked(e.value)} />
-    </div>
-  );
-};
-  const BannerPic = (rowData) => {
-  return (
-    <div className="flex flex-wrap gap-2">
-          <Image src="/images/admin/profile_banner.png" className="inline mb-3" width={300} height={150} alt='title' />
-    </div>
-  );
-};
-
+  // Sidebar Items
   const SideBarNavItems = [
-    {
-      label: 'Rebranding',
-      href: '/admin/rebranding',
-    },
-    {
-      label: 'Contact Information',
-      href: '/admin/rebranding/contact-info',
-    },
-     {
-    label: 'Flash Screen Popup',
-      href: '/admin/rebranding/home-popup',
-    },
-
+    { label: 'Rebranding', href: '/admin/rebranding' },
+    { label: 'Contact Information', href: '/admin/rebranding/contact-info' },
+    { label: 'Flash Screen Popup', href: '/admin/rebranding/home-popup' }
   ];
-  return (
-    
-<>
-  <div className="grid grid-cols-12 md:grid-cols-10 lg:grid-cols-10 xl:grid-cols-12 2xl:grid-cols-7 items-start">
-    <div className='col-span-1'>
 
-      <SubSidebar title="Rebranding" navItems={SideBarNavItems} />
+  // Fetch Data
+  const fetchData = async () => {
+    setLoading(true);
+    try {
+      const { page, rows, sortField, sortOrder, search } = lazyParams;
+      const res = await axios.get(`/api/rebranding`, {
+        params: {
+          page,
+          limit: rows,
+          search,
+          sortField,
+          sortOrder
+        }
+      });
+      console.log("Fetched data:", res.data);
+      setData(res.data.data || []);
+      setTotalRecords(res.data.totalRecords || 0);
+    } catch (err) {
+      console.error("Error fetching banners:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchData();
+  }, [lazyParams]);
+
+  // Table Templates
+  const actionTemplate = (rowData) => (
+    <div className="flex justify-center items-center gap-4">
+      <Link href={`/admin/rebranding/add-banners?id=${rowData._id}`} className="leading-none">
+        <i className="pi pi-pen-to-square text-[18px]"></i>
+      </Link>
+      <Link href="#" className="leading-none">
+        <i className="pi pi-trash text-[18px]"></i>
+      </Link>
     </div>
- 
-  <div className='col-span-6 '>
-      <div className='p-[20px] xl:p-[25px] 3xl:p-[1.563vw] w-full'>
-        <div className='flex justify-between mb-5'>
-          <div>
-            <h2 className='text-[#19212A] text-[14px] xl:text-[22px] 3xl:text-[1.146vw] font-[700] m-0'>Banners</h2>
-          </div>
-          <div>
-            <Link href='/admin/rebranding/add-banners' className='text-white border bg-primarycolor border-[#af251c] px-[14px] xl:px-[16px] 3xl:px-[0.833vw] py-[8px] xl:py-[10px] 3xl:py-[0.521vw] leading-[100%] rounded-none p-button-raised flex gap-2 items-center'>
-              <i className='pi pi-plus text-[14px]'></i> Add
-            </Link>
-          </div>
+  );
 
+  const BannerPic = (rowData) => (
+    <Image
+      src={rowData.image || "/images/admin/profile_banner.png"}
+      alt={rowData.title}
+      width={300}
+      height={150}
+      className="inline mb-3 rounded-md"
+    />
+  );
+
+  const StatusTemplate = (rowData) => (
+    <InputSwitch
+      checked={rowData.status}
+      onChange={() => console.log("toggle status", rowData.id)}
+    />
+  );
+
+  // Search Handler
+  const handleSearch = (e) => {
+    setLazyParams({ ...lazyParams, search: e.target.value, page: 1, first: 0 });
+  };
+
+  // Pagination, Sorting, etc.
+  const onPage = (event) => {
+    setLazyParams({
+      ...lazyParams,
+      first: event.first,
+      rows: event.rows,
+      page: event.page + 1
+    });
+  };
+
+  const onSort = (event) => {
+    setLazyParams({
+      ...lazyParams,
+      sortField: event.sortField,
+      sortOrder: event.sortOrder
+    });
+  };
+
+  return (
+    <div className="grid grid-cols-12 items-start">
+      <div className="col-span-1">
+        <SubSidebar title="Rebranding" navItems={SideBarNavItems} />
+      </div>
+
+      <div className="col-span-11 p-5">
+        <div className="flex justify-between mb-5">
+          <h2 className="text-[#19212A] text-[22px] font-[700]">Banners</h2>
+          <Link
+            href="/admin/rebranding/add-banners"
+            className="text-white bg-primarycolor px-4 py-2 flex gap-2 items-center"
+          >
+            <i className="pi pi-plus text-[14px]"></i> Add
+          </Link>
         </div>
 
-        <div className='bg-white border card-shadow '>
-          <div className='px-[20px] xl:px-[1.042vw] py-[14px] xl:py-[0.729vw] border-b border-[#EAEDF3]'>
-            <div className="md:flex items-center gap-2 justify-between">
-              <div className='flex items-center gap-4'>
-                <div className="text-[#101828] text-[16px] xl:text-[0.833vw] font-medium">
-                 All Banners
-                </div>
-                <div className="bg-[#F6F7F9] px-[12px] xl:px-[0.625vw] py-[4px] xl:py-[0.208vw] text-[#6C768B] text-[12px] xl:text-[0.625vw] rounded-[16px] xl:rounded-[0.833vw] font-medium">
-                  Display 1 to 10 of 50
-                </div>
-              </div>
-
-
-              <div className="">
-                <div className="col custSearch">
-                  <IconField iconPosition="left">
-                    <InputIcon className="pi pi-search"> </InputIcon>
-                    <InputText placeholder="Search" />
-                  </IconField>
-                </div>
-
-                <div>
-
-                </div>
-
-              </div>
-            </div>
-
+        <div className="bg-white border card-shadow">
+          <div className="px-5 py-3 border-b border-[#EAEDF3] flex justify-between items-center">
+            <div className="text-[#101828] font-medium">All Banners</div>
+            <IconField iconPosition="left">
+              <InputIcon className="pi pi-search" />
+              <InputText placeholder="Search" onChange={handleSearch} />
+            </IconField>
           </div>
-          <div className='overflow-auto'>
-            <DataTable value={list}
+
+          <div className="overflow-auto">
+            <DataTable
+              value={data}
               className="custTable tableCust"
               scrollable
               showGridlines
-              responsiveLayout="scroll"
-              style={{ width: "100%" }}
+              loading={loading}
               paginator
-              paginatorTemplate="CurrentPageReport RowsPerPageDropdown PrevPageLink PageLinks NextPageLink"
-              currentPageReportTemplate="Rows per page {first}-{last} of {totalRecords}"
-              rows={10}
+              totalRecords={totalRecords}
+              lazy
+              onPage={onPage}
+              onSort={onSort}
+              first={lazyParams.first}
+              rows={lazyParams.rows}
+              sortField={lazyParams.sortField}
+              sortOrder={lazyParams.sortOrder}
               rowsPerPageOptions={[5, 10, 25, 50]}
-              onSelectionChange={(e) => setSelectedProducts(e.value)}
-
+              currentPageReportTemplate={`Rows ${lazyParams.first + 1} - ${
+                lazyParams.first + data.length
+              } of ${totalRecords}`}
+              paginatorTemplate="CurrentPageReport RowsPerPageDropdown PrevPageLink PageLinks NextPageLink"
             >
-
+              <Column field="id" header="Sr.No." sortable style={{ minWidth: '3rem' }} />
+              <Column header="Banner Picture" body={BannerPic} style={{ minWidth: '10rem' }} />
+              <Column field="RebrandingData.data.sortno" header="Sort Number" sortable />
+              <Column field="RebrandingData.data.title" header="Banner Title" sortable />
+              <Column field="RebrandingData.data.description" header="Banner Description" sortable />
+              <Column field="RebrandingData.data.status" header="Status" body={StatusTemplate} />
+              <Column field="RebrandingData.data.fromDate" header="From (Date)" sortable />
+              <Column field="RebrandingData.data.toDate" header="To (Date)" sortable />
               <Column
-                field="id"
-                header="Sr.No."
-                sortable
-                style={{ minWidth: "1rem" }}
-                alignHeader='center'
-               
-              ></Column>
-              <Column
-                field="bannerpicture"
-                header="Banner Picture"
-                sortable
-                 body={BannerPic}
-                style={{ minWidth: "12rem" }}
-              ></Column>
-              <Column
-                field="sortno"
-                header="Sort Number"
-                sortable
-                style={{ minWidth: "3rem" }}
-              ></Column>
-              <Column
-                field="title"
-                header="Banner Title"
-                sortable
-                style={{ minWidth: "15rem" }}
-              ></Column>
-              <Column
-                field="description"
-                header="Banner Description"
-                sortable
-                style={{ minWidth: "16rem" }}
-              ></Column>
-              <Column
-                field="Status"
-                header="Status"
-                sortable
-                body={StatusTemplate}
-              />
-              <Column
-                field="from"
-                header="from (Date)"
-                sortable
-                style={{ minWidth: "7rem" }}
-              ></Column>
-              <Column
-                field="to"
-                header="To (Date)"
-                sortable
-                style={{ minWidth: "7rem" }}
-              ></Column>
-               <Column
-                field="action"
                 header="Action"
-                className="action-shadow-table"
-                frozen
-                alignFrozen="right"
-                align="center"
                 body={actionTemplate}
-                style={{ minWidth: "4rem", background: "#fbf7dc", zIndex: 1, boxShadow: "-4px 0 6px -1px rgba(0, 0, 0, 0.1); " }}
-              ></Column>
+                align="center"
+                style={{ minWidth: '6rem', background: '#fbf7dc' }}
+              />
             </DataTable>
           </div>
-
         </div>
       </div>
-      </div>
-    
     </div>
-
-
-
-    
-</>
   );
 }
-
-
-
