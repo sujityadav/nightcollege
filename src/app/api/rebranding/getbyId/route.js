@@ -23,6 +23,9 @@ export async function GET(req) {
         { status: 200 }
     );        
   } catch (error) {
-    
+     return NextResponse.json(
+      { success: false, message: "Error storing data", error: error.message },
+      { status: 500 }
+    );
   }
 }
