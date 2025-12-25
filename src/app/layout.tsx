@@ -41,12 +41,11 @@ export default function RootLayout({
       <body className={myroboto.className}>
         {/* <WebsiteTop/> */}
           <StoreProvider>
-          <ConditionalLayoutWrapper>{children}
-      
-
+          <ConditionalLayoutWrapper>
+            {children}
+            <Footer />
+            <BackToTopButton/>
           </ConditionalLayoutWrapper>
-              <><Footer /></>
-              <BackToTopButton/>
         </StoreProvider>
       </body>
     </html>

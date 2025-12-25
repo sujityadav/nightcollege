@@ -2,6 +2,10 @@
 
 import React, { useState, useRef } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useDispatch } from "react-redux";
+import { logout } from "@/redux/authSlice";
+import Cookies from "js-cookie";
 import { OverlayPanel } from 'primereact/overlaypanel';
 import 'primeicons/primeicons.css';
 import 'primereact/resources/themes/lara-light-blue/theme.css';
@@ -9,9 +13,18 @@ import 'primereact/resources/primereact.min.css';
 
 export default function Top({ ...pageProps }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const router = useRouter();
+  const dispatch = useDispatch();
 
   // Explicitly type the ref to OverlayPanel and assert non-null
   const op = useRef<OverlayPanel>(null!);
+
+  const handleLogout = (e: React.MouseEvent) => {
+    e.preventDefault();
+    dispatch(logout());
+    Cookies.remove("token");
+    router.push("/login");
+  };
 
   const user = {
     name: "Night College (Admin)",
@@ -83,7 +96,7 @@ export default function Top({ ...pageProps }) {
               <i className="pi pi-cog"></i>
               <span>Settings</span>
             </Link>
-            <Link href="#" className="flex items-center space-x-2 hover:text-blue-500">
+            <Link href="#" onClick={handleLogout} className="flex items-center space-x-2 hover:text-blue-500">
               <i className="pi pi-sign-out"></i>
               <span>Logout</span>
             </Link>

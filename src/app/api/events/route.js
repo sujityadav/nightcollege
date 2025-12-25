@@ -4,10 +4,7 @@ import  Events  from "../../models/events";
 export async function POST(req) {
   try {
     await connectDB();
-
     const body = await req.json();
-
-
     if (!body?.data) {
       return NextResponse.json(
         { success: false, message: "Missing 'data' in body" },

@@ -95,7 +95,7 @@ export default function EventList() {
         <div className="flex justify-between mb-5">
           <h2 className="text-[#19212A] text-[22px] font-bold m-0">Events</h2>
           <Link href="/admin/events/add-events" className="text-white bg-primarycolor px-4 py-2 flex gap-2 items-center">
-            <i className="pi pi-plus"></i> Add Events
+            <i className="pi pi-plus"></i> Add Event
           </Link>
         </div>
 

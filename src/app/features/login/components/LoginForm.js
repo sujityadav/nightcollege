@@ -19,9 +19,8 @@ export default function LoginForm() {
   const onSubmit = async (data) => {
     setLoading(true);
     try {
-      await loginAction(data);
       const response = await loginAction(data);
-    if(response.data.success){
+    if(response?.data?.success){
         const token = response?.data?.updatedUser?.token;
         setLoading(false);
         dispatch(setAuth({ token, user: response.data.updatedUser }));

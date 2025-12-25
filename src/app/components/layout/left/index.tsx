@@ -6,12 +6,24 @@ import "primereact/resources/primereact.min.css";
 import "primeicons/primeicons.css";
 import Image from "next/image";
 import { ScrollPanel } from "primereact/scrollpanel";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
+import { useDispatch } from "react-redux";
+import { logout } from "@/redux/authSlice";
+import Cookies from "js-cookie";
 
 
 export default function Left() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const pathname = usePathname();
+  const router = useRouter();
+  const dispatch = useDispatch();
+
+  const handleLogout = (e: React.MouseEvent) => {
+    e.preventDefault();
+    dispatch(logout());
+    Cookies.remove("token");
+    router.push("/login");
+  };
   // Menu array with PrimeReact icon class
   const menuItems = [
     { label: "Rebranding", href: "/admin/rebranding", icon: "pi pi-home" },
@@ -80,8 +92,8 @@ export default function Left() {
               <span>Settings</span>
             </Link>
             <Link
-
-              href=''
+              href='#'
+              onClick={handleLogout}
               className="flex items-center p-2 rounded hover:bg-gray-200 space-x-2"
             >
               <i className="pi pi-sign-out"></i>
