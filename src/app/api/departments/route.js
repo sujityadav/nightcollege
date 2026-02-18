@@ -74,6 +74,7 @@ export async function GET(req) {
             sortBy,
             order: order === 1 ? "asc" : "desc",
           },
+          success: true,
           search: search || null,
         },
       },

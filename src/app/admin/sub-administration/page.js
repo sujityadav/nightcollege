@@ -123,7 +123,7 @@ export default function EventList() {
             href={`/admin/sub-administration/create-SubAdministration?administrationId=${administrationId}`}
             className='text-white border bg-primarycolor border-[#af251c] px-[14px] py-[8px] leading-[100%] rounded-none p-button-raised flex gap-2 items-center'
           >
-            <i className='pi pi-plus text-[14px]'></i> Add Department
+            <i className='pi pi-plus text-[14px]'></i> Add Sub Administration
           </Link>
         </div>
 

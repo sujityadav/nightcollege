@@ -143,7 +143,7 @@ export default function AddEvents() {
            
 
             <div className='mt-6 flex justify-center gap-6'>
-              <Link href="/admin/departments" className='cancelbtn px-4 py-2'>Cancel</Link>
+              <Link href={`/admin/sub-administration?administrationId=${searchParams.get('administrationId')}`} className='cancelbtn px-4 py-2'>Cancel</Link>
               <Button
                 type='submit'
                 className='text-white bg-primarycolor border-[#af251c] px-4 py-2 rounded-none'

@@ -16,7 +16,7 @@ import { confirmDialog, ConfirmDialog } from 'primereact/confirmdialog';
 
 export default function EventList() {
   const router = useRouter();
-  const [eventsData, setEventsData] = useState([]);
+  const [departMentData, setDepartMentData] = useState([]);
   const [totalRecords, setTotalRecords] = useState(0);
   const [loading, setLoading] = useState(false);
   const [lazyParams, setLazyParams] = useState({
@@ -29,7 +29,7 @@ export default function EventList() {
   const [globalFilter, setGlobalFilter] = useState('');
   const toast = useRef(null);
   // 🔥 Fetch data from API with query params
-  const fetchEventList = async () => {
+  const fetchDepartMentsList = async () => {
     try {
       setLoading(true);
       const response = await axios.get("/api/departments", {
@@ -42,9 +42,10 @@ export default function EventList() {
         },
       });
 
-      if (response?.data?.success) {
-        setEventsData(response.data.data);
-        setTotalRecords(response.data.totalRecords);
+
+      if (response?.data?.result?.success) {
+        setDepartMentData(response?.data?.result?.data);
+        setTotalRecords(response?.data?.result?.pagination?.totalRecords);
       }
     } catch (error) {
       console.error("Failed to fetch departments:", error);
@@ -53,8 +54,9 @@ export default function EventList() {
     }
   };
 
+
   useEffect(() => {
-    fetchEventList();
+    fetchDepartMentsList();
   }, [lazyParams, globalFilter]);
 
   // 🔥 Delete department
@@ -62,7 +64,7 @@ export default function EventList() {
     try {
       const response = await axios.delete(`/api/departments/${id}`);
       if (response?.data?.success) {
-        fetchEventList(); // refresh after delete
+        fetchDepartMentsList(); // refresh after delete
         toast.current.show({
           severity: 'success',
           summary: 'Deleted',
@@ -170,7 +172,7 @@ export default function EventList() {
 
           <div className='overflow-auto'>
             <DataTable
-              value={eventsData}
+              value={departMentData}
               lazy
               loading={loading}
               totalRecords={totalRecords}
