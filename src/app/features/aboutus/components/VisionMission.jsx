@@ -13,7 +13,9 @@ const VisionMission = () => {
     handleEditorChange,
     handleSave,
     isLoading,
-    toast
+    toast,
+     setTitle,
+    title
   } = useAboutEditor("vision");
 
   return (
@@ -23,7 +25,7 @@ const VisionMission = () => {
         <div className='space-y-3'>
           <div className='flex flex-col gap-1'>
             <label className='text-[#212325] text-[14px] font-[500]'>Title</label>
-            <InputText type='text' placeholder='Enter your title' className='rounded-none' />
+            <InputText value={title} onChange={(e)=>setTitle(e.target.value)} type='text' placeholder='Enter your title' className='rounded-none' />
           </div>
 
           <div className='flex flex-col gap-1'>
