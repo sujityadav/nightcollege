@@ -8,7 +8,7 @@ export async function POST(req) {
 
     const body = await req.json();
 
-    console.log("body",body)
+    console.log("body", body);
 
     if (!body?.data) {
       return NextResponse.json(
@@ -16,13 +16,29 @@ export async function POST(req) {
         { status: 400 }
       );
     }
-    const created = await AboutUs.create({
-      Aboutusdata: body,
-      type: body.type
-    });
+
+    // Define unique condition (IMPORTANT)
+    const filter = { type: body.type }; 
+    // or { _id: body._id } if you want single record
+
+    const updated = await AboutUs.findOneAndUpdate(
+      filter,
+      {
+        $set: {
+          title: body?.title,
+          Aboutusdata: body,
+          type: body.type
+        }
+      },
+      {
+        new: true,       // return updated doc
+        upsert: true     // create if not exists
+      }
+    );
+
     return NextResponse.json(
-      { success: true, message: "Data stored", entry: created },
-      { status: 201 }
+      { success: true, message: "Data saved/updated", entry: updated },
+      { status: 200 }
     );
   } catch (error) {
     return NextResponse.json(

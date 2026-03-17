@@ -8,7 +8,7 @@ import imageGetService from '@/app/utils/imageGetService';
 export const useAboutEditor = (type) => {
   const [editorContent, setEditorContent] = useState('');
   const [imageArray, setImageArray] = useState([]);
-
+  const [title, setTitle] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [existingId, setExistingId] = useState(null); // For edit mode
   const toast = useRef(null);
@@ -26,16 +26,17 @@ export const useAboutEditor = (type) => {
          const tableHtml = jsonToTableHtml(result.data.data[0].Aboutusdata);
 
          const response = await imageGetService(result.data.data[0]?._id);
-         console.log("response",response)
+         console.log("response",result)
           const image = {
             url: "http://localhost:3000/" + response?.imageData?.url,
             name:response?.imageData?.name,
             size: response?.imageData?.size,
           }
          setImageArray([])
-        console.log("image",image)
+        console.log("image",result.data.data[0]?.Aboutusdata.title)
         setImageArray((prev) => [...prev, image]);
-
+        setTitle(result.data.data[0]?.Aboutusdata.title);
+        
          if(tableHtml){
 
         setEditorContent(tableHtml);
@@ -59,12 +60,12 @@ export const useAboutEditor = (type) => {
         {
           data: tableData,
           content: editorContent,
+          title: title,
           type:type,
           _id: existingId, // if present, update instead of create
         },
         user?.token
       );
-      console.log("response",response)
       if(response?.data?.entry?._id){
         imageArray.map(async(file)=>{
          const uploadedFile = await storeImage(file.name, response?.data?.entry?._id);
@@ -103,6 +104,8 @@ export const useAboutEditor = (type) => {
     toast,
     setEditorContent,
     setImageArray,
-    imageArray
+    imageArray,
+    setTitle,
+    title
   };
 };

@@ -1,10 +1,11 @@
 import axios from 'axios';
 
-export const saveAboutTable = async ({ data, content,type, _id }, token) => {
+export const saveAboutTable = async ({ data, content,title,type, _id }, token) => {
   const payload = {
     data,
     content,
     type,
+    title,
     ...(!!_id && { _id }), // send ID if updating
   };
 
