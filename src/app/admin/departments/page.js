@@ -13,8 +13,18 @@ import axios from 'axios';
 import { format } from 'date-fns';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Toast } from 'primereact/toast';
+import { usePageBreadcrumbs } from '@/app/hooks/usePageBreadcrumbs';
 
 export default function InnerDepartmentList() {
+  // Set breadcrumbs for this page - automatically generated from path
+  usePageBreadcrumbs({
+    pageTitle: 'Departments Management',
+    pathLabels: {
+      '/admin': 'Dashboard',
+      '/admin/departments': 'Departments'
+    }
+  });
+
   const router = useRouter();
   const [departmentsData, setDepartmentsData] = useState([]);
   const toast = useRef(null);

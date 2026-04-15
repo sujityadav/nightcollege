@@ -10,8 +10,18 @@ import axios from 'axios';
 import { format } from 'date-fns';
 import { Toast } from 'primereact/toast';
 import { ConfirmDialog } from 'primereact/confirmdialog';
+import { usePageBreadcrumbs } from '@/app/hooks/usePageBreadcrumbs';
 
 export default function EventList() {
+  // Set breadcrumbs for this page - automatically generated from path
+  usePageBreadcrumbs({
+    pageTitle: 'Events Management',
+    pathLabels: {
+      '/admin': 'Dashboard',
+      '/admin/events': 'Events'
+    }
+  });
+
   const [eventsData, setEventsData] = useState([]);
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
@@ -34,104 +44,119 @@ export default function EventList() {
         severity: 'error',
         summary: 'Error',
         detail: 'Failed to fetch events',
-        life: 3000,
       });
     }
   };
 
   useEffect(() => {
     fetchEventList();
-  }, [search, page, limit]);
+  }, [page, limit, search]);
+
+  const formatDate = (dateString) => {
+    if (!dateString) return '-';
+    try {
+      return format(new Date(dateString), 'dd/MM/yyyy');
+    } catch {
+      return '-';
+    }
+  };
 
   const handleDelete = async (id) => {
     try {
-      const response = await axios.delete(`/api/events/${id}`);
-      if (response?.data?.success) {
-        fetchEventList(); // reload instead of filter (to handle pagination)
-        toast.current.show({
-          severity: 'success',
-          summary: 'Success',
-          detail: 'Event deleted successfully',
-          life: 3000,
-        });
-      }
+      await axios.delete(`/api/events/${id}`);
+      toast.current.show({
+        severity: 'success',
+        summary: 'Success',
+        detail: 'Event deleted successfully',
+      });
+      fetchEventList();
     } catch (error) {
       toast.current.show({
         severity: 'error',
         summary: 'Error',
         detail: 'Failed to delete event',
-        life: 3000,
       });
     }
+    setDeleteDialogVisible(false);
   };
 
-  const actionTemplate = (rowData) => (
-    <div className="flex justify-center items-center gap-4">
-      <Link href={`/admin/events/add-events?id=${rowData?._id}`} className="leading-none">
-        <i className="pi pi-pen-to-square text-[18px]"></i>
-      </Link>
-      <button onClick={() => { setDeleteId(rowData._id); setDeleteDialogVisible(true); }} className="leading-none text-red-600">
-        <i className="pi pi-trash text-[18px]"></i>
-      </button>
-    </div>
-  );
+  const confirmDelete = (id) => {
+    setDeleteId(id);
+    setDeleteDialogVisible(true);
+  };
 
-  const formatDate = (value) => value ? format(new Date(value), 'dd MMM yyyy') : '-';
+  const actionTemplate = (rowData) => {
+    return (
+      <div className="flex gap-2">
+        <Link
+          href={`/admin/events/add-events?id=${rowData._id}`}
+          className="p-button p-button-success p-button-text"
+        >
+          Edit
+        </Link>
+        <button
+          onClick={() => confirmDelete(rowData._id)}
+          className="p-button p-button-danger p-button-text"
+        >
+          Delete
+        </button>
+      </div>
+    );
+  };
 
   return (
-    <div className="grid grid-cols-1">
+    <div className="p-4">
       <Toast ref={toast} />
       <ConfirmDialog
         visible={deleteDialogVisible}
         onHide={() => setDeleteDialogVisible(false)}
         message="Are you sure you want to delete this event?"
-        header="Confirm Deletion"
+        header="Confirmation"
         icon="pi pi-exclamation-triangle"
+        accept={() => handleDelete(deleteId)}
+        reject={() => setDeleteDialogVisible(false)}
         acceptClassName="p-button-danger"
-        accept={() => { handleDelete(deleteId); setDeleteDialogVisible(false); }}
+        rejectClassName="p-button-secondary"
       />
 
-      <div className="p-5 w-full">
-        <div className="flex justify-between mb-5">
-          <h2 className="text-[#19212A] text-[22px] font-bold m-0">Events</h2>
-          <Link href="/admin/events/add-events" className="text-white bg-primarycolor px-4 py-2 flex gap-2 items-center">
-            <i className="pi pi-plus"></i> Add Event
+      <div className="card">
+        <div className="flex justify-between items-center mb-4">
+          <h2 className="text-xl font-semibold">Events</h2>
+          <Link
+            href="/admin/events/add-events"
+            className="p-button p-button-primary"
+          >
+            Add Event
           </Link>
         </div>
 
-        <div className="bg-white border card-shadow">
-          <div className="px-5 py-3 border-b border-[#EAEDF3]">
-            <div className="md:flex items-center gap-2 justify-between">
-              <div className="flex items-center gap-4">
-                <div className="text-[#101828] text-[16px] font-medium">All Events</div>
-                <div className="bg-[#F6F7F9] px-3 py-1 text-[#6C768B] text-[12px] rounded-[16px] font-medium">
-                  {totalRecords} total
-                </div>
-              </div>
-              <div className="col custSearch">
-                <IconField iconPosition="left">
-                  <InputIcon className="pi pi-search" />
-                  <InputText placeholder="Search" value={search} onChange={(e) => { setPage(1); setSearch(e.target.value); }} />
-                </IconField>
-              </div>
-            </div>
-          </div>
+        <div className="mb-4">
+          <IconField>
+            <InputIcon className="pi pi-search" />
+            <InputText
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Search events..."
+              className="w-full"
+            />
+          </IconField>
+        </div>
 
-          <div className="overflow-auto">
+        <div className="card">
+          <div className="overflow-x-auto">
             <DataTable
               value={eventsData}
               paginator
               rows={limit}
+              rowsPerPageOptions={[5, 10, 25, 50]}
               totalRecords={totalRecords}
               lazy
-              first={(page - 1) * limit}
               onPage={(e) => {
                 setPage(e.page + 1);
                 setLimit(e.rows);
               }}
-              rowsPerPageOptions={[5, 10, 25, 50]}
-              paginatorTemplate="CurrentPageReport RowsPerPageDropdown PrevPageLink PageLinks NextPageLink"
-              currentPageReportTemplate="Rows {first} - {last} of {totalRecords}"
+              loading={false}
+              emptyMessage="No events found."
             >
               <Column field="Eventdata.data.title" header="Title" sortable />
               <Column field="Eventdata.data.smallDescription" header="Description" />

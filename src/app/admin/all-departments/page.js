@@ -13,6 +13,7 @@ import { format } from 'date-fns';
 import { useRouter } from 'next/navigation';
 import { Toast } from 'primereact/toast';
 import { confirmDialog, ConfirmDialog } from 'primereact/confirmdialog';
+import { usePageBreadcrumbs } from '@/app/hooks/usePageBreadcrumbs';
 
 export default function EventList() {
   const router = useRouter();
@@ -28,6 +29,16 @@ export default function EventList() {
   });
   const [globalFilter, setGlobalFilter] = useState('');
   const toast = useRef(null);
+
+  // Set breadcrumbs for this page - automatically generated from path
+  usePageBreadcrumbs({
+    pageTitle: 'All Departments Management',
+    pathLabels: {
+      '/admin': 'Dashboard',
+      '/admin/all-departments': 'All Departments'
+    }
+  });
+
   // 🔥 Fetch data from API with query params
   const fetchDepartMentsList = async () => {
     try {

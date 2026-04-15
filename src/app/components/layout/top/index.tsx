@@ -10,6 +10,7 @@ import { OverlayPanel } from 'primereact/overlaypanel';
 import 'primeicons/primeicons.css';
 import 'primereact/resources/themes/lara-light-blue/theme.css';
 import 'primereact/resources/primereact.min.css';
+import Breadcrumb from '@/app/components/common/Breadcrumb';
 
 export default function Top({ ...pageProps }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -49,19 +50,7 @@ export default function Top({ ...pageProps }) {
         </svg>
       </button>
 
-      <div>
-        <div className="flex space-x-[8px] items-center mb-1">
-          <Link href='' className="text-[#9CA1AB] text-[12px] xl:text-[0.729vw] leading-none">Home</Link>
-          <i className="pi pi-angle-right text-[8px] text-[#9CA1AB]"></i>
-          <Link href='' className="text-[#9CA1AB] text-[12px] xl:text-[0.729vw] leading-none">Page 1</Link>
-          <i className="pi pi-angle-right text-[8px] text-[#9CA1AB]"></i>
-          <Link href='' className="text-[#af251c] text-[12px] xl:text-[0.729vw] leading-none">Current Page</Link>
-        </div>
-
-        <div className="text-[#374151] text-[18px] xl:text-[0.938vw] font-semibold leading-[1.2]">
-          Dashboard
-        </div>
-      </div>
+      <Breadcrumb />
 
       <div className="flex gap-5 items-center">
         <div>
