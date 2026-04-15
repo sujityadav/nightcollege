@@ -1,38 +1,61 @@
 import { NextRequest, NextResponse } from "next/server";
-import { writeFile, mkdir } from "fs/promises";
-import path from "path";
-import fs from "fs";
+import { v2 as cloudinary, UploadApiResponse } from "cloudinary";
+
+// Configure Cloudinary
+cloudinary.config({
+  cloud_name: process.env.CLOUDARY_CLOUD_NAME,
+  api_key: process.env.CLOUDARY_KEY,
+  api_secret: process.env.CLOUDARY_SECRET,
+  secure: true,
+});
 
 export async function POST(req: NextRequest) {
   try {
     const formData = await req.formData();
-    const tempDir = path.join(process.cwd(), "public", "uploads", "temp");
-
-    if (!fs.existsSync(tempDir)) {
-      await mkdir(tempDir, { recursive: true });
-    }
-
     const results: any[] = [];
 
-    // Convert iterator to array to avoid TS ES5 issue
-    const entries = Array.from(formData.entries());
-
-    // Use for...of with await
+    // Get all files from form data
+    // Using a type assertion to work with FormData
+    const formDataObj = formData as any;
+    const entries: [string, FormDataEntryValue][] = Array.from(formDataObj.entries());
+    
+    // Process each entry
     for (const [key, value] of entries) {
       if (value instanceof File) {
-        const arrayBuffer = await value.arrayBuffer();
+        const file = value;
+        const arrayBuffer = await file.arrayBuffer();
         const buffer = Buffer.from(arrayBuffer);
-        const fileName = `${Date.now()}-${value.name}`;
-        const filePath = path.join(tempDir, fileName);
-
-        await writeFile(filePath, buffer);
-
-        const fileUrl = `/uploads/temp/${fileName}`;
+        
+        // Convert buffer to base64 string for Cloudinary upload
+        const base64String = `data:${file.type};base64,${buffer.toString('base64')}`;
+        
+        // Upload to Cloudinary
+        const uploadResult: UploadApiResponse = await new Promise((resolve, reject) => {
+          cloudinary.uploader.upload(
+            base64String,
+            {
+              folder: "nightcollege", // Optional folder in Cloudinary
+              public_id: `${Date.now()}-${file.name.replace(/\.[^/.]+$/, "")}`, // Remove extension
+              resource_type: "auto", // Automatically detect image, video, etc.
+            },
+            (error, result) => {
+              if (error) {
+                reject(error);
+              } else {
+                resolve(result as UploadApiResponse);
+              }
+            }
+          );
+        });
 
         results.push({
-          url: fileUrl,
-          name: value.name,
-          size: value.size,
+          url: uploadResult.secure_url,
+          public_id: uploadResult.public_id,
+          name: file.name,
+          size: file.size,
+          format: uploadResult.format,
+          width: uploadResult.width,
+          height: uploadResult.height,
         });
       }
     }
