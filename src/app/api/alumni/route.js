@@ -45,6 +45,10 @@ export async function GET(req) {
     if (search) {
       filter = {
         $or: [
+          { "AlumniData.data.name": { $regex: search, $options: "i" } },
+          { "AlumniData.data.title": { $regex: search, $options: "i" } },
+          { "AlumniData.data.description": { $regex: search, $options: "i" } },
+          // Keep existing alumni records searchable while they still use the old field names.
           { "AlumniData.data.fullName": { $regex: search, $options: "i" } },
           { "AlumniData.data.course": { $regex: search, $options: "i" } },
           { "AlumniData.data.company": { $regex: search, $options: "i" } },

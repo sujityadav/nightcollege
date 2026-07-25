@@ -11,7 +11,6 @@ import { DataTable } from "primereact/datatable";
 import axios from 'axios';
 import { format } from 'date-fns';
 import { Toast } from 'primereact/toast';
-import Image from 'next/image';
 import { confirmDialog, ConfirmDialog } from 'primereact/confirmdialog';
 
 export default function AlumniList() {
@@ -116,13 +115,12 @@ export default function AlumniList() {
   );
 
   const photoTemplate = (rowData) => {
-    return rowData?.AlumniData?.data?.profilePhoto ? (
-      <Image
-        src={rowData.AlumniData.data.profilePhoto}
-        alt="Alumni"
-        width={40}
-        height={40}
-        className="rounded-full"
+    const photo = rowData?.AlumniData?.data?.photo || rowData?.AlumniData?.data?.profilePhoto;
+    return photo ? (
+      <img
+        src={photo}
+        alt={rowData?.AlumniData?.data?.name || rowData?.AlumniData?.data?.fullName || 'Alumni'}
+        className="h-12 w-12 rounded-full object-cover"
       />
     ) : (
       <span className="text-gray-400">No Photo</span>
@@ -153,10 +151,10 @@ export default function AlumniList() {
               </span>
             </div>
 
-            <IconField iconPosition="left">
+            <IconField iconPosition="left" className="app-search-field">
               <InputIcon className="pi pi-search"></InputIcon>
               <InputText
-                placeholder="Search"
+                placeholder="Search here.."
                 value={lazyParams.search}
                 onChange={(e) =>
                   setLazyParams({ ...lazyParams, page: 1, first: 0, search: e.target.value })
@@ -187,18 +185,9 @@ export default function AlumniList() {
               rowsPerPageOptions={[5, 10, 25, 50]}
             >
               <Column header="Photo" body={photoTemplate} style={{ minWidth: '6rem' }} />
-              <Column field="AlumniData.data.fullName" header="Name" sortable />
-              <Column
-                header="Batch Year"
-                body={(rowData) =>
-                  rowData?.AlumniData?.data?.batchYear
-                    ? new Date(rowData.AlumniData.data.batchYear).getFullYear()
-                    : '-'
-                }
-              />
-              <Column field="AlumniData.data.course" header="Course" sortable />
-              <Column field="AlumniData.data.position" header="Position" />
-              <Column field="AlumniData.data.company" header="Company" />
+              <Column header="Name" sortable sortField="AlumniData.data.name" body={(rowData) => rowData?.AlumniData?.data?.name || rowData?.AlumniData?.data?.fullName || '-'} />
+              <Column header="Title" sortable sortField="AlumniData.data.title" body={(rowData) => rowData?.AlumniData?.data?.title || rowData?.AlumniData?.data?.position || '-'} />
+              <Column header="Description" body={(rowData) => <div className="max-w-md line-clamp-2" dangerouslySetInnerHTML={{ __html: rowData?.AlumniData?.data?.description || rowData?.AlumniData?.data?.bio || '-' }} />} />
               <Column header="Action" body={actionTemplate} align="center"
                 style={{ minWidth: "5rem", background: "#fbf7dc", boxShadow: "-4px 0 6px -1px rgba(0, 0, 0, 0.1)" }}
               />
