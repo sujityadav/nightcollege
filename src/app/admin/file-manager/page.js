@@ -60,9 +60,9 @@ export default function FileManager() {
                   {/* <Dropdown value={selectedYear} onChange={(e) => setSelectedYear(e.value)} options={Year} optionLabel="name" placeholder="Select a year" className="w-14rem" /> */}
                 </div>
                 <div className="col custSearch">
-                  <IconField iconPosition="left">
+                  <IconField iconPosition="left" className="app-search-field">
                     <InputIcon className="pi pi-search"></InputIcon>
-                    <InputText placeholder="Search" />
+                    <InputText placeholder="Search here.." />
                   </IconField>
                 </div>
               </div>

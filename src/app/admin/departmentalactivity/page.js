@@ -129,9 +129,9 @@ export default function EventList() {
               </div>
 
               <div className="col custSearch">
-                <IconField iconPosition="left">
+                <IconField iconPosition="left" className="app-search-field">
                   <InputIcon className="pi pi-search"></InputIcon>
-                  <InputText placeholder="Search" />
+                  <InputText placeholder="Search here.." />
                 </IconField>
               </div>
             </div>

@@ -573,8 +573,25 @@ color:#3C4146;
   .custSearch .p-input-icon-right>.p-input-suffix {
     margin-top: -0.6rem;
   }
-  .custSearch .p-input-icon-left>.p-inputtext {
+.custSearch .p-input-icon-left>.p-inputtext {
   padding-left: 2.1rem;
+}
+
+/* Shared PrimeReact table search field */
+.app-search-field {
+  position: relative;
+  display: inline-block;
+}
+
+.app-search-field .p-inputtext {
+  min-width: 14rem;
+  padding-left: 2.5rem;
+}
+
+.app-search-field .p-input-icon {
+  left: 0.75rem;
+  margin-top: 0 !important;
+  transform: translateY(-50%);
 }
 /* ***************** end********************* */
 .action-shadow-table {

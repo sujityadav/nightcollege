@@ -116,12 +116,12 @@ export default function Rebranding() {
   };
 
   return (
-    <div className="grid grid-cols-12 items-start">
-      <div className="col-span-1">
+    <div className="flex w-full min-w-0 items-start">
+      <div className="shrink-0">
         <SubSidebar title="Rebranding" navItems={SideBarNavItems} />
       </div>
 
-      <div className="col-span-11 p-5">
+      <div className="min-w-0 flex-1 p-5">
         <div className="flex justify-between mb-5">
           <h2 className="text-[#19212A] text-[22px] font-[700]">Banners</h2>
           <Link
@@ -135,9 +135,9 @@ export default function Rebranding() {
         <div className="bg-white border card-shadow">
           <div className="px-5 py-3 border-b border-[#EAEDF3] flex justify-between items-center">
             <div className="text-[#101828] font-medium">All Banners</div>
-            <IconField iconPosition="left">
+            <IconField iconPosition="left" className="app-search-field">
               <InputIcon className="pi pi-search" />
-              <InputText placeholder="Search" onChange={handleSearch} />
+              <InputText placeholder="Search here.." onChange={handleSearch} />
             </IconField>
           </div>
 
