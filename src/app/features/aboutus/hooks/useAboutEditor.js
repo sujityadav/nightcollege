@@ -21,31 +21,33 @@ export const useAboutEditor = (type) => {
 
   const fetchInitialData = async () => {
     try {
-      const result = await getAboutTable(user?.token,type);
-      if (result?.data) {
-         const tableHtml = jsonToTableHtml(result.data.data[0].Aboutusdata);
+      const result = await getAboutTable(user?.token, type);
+      const entry = result?.data?.data?.[0];
+      if (!entry?.Aboutusdata) return;
 
-         const response = await imageGetService(result.data.data[0]?._id);
-         console.log("response",result)
-          const image = {
-            url: "http://localhost:3000/" + response?.imageData?.url,
-            name:response?.imageData?.name,
-            size: response?.imageData?.size,
-          }
-         setImageArray([])
-        console.log("image",result.data.data[0]?.Aboutusdata.title)
-        setImageArray((prev) => [...prev, image]);
-        setTitle(result.data.data[0]?.Aboutusdata.title);
-        
-         if(tableHtml){
+      const tableHtml = jsonToTableHtml(entry.Aboutusdata);
+      setTitle(entry.Aboutusdata.title || '');
+      setEditorContent(tableHtml || entry.Aboutusdata.content || '');
+      setExistingId(entry._id || result.data._id || null);
 
-        setEditorContent(tableHtml);
-
-         }else{
-        setEditorContent(result.data.data[0].Aboutusdata.content);
-
-         }
-        setExistingId(result.data._id); // for update
+      try {
+        const response = await imageGetService(entry._id);
+        const imageUrl = response?.imageData?.url;
+        if (imageUrl) {
+          setImageArray([
+            {
+              url: imageUrl.startsWith('http')
+                ? imageUrl
+                : `http://localhost:3000/${imageUrl}`,
+              name: response?.imageData?.name,
+              size: response?.imageData?.size,
+            },
+          ]);
+        } else {
+          setImageArray([]);
+        }
+      } catch {
+        setImageArray([]);
       }
     } catch (err) {
       console.warn('No existing about-us data found');

@@ -82,18 +82,20 @@ const TextEditor: React.FC<TextEditorProps> = ({ value = "", onChange, onImageUp
     }
   }, [value, editorLoaded]);
 
-    useEffect(() => {
-  if (editorLoaded && editorRef.current && imageArray && imageArray.length > 0) {
+  useEffect(() => {
+    if (!editorLoaded || !editorRef.current || !imageArray?.length) return;
+
     const editor = editorRef.current;
-    
-    // Insert images if not already in content
+
     imageArray.forEach((img) => {
+      if (!img?.url || img.url.includes("undefined")) return;
       if (!editor.getContents().includes(img.url)) {
-        editor.insertHTML(`<img src="${img.url}" alt="${img.name}" style="max-width:100%;" />`);
+        editor.insertHTML(
+          `<img src="${img.url}" alt="${img.name || ""}" style="max-width:100%;" />`
+        );
       }
     });
-  }
-}, [imageArray, editorLoaded]);
+  }, [imageArray, editorLoaded]);
 
   return (
     <div>

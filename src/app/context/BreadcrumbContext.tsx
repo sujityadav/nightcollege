@@ -1,6 +1,13 @@
 'use client';
 
-import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
+import React, {
+  createContext,
+  useCallback,
+  useContext,
+  useMemo,
+  useState,
+  ReactNode,
+} from 'react';
 
 export interface BreadcrumbItem {
   label: string;
@@ -33,26 +40,29 @@ export const BreadcrumbProvider: React.FC<BreadcrumbProviderProps> = ({
   const [breadcrumbs, setBreadcrumbs] = useState<BreadcrumbItem[]>(initialBreadcrumbs);
   const [pageTitle, setPageTitle] = useState<string>(initialTitle);
 
-  const updateBreadcrumbs = (newBreadcrumbs: BreadcrumbItem[]) => {
+  const updateBreadcrumbs = useCallback((newBreadcrumbs: BreadcrumbItem[]) => {
     setBreadcrumbs(newBreadcrumbs);
-  };
+  }, []);
 
-  const resetBreadcrumbs = () => {
+  const resetBreadcrumbs = useCallback(() => {
     setBreadcrumbs([]);
     setPageTitle('Dashboard');
-  };
+  }, []);
+
+  const value = useMemo(
+    () => ({
+      breadcrumbs,
+      setBreadcrumbs,
+      updateBreadcrumbs,
+      resetBreadcrumbs,
+      pageTitle,
+      setPageTitle,
+    }),
+    [breadcrumbs, pageTitle, updateBreadcrumbs, resetBreadcrumbs]
+  );
 
   return (
-    <BreadcrumbContext.Provider 
-      value={{ 
-        breadcrumbs, 
-        setBreadcrumbs, 
-        updateBreadcrumbs, 
-        resetBreadcrumbs,
-        pageTitle,
-        setPageTitle
-      }}
-    >
+    <BreadcrumbContext.Provider value={value}>
       {children}
     </BreadcrumbContext.Provider>
   );

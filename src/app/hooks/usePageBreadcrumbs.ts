@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useMemo, useRef } from 'react';
 import { usePathname } from 'next/navigation';
 import { useBreadcrumb, BreadcrumbItem } from '@/app/context/BreadcrumbContext';
 
@@ -46,43 +46,59 @@ export const usePageBreadcrumbs = ({
   const { setBreadcrumbs, setPageTitle, resetBreadcrumbs } = useBreadcrumb();
   const pathname = usePathname();
 
+  // Stabilize object/array props so inline literals from pages don't retrigger the effect
+  const pathLabelsKey = useMemo(() => JSON.stringify(pathLabels ?? {}), [pathLabels]);
+  const breadcrumbsKey = useMemo(() => JSON.stringify(breadcrumbs ?? null), [breadcrumbs]);
+  const stablePathLabels = useMemo(
+    () => JSON.parse(pathLabelsKey) as Record<string, string>,
+    [pathLabelsKey]
+  );
+  const stableBreadcrumbs = useMemo(
+    () => JSON.parse(breadcrumbsKey) as BreadcrumbItem[] | null,
+    [breadcrumbsKey]
+  );
+
+  const resetOnUnmountRef = useRef(resetOnUnmount);
+  resetOnUnmountRef.current = resetOnUnmount;
+
   useEffect(() => {
     let finalBreadcrumbs: BreadcrumbItem[] = [];
     let finalPageTitle = pageTitle;
 
-    // Determine breadcrumbs
-    if (breadcrumbs && breadcrumbs.length > 0) {
-      finalBreadcrumbs = breadcrumbs;
+    if (stableBreadcrumbs && stableBreadcrumbs.length > 0) {
+      finalBreadcrumbs = stableBreadcrumbs;
     } else {
-      // Generate from path
       const path = currentPath || pathname || '';
       if (path) {
-        finalBreadcrumbs = generateBreadcrumbsFromPath(path, pathLabels);
-        // If pageTitle not provided, use last segment label
+        finalBreadcrumbs = generateBreadcrumbsFromPath(path, stablePathLabels);
         if (!finalPageTitle && finalBreadcrumbs.length > 0) {
           finalPageTitle = finalBreadcrumbs[finalBreadcrumbs.length - 1].label;
         }
       }
     }
 
-    // If still no breadcrumbs, default empty
-    if (finalBreadcrumbs.length === 0) {
-      finalBreadcrumbs = [];
-    }
-
-    // Set the breadcrumbs and page title
     setBreadcrumbs(finalBreadcrumbs);
     if (finalPageTitle) {
       setPageTitle(finalPageTitle);
     }
 
-    // Cleanup function to reset breadcrumbs when component unmounts
     return () => {
-      if (resetOnUnmount) {
+      if (resetOnUnmountRef.current) {
         resetBreadcrumbs();
       }
     };
-  }, [breadcrumbs, pageTitle, currentPath, pathLabels, pathname, setBreadcrumbs, setPageTitle, resetBreadcrumbs, resetOnUnmount]);
+  }, [
+    breadcrumbsKey,
+    pageTitle,
+    currentPath,
+    pathLabelsKey,
+    pathname,
+    setBreadcrumbs,
+    setPageTitle,
+    resetBreadcrumbs,
+    stableBreadcrumbs,
+    stablePathLabels,
+  ]);
 };
 
 /**
