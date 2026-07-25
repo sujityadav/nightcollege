@@ -124,7 +124,7 @@ export default function AddAlumni() {
         </h2>
 
         <form onSubmit={handleSubmit(onSubmit)} className='bg-white card-shadow p-[25px]'>
-          <div className='px-[250px] space-y-3'>
+          <div className='px-4 sm:px-6 md:px-10 lg:px-20 xl:px-[250px] space-y-3'>
 
             <div className='flex flex-col gap-1'>
               <label>Full Name</label>
