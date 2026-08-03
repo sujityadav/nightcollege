@@ -8,7 +8,6 @@ import TextEditor from '@/app/components/common/editor';
 import { Button } from 'primereact/button';
 import Link from 'next/link';
 
-
 export default function AboutUs() {
   const SideBarNavItems = [
     {
