@@ -120,7 +120,7 @@ export default function Events() {
                   {event.description}
                 </p>
                 <div className="mt-4">
-                  <Link href="" className="arrow-link mt-2 group-hover:text-white">
+                  <Link href="/events/detail" className="arrow-link mt-2 group-hover:text-white">
                     Read more<span className="arrow"></span>
                   </Link>
                 </div>
