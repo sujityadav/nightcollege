@@ -1,116 +1,334 @@
 'use client';
-import React, { useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react';
 import 'primereact/resources/themes/lara-light-blue/theme.css';
 import 'primereact/resources/primereact.min.css';
 import { SubSidebar } from '@/app/components/layout/sub-sidebar';
 import { InputText } from 'primereact/inputtext';
-import TextEditor from '@/app/components/common/editor';
-import { Button } from 'primereact/button';
+import { DataTable } from 'primereact/datatable';
+import { Column } from 'primereact/column';
+import { InputSwitch } from 'primereact/inputswitch';
+import { IconField } from 'primereact/iconfield';
+import { InputIcon } from 'primereact/inputicon';
+import { Toast } from 'primereact/toast';
+import { ConfirmDialog, confirmDialog } from 'primereact/confirmdialog';
 import Link from 'next/link';
-import Image from 'next/image';
-import { Calendar } from 'primereact/calendar';
+import axios from 'axios';
+import { useSelector } from 'react-redux';
 
-export default function HomePopup() {
+const SideBarNavItems = [
+  { label: 'Rebranding', href: '/admin/rebranding' },
+  { label: 'Contact Information', href: '/admin/rebranding/contact-info' },
+  { label: 'Flash Screen Popup', href: '/admin/rebranding/home-popup' },
+];
 
-    const SideBarNavItems = [
-    {
-      label: 'Rebranding',
-      href: '/admin/rebranding',
-    },
-    {
-      label: 'Contact Information',
-      href: '/admin/rebranding/contact-info',
-    },
-    
-    {
-      label: 'Flash Screen Popup',
-      href: '/admin/rebranding/home-popup',
-    },
-    
+export default function HomePopupList() {
+  const [data, setData] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [updatingStatusId, setUpdatingStatusId] = useState(null);
+  const [totalRecords, setTotalRecords] = useState(0);
+  const [lazyParams, setLazyParams] = useState({
+    first: 0,
+    rows: 10,
+    page: 1,
+    sortField: null,
+    sortOrder: null,
+    search: '',
+  });
 
-  ];
- 
+  const user = useSelector((state) => state.auth.user);
+  const toast = useRef(null);
+
+  const fetchData = async () => {
+    setLoading(true);
+    try {
+      const { page, rows, sortField, sortOrder, search } = lazyParams;
+      const res = await axios.get('/api/flash-screen', {
+        params: { page, limit: rows, search, sortField, sortOrder },
+      });
+      setData(res.data.data || []);
+      setTotalRecords(res.data.total || 0);
+    } catch (err) {
+      console.error('Error fetching flash screens:', err);
+      toast.current?.show({
+        severity: 'error',
+        summary: 'Error',
+        detail: 'Failed to load flash screens',
+        life: 3000,
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchData();
+  }, [lazyParams]);
+
+  const handleStatusToggle = async (rowData, checked) => {
+    const newStatus = checked ? 1 : 0;
+    const previousStatus = Number(rowData?.FlashScreenData?.data?.status ?? 0);
+
+    setData((prev) =>
+      prev.map((item) =>
+        item._id === rowData._id
+          ? {
+              ...item,
+              FlashScreenData: {
+                ...item.FlashScreenData,
+                data: {
+                  ...item.FlashScreenData?.data,
+                  status: newStatus,
+                },
+              },
+            }
+          : item
+      )
+    );
+    setUpdatingStatusId(rowData._id);
+
+    try {
+      const response = await axios.put(
+        `/api/flash-screen/${rowData._id}`,
+        { status: newStatus },
+        { headers: { Authorization: `Bearer ${user?.token}` } }
+      );
+
+      if (!response?.data?.success) {
+        throw new Error(response?.data?.message || 'Failed to update status');
+      }
+
+      toast.current?.show({
+        severity: 'success',
+        summary: 'Status updated',
+        detail: `Flash screen marked as ${newStatus === 1 ? 'active' : 'inactive'}`,
+        life: 2500,
+      });
+    } catch (err) {
+      setData((prev) =>
+        prev.map((item) =>
+          item._id === rowData._id
+            ? {
+                ...item,
+                FlashScreenData: {
+                  ...item.FlashScreenData,
+                  data: {
+                    ...item.FlashScreenData?.data,
+                    status: previousStatus,
+                  },
+                },
+              }
+            : item
+        )
+      );
+      toast.current?.show({
+        severity: 'error',
+        summary: 'Error',
+        detail: 'Failed to update status',
+        life: 3000,
+      });
+    } finally {
+      setUpdatingStatusId(null);
+    }
+  };
+
+  const deleteItem = async (id) => {
+    try {
+      const response = await axios.delete(`/api/flash-screen/${id}`, {
+        headers: { Authorization: `Bearer ${user?.token}` },
+      });
+
+      if (!response?.data?.success) {
+        throw new Error(response?.data?.message || 'Failed to delete');
+      }
+
+      toast.current?.show({
+        severity: 'success',
+        summary: 'Deleted',
+        detail: 'Flash screen deleted successfully',
+        life: 2500,
+      });
+      fetchData();
+    } catch (err) {
+      toast.current?.show({
+        severity: 'error',
+        summary: 'Error',
+        detail: 'Failed to delete flash screen',
+        life: 3000,
+      });
+    }
+  };
+
+  const confirmDelete = (rowData) => {
+    confirmDialog({
+      header: 'Delete Flash Screen',
+      message: 'Are you sure you want to delete this flash screen?',
+      icon: 'pi pi-exclamation-triangle',
+      acceptLabel: 'Yes, Delete',
+      rejectLabel: 'Cancel',
+      acceptClassName: 'p-button-danger',
+      accept: () => deleteItem(rowData._id),
+    });
+  };
+
+  const formatDate = (value) => {
+    if (!value) return '-';
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return value;
+    return date.toLocaleDateString('en-GB', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+    });
+  };
+
+  const serialNumberTemplate = (_rowData, options) =>
+    lazyParams.first + options.rowIndex + 1;
+
+  const photoTemplate = (rowData) => {
+    const photo = rowData?.FlashScreenData?.data?.photo;
+    if (!photo) return <span className="text-gray-400 text-sm">No Photo</span>;
+    return (
+      <img
+        src={photo}
+        alt="Flash screen"
+        className="h-14 w-24 rounded object-cover"
+      />
+    );
+  };
+
+  const statusTemplate = (rowData) => (
+    <InputSwitch
+      checked={Number(rowData?.FlashScreenData?.data?.status) === 1}
+      disabled={updatingStatusId === rowData._id}
+      onChange={(e) => handleStatusToggle(rowData, e.value)}
+    />
+  );
+
+  const actionTemplate = (rowData) => (
+    <div className="flex justify-center items-center gap-4">
+      <Link
+        href={`/admin/rebranding/home-popup/add?id=${rowData._id}`}
+        className="leading-none"
+      >
+        <i className="pi pi-pen-to-square text-[18px]"></i>
+      </Link>
+      <button
+        type="button"
+        onClick={() => confirmDelete(rowData)}
+        className="leading-none bg-transparent border-0 cursor-pointer text-red-500"
+      >
+        <i className="pi pi-trash text-[18px]"></i>
+      </button>
+    </div>
+  );
 
   return (
+    <div className="flex w-full min-w-0 items-start">
+      <Toast ref={toast} />
+      <ConfirmDialog />
+      <div className="shrink-0">
+        <SubSidebar title="Rebranding" navItems={SideBarNavItems} />
+      </div>
 
-     <div className="grid grid-cols-12 md:grid-cols-10 lg:grid-cols-10 xl:grid-cols-12 2xl:grid-cols-7 items-start">
-        <div className='col-span-1'>
-    
-          <SubSidebar title="Rebranding" navItems={SideBarNavItems} />
+      <div className="min-w-0 flex-1 p-5">
+        <div className="flex justify-between mb-5">
+          <h2 className="text-[#19212A] text-[22px] font-[700]">
+            Flash Screen Popup
+          </h2>
+          <Link
+            href="/admin/rebranding/home-popup/add"
+            className="text-white bg-primarycolor px-4 py-2 flex gap-2 items-center"
+          >
+            <i className="pi pi-plus text-[14px]"></i> Add
+          </Link>
         </div>
-     
-      <div className='col-span-6 '>
-         <div className='p-[20px] xl:p-[25px] 3xl:p-[1.563vw] w-full'>
-        <div className='mb-3'>
-          <div className='flex justify-between'>
-            <h2 className='text-[#19212A] text-[14px] xl:text-[22px] 3xl:text-[1.146vw] font-[700] m-0'>Flash Screen (Home Page Popup)</h2>
 
-             <Link href='/admin/rebranding' className='cancelbtn  px-[14px] xl:px-[18px] 3xl:px-[0.938vw] py-[10px] xl:py-[12px] 3xl:py-[0.625vw] leading-[100%]'>
-                  Back
-                </Link>
+        <div className="bg-white border card-shadow min-w-0 overflow-hidden">
+          <div className="px-5 py-3 border-b border-[#EAEDF3] flex justify-between items-center">
+            <div className="text-[#101828] font-medium">All Flash Screens</div>
+            <IconField iconPosition="left" className="app-search-field">
+              <InputIcon className="pi pi-search" />
+              <InputText
+                placeholder="Search here.."
+                onChange={(e) =>
+                  setLazyParams({
+                    ...lazyParams,
+                    search: e.target.value,
+                    page: 1,
+                    first: 0,
+                  })
+                }
+              />
+            </IconField>
           </div>
 
-        </div>
-
-        <div className='bg-white card-shadow h-full p-[20px] xl:p-[25px] 3xl:p-[1.563vw]'>
-           <div className=' px-[20px] lg:px-[100px] xl:px-[150px] 3xl:px-[13.021vw]'>
-          <div className='space-y-3'>
-                 
-           <div className='flex flex-col gap-1'>
-                <label className='text-[#212325] text-[14px] xl:text-[14px] 3xl:text-[0.729vw] font-[500]'>Photo Upload</label>
-
-                <div className="flex border-2 border-[#b9d1ffab] border-dashed bg-[#fffef5] p-4  justify-center group relative cursor-pointer">
-                  <input type="file" className="absolute left-0 right-0 top-0 bottom-0 opacity-0  cursor-pointer" />
-                  <div className="text-center">
-                    <Image src="/images/admin/svg/upload.svg" className="inline mb-3" width={40} height={40} alt='Upload' />
-                    <p className="text-[#6C768B] xl:text-[0.730vw] mb-3"><span className="font-semibold">Click to upload</span> or drag and drop</p>
-                    <p className="text-[0.750rem] xl:text-[0.625vw] text-[#6C768B] font-semibold mb-4">Max. File Size: 30MB</p>
-                    <button className="text-white text-[0.750rem] xl:text-[0.625vw] bg-[#4FB155] border border-[#4FB155] rounded xl:py-[0.417vw] py-2 xl:px-[0.417vw] px-2 inline-block group-hover:bg-[#3f8643] group-hover:border-[#3f8643] transition duration-300 ease-in-out">
-                      <i className="rdmark-table-search mr-2"></i>
-                      Browse File
-                    </button>
-                  </div>
-                </div>
-              </div>
-              <div className='p-2 border flex gap-5 items-center'>
-                <div>
-                    <Image src="/images/admin/profile_banner.png" className="inline mb-3" width={300} height={150} alt='Upload' />
-                   
-                    
-                </div>
-                 <div>
-                      <Link href='' className='w-auto flex gap-2 item-center bg-[#A0AEC0] text-[#19212A] text-[14px] xl:text-[14px] 3xl:text-[0.729vw] font-[500] p-[10px] xl:p-[10px] 3xl:p-[0.521vw] leading-none'>
- <i className="pi pi-times-circle "></i> Remove Photo
-                      </Link>
-                    </div>
-               
-                
-                
-                
-              </div>
-             
-            </div>
-
-            <div className='mt-[30px]'>
-              <div className='flex justify-center gap-6'>
-                {/* <Button label="Save" /> */}
-                 <Link href='' className='cancelbtn  px-[14px] xl:px-[18px] 3xl:px-[0.938vw] py-[10px] xl:py-[12px] 3xl:py-[0.625vw] leading-[100%]'>
-                  Cancel
-                </Link>
-                <Button type='submit' className='text-white border bg-primarycolor border-[#af251c] px-[14px] xl:px-[18px] 3xl:px-[0.938vw] py-[10px] xl:py-[12px] 3xl:py-[0.625vw] leading-[100%] rounded-none p-button-raised'  > 
-                  Save
-                </Button>
-              </div>
-            </div>
-         </div>
+          <div className="min-w-0 overflow-x-auto">
+            <DataTable
+              value={data}
+              className="custTable tableCust"
+              scrollable
+              showGridlines
+              loading={loading}
+              paginator
+              totalRecords={totalRecords}
+              lazy
+              onPage={(event) =>
+                setLazyParams({
+                  ...lazyParams,
+                  first: event.first,
+                  rows: event.rows,
+                  page: event.page + 1,
+                })
+              }
+              onSort={(event) =>
+                setLazyParams({
+                  ...lazyParams,
+                  sortField: event.sortField,
+                  sortOrder: event.sortOrder,
+                })
+              }
+              first={lazyParams.first}
+              rows={lazyParams.rows}
+              sortField={lazyParams.sortField}
+              sortOrder={lazyParams.sortOrder}
+              rowsPerPageOptions={[5, 10, 25, 50]}
+              currentPageReportTemplate={`Rows ${lazyParams.first + 1} - ${
+                lazyParams.first + data.length
+              } of ${totalRecords}`}
+              paginatorTemplate="CurrentPageReport RowsPerPageDropdown PrevPageLink PageLinks NextPageLink"
+            >
+              <Column header="Sr.No." body={serialNumberTemplate} style={{ minWidth: '4rem' }} />
+              <Column header="Photo" body={photoTemplate} style={{ minWidth: '7rem' }} />
+              <Column
+                field="FlashScreenData.data.status"
+                header="Status"
+                body={statusTemplate}
+                style={{ minWidth: '6rem' }}
+              />
+              <Column
+                field="FlashScreenData.data.fromDate"
+                header="From Date"
+                body={(row) => formatDate(row?.FlashScreenData?.data?.fromDate)}
+                sortable
+                style={{ minWidth: '8rem' }}
+              />
+              <Column
+                field="FlashScreenData.data.toDate"
+                header="To Date"
+                body={(row) => formatDate(row?.FlashScreenData?.data?.toDate)}
+                sortable
+                style={{ minWidth: '8rem' }}
+              />
+              <Column
+                header="Action"
+                body={actionTemplate}
+                align="center"
+                style={{ minWidth: '6rem', background: '#fbf7dc' }}
+              />
+            </DataTable>
+          </div>
         </div>
       </div>
-          </div>
-        
-        </div>
-   
+    </div>
   );
 }
-
-
-

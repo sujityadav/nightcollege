@@ -63,7 +63,9 @@ export default function Left() {
         {/* <ScrollPanel className="h-[800px]"> */}
           <ul className="p-4 ">
            {menuItems.map((item, index) => {
-        const isActive = pathname === item.href;
+        const href = item.href.trim();
+        const isActive =
+          pathname === href || pathname.startsWith(`${href}/`);
         return (
           <Link
             key={index}

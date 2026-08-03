@@ -28,19 +28,10 @@ const Breadcrumb: React.FC<BreadcrumbProps> = ({
   pageTitle = 'Dashboard',
   useContext = true
 }) => {
-  let contextBreadcrumbs: BreadcrumbItem[] = [];
-  let contextPageTitle = pageTitle;
-  
-  if (useContext) {
-    try {
-      const context = useBreadcrumb();
-      contextBreadcrumbs = context.breadcrumbs;
-      contextPageTitle = context.pageTitle;
-    } catch (error) {
-      // Context not available, use provided props
-      console.warn('Breadcrumb context not available, using provided props');
-    }
-  }
+
+  const context = useBreadcrumb();
+  const contextBreadcrumbs = context.breadcrumbs;
+  const contextPageTitle = context.pageTitle;
 
   // Use context values if available and useContext is true, otherwise use props
   const finalBreadcrumbs = useContext && contextBreadcrumbs.length > 0

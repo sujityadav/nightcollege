@@ -1,5 +1,5 @@
 'use client';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import 'primereact/resources/themes/lara-light-blue/theme.css';
 import 'primereact/resources/primereact.min.css';
 import { SubSidebar } from '@/app/components/layout/sub-sidebar';
@@ -9,15 +9,16 @@ import { Column } from 'primereact/column';
 import { InputSwitch } from 'primereact/inputswitch';
 import { IconField } from "primereact/iconfield";
 import { InputIcon } from "primereact/inputicon";
-import { Button } from 'primereact/button';
+import { Toast } from 'primereact/toast';
+import { ConfirmDialog, confirmDialog } from 'primereact/confirmdialog';
 import Link from 'next/link';
-import Image from 'next/image';
 import axios from 'axios';
+import { useSelector } from 'react-redux';
 
 export default function Rebranding() {
   const [data, setData] = useState([]);
-  const [checked, setChecked] = useState(true);
   const [loading, setLoading] = useState(false);
+  const [updatingStatusId, setUpdatingStatusId] = useState(null);
   const [totalRecords, setTotalRecords] = useState(0);
   const [lazyParams, setLazyParams] = useState({
     first: 0,
@@ -28,14 +29,15 @@ export default function Rebranding() {
     search: ''
   });
 
-  // Sidebar Items
+  const user = useSelector((state) => state.auth.user);
+  const toast = useRef(null);
+
   const SideBarNavItems = [
     { label: 'Rebranding', href: '/admin/rebranding' },
     { label: 'Contact Information', href: '/admin/rebranding/contact-info' },
     { label: 'Flash Screen Popup', href: '/admin/rebranding/home-popup' }
   ];
 
-  // Fetch Data
   const fetchData = async () => {
     setLoading(true);
     try {
@@ -49,9 +51,8 @@ export default function Rebranding() {
           sortOrder
         }
       });
-      console.log("Fetched data:", res.data);
       setData(res.data.data || []);
-      setTotalRecords(res.data.totalRecords || 0);
+      setTotalRecords(res.data.total || 0);
     } catch (err) {
       console.error("Error fetching banners:", err);
     } finally {
@@ -63,41 +64,200 @@ export default function Rebranding() {
     fetchData();
   }, [lazyParams]);
 
-  // Table Templates
+  const handleStatusToggle = async (rowData, checked) => {
+    const newStatus = checked ? 1 : 0;
+    const previousStatus = Number(rowData?.RebrandingData?.data?.status ?? 0);
+
+    setData((prev) =>
+      prev.map((item) =>
+        item._id === rowData._id
+          ? {
+              ...item,
+              RebrandingData: {
+                ...item.RebrandingData,
+                data: {
+                  ...item.RebrandingData?.data,
+                  status: newStatus,
+                },
+              },
+            }
+          : item
+      )
+    );
+    setUpdatingStatusId(rowData._id);
+
+    try {
+      const response = await axios.put(
+        `/api/rebranding/${rowData._id}`,
+        { status: newStatus },
+        {
+          headers: {
+            Authorization: `Bearer ${user?.token}`,
+          },
+        }
+      );
+
+      if (!response?.data?.success) {
+        throw new Error(response?.data?.message || "Failed to update status");
+      }
+
+      toast.current?.show({
+        severity: "success",
+        summary: "Status updated",
+        detail: `Banner marked as ${newStatus === 1 ? "active" : "inactive"}`,
+        life: 2500,
+      });
+    } catch (err) {
+      console.error("Failed to update status:", err);
+      setData((prev) =>
+        prev.map((item) =>
+          item._id === rowData._id
+            ? {
+                ...item,
+                RebrandingData: {
+                  ...item.RebrandingData,
+                  data: {
+                    ...item.RebrandingData?.data,
+                    status: previousStatus,
+                  },
+                },
+              }
+            : item
+        )
+      );
+      toast.current?.show({
+        severity: "error",
+        summary: "Error",
+        detail: "Failed to update status",
+        life: 3000,
+      });
+    } finally {
+      setUpdatingStatusId(null);
+    }
+  };
+
+  const deleteBanner = async (id) => {
+    try {
+      const response = await axios.delete(`/api/rebranding/${id}`, {
+        headers: {
+          Authorization: `Bearer ${user?.token}`,
+        },
+      });
+
+      if (!response?.data?.success) {
+        throw new Error(response?.data?.message || "Failed to delete banner");
+      }
+
+      toast.current?.show({
+        severity: "success",
+        summary: "Deleted",
+        detail: "Banner deleted successfully",
+        life: 2500,
+      });
+      fetchData();
+    } catch (err) {
+      console.error("Failed to delete banner:", err);
+      toast.current?.show({
+        severity: "error",
+        summary: "Error",
+        detail: "Failed to delete banner",
+        life: 3000,
+      });
+    }
+  };
+
+  const confirmDelete = (rowData) => {
+    confirmDialog({
+      header: "Delete Banner",
+      message: `Are you sure you want to delete "${rowData?.RebrandingData?.data?.title || "this banner"}"?`,
+      icon: "pi pi-exclamation-triangle",
+      acceptLabel: "Yes, Delete",
+      rejectLabel: "Cancel",
+      acceptClassName: "p-button-danger",
+      accept: () => deleteBanner(rowData._id),
+    });
+  };
+
   const actionTemplate = (rowData) => (
     <div className="flex justify-center items-center gap-4">
       <Link href={`/admin/rebranding/add-banners?id=${rowData._id}`} className="leading-none">
         <i className="pi pi-pen-to-square text-[18px]"></i>
       </Link>
-      <Link href="#" className="leading-none">
+      <button
+        type="button"
+        onClick={() => confirmDelete(rowData)}
+        className="leading-none bg-transparent border-0 cursor-pointer text-red-500"
+      >
         <i className="pi pi-trash text-[18px]"></i>
-      </Link>
+      </button>
     </div>
   );
 
-  const BannerPic = (rowData) => (
-    <Image
-      src={rowData.image || "/images/admin/profile_banner.png"}
-      alt={rowData.title}
-      width={300}
-      height={150}
-      className="inline mb-3 rounded-md"
-    />
-  );
+  const BannerPic = (rowData) => {
+    const mediaUrl = rowData?.RebrandingData?.data?.photo;
+    const mediaType =
+      rowData?.RebrandingData?.data?.mediaType ||
+      (mediaUrl &&
+      (mediaUrl.includes('/video/upload/') ||
+        /\.(mp4|webm|ogg|mov|m4v)(\?|$)/i.test(mediaUrl))
+        ? 'video'
+        : 'image');
 
-  const StatusTemplate = (rowData) => (
-    <InputSwitch
-      checked={rowData.status}
-      onChange={() => console.log("toggle status", rowData.id)}
-    />
-  );
+    if (!mediaUrl) {
+      return <span className="text-gray-400 text-sm">No Media</span>;
+    }
 
-  // Search Handler
+    if (mediaType === 'video') {
+      return (
+        <video
+          src={mediaUrl}
+          className="h-14 w-24 rounded object-cover"
+          muted
+          playsInline
+        />
+      );
+    }
+
+    return (
+      <img
+        src={mediaUrl}
+        alt={rowData?.RebrandingData?.data?.title || 'Banner'}
+        className="h-14 w-24 rounded object-cover"
+      />
+    );
+  };
+
+  const serialNumberTemplate = (_rowData, options) => lazyParams.first + options.rowIndex + 1;
+
+  const StatusTemplate = (rowData) => {
+    const isActive = Number(rowData?.RebrandingData?.data?.status) === 1;
+    return (
+      <InputSwitch
+        checked={isActive}
+        disabled={updatingStatusId === rowData._id}
+        onChange={(e) => handleStatusToggle(rowData, e.value)}
+      />
+    );
+  };
+
+  const formatDate = (value) => {
+    if (!value) return "-";
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return value;
+    return date.toLocaleDateString("en-GB", {
+      day: "2-digit",
+      month: "2-digit",
+      year: "numeric",
+    });
+  };
+
+  const fromDateTemplate = (rowData) => formatDate(rowData?.RebrandingData?.data?.fromDate);
+  const toDateTemplate = (rowData) => formatDate(rowData?.RebrandingData?.data?.toDate);
+
   const handleSearch = (e) => {
     setLazyParams({ ...lazyParams, search: e.target.value, page: 1, first: 0 });
   };
 
-  // Pagination, Sorting, etc.
   const onPage = (event) => {
     setLazyParams({
       ...lazyParams,
@@ -117,6 +277,8 @@ export default function Rebranding() {
 
   return (
     <div className="flex w-full min-w-0 items-start">
+      <Toast ref={toast} />
+      <ConfirmDialog />
       <div className="shrink-0">
         <SubSidebar title="Rebranding" navItems={SideBarNavItems} />
       </div>
@@ -132,7 +294,7 @@ export default function Rebranding() {
           </Link>
         </div>
 
-        <div className="bg-white border card-shadow">
+        <div className="bg-white border card-shadow min-w-0 overflow-hidden">
           <div className="px-5 py-3 border-b border-[#EAEDF3] flex justify-between items-center">
             <div className="text-[#101828] font-medium">All Banners</div>
             <IconField iconPosition="left" className="app-search-field">
@@ -141,7 +303,7 @@ export default function Rebranding() {
             </IconField>
           </div>
 
-          <div className="overflow-auto">
+          <div className="min-w-0 overflow-x-auto">
             <DataTable
               value={data}
               className="custTable tableCust"
@@ -163,14 +325,14 @@ export default function Rebranding() {
               } of ${totalRecords}`}
               paginatorTemplate="CurrentPageReport RowsPerPageDropdown PrevPageLink PageLinks NextPageLink"
             >
-              <Column field="id" header="Sr.No." sortable style={{ minWidth: '3rem' }} />
-              <Column header="Banner Picture" body={BannerPic} style={{ minWidth: '10rem' }} />
-              <Column field="RebrandingData.data.sortno" header="Sort Number" sortable />
-              <Column field="RebrandingData.data.title" header="Banner Title" sortable />
-              <Column field="RebrandingData.data.description" header="Banner Description" sortable />
-              <Column field="RebrandingData.data.status" header="Status" body={StatusTemplate} />
-              <Column field="RebrandingData.data.fromDate" header="From (Date)" sortable />
-              <Column field="RebrandingData.data.toDate" header="To (Date)" sortable />
+              <Column header="Sr.No." body={serialNumberTemplate} style={{ minWidth: '3rem' }} />
+              <Column header="Banner Media" body={BannerPic} style={{ minWidth: '6rem' }} />
+              <Column field="RebrandingData.data.sortNo" header="Sort Number" sortable style={{ minWidth: '7rem' }} />
+              <Column field="RebrandingData.data.title" header="Banner Title" sortable style={{ minWidth: '10rem' }} />
+              <Column field="RebrandingData.data.description" header="Banner Description" sortable style={{ minWidth: '12rem' }} />
+              <Column field="RebrandingData.data.status" header="Status" body={StatusTemplate} style={{ minWidth: '6rem' }} />
+              <Column field="RebrandingData.data.fromDate" header="From (Date)" body={fromDateTemplate} sortable style={{ minWidth: '8rem' }} />
+              <Column field="RebrandingData.data.toDate" header="To (Date)" body={toDateTemplate} sortable style={{ minWidth: '8rem' }} />
               <Column
                 header="Action"
                 body={actionTemplate}
