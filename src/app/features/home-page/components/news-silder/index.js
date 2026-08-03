@@ -16,7 +16,7 @@ export default function NewsSilder() {
     {/* News Title */}
     <div className="shrink-0 w-full lg:w-auto">
       <div className="px-0 sm:px-4 3xl:px-5 py-1 sm:py-2 3xl:py-3">
-        <h6 className="text-white font-semibold text-base md:text-lg lg:text-xl">News/Announcement</h6>
+        <h6 className="text-white font-semibold text-base md:text-lg lg:text-xl">News/Announcements</h6>
       </div>
     </div>
 
