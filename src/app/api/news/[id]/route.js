@@ -6,12 +6,11 @@ export async function PUT(req, { params }) {
     await connectDB();
     const { id } = params;
     const body = await req.json();
-     console.log("body", body.data);
     const updated = await News.findByIdAndUpdate(
-  id,
-  { 'Newsdata.data': body.data }, // ✅ correct path
-  { new: true, runValidators: true }
-);
+      id,
+      { 'Newsdata.data': body.data },
+      { new: true, runValidators: true }
+    );
 
     if (!updated) {
       return NextResponse.json({ success: false, message: 'Event not found' }, { status: 404 });
@@ -27,9 +26,7 @@ export async function DELETE(req, { params }) {
   try {
     await connectDB();
     const { id } = params;
-    const updated = await News.findByIdAndDelete(
-  id,
-);
+    const updated = await News.findByIdAndDelete(id);
 
     if (!updated) {
       return NextResponse.json({ success: false, message: 'News not found' }, { status: 404 });

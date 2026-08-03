@@ -14,6 +14,7 @@ import { useRouter } from 'next/navigation';
 export default function LoginForm() {
   const { register, handleSubmit, errors } = useLoginForm();
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   const dispatch = useDispatch();
   const router = useRouter();
   const onSubmit = async (data) => {
@@ -51,13 +52,24 @@ export default function LoginForm() {
 
       <div className="flex flex-col items-start mb-6 w-full">
         <label className="text-sm font-medium text-[#2d2d2d] mb-1">Password</label>
-        <InputText
-          type="password"
-          {...register('password', { required: 'Password is required' })}
-          className="p-inputtext-sm w-full"
-          placeholder="Enter password"
-          disabled={loading}
-        />
+        <div className="relative w-full">
+          <InputText
+            type={showPassword ? 'text' : 'password'}
+            {...register('password', { required: 'Password is required' })}
+            className="p-inputtext-sm w-full pr-10"
+            placeholder="Enter password"
+            disabled={loading}
+          />
+          <button
+            type="button"
+            onClick={() => setShowPassword((visible) => !visible)}
+            className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 disabled:cursor-not-allowed"
+            aria-label={showPassword ? 'Hide password' : 'Show password'}
+            disabled={loading}
+          >
+            <i className={`pi ${showPassword ? 'pi-eye-slash' : 'pi-eye'}`} aria-hidden="true" />
+          </button>
+        </div>
         {errors.password && (
           <span className="text-red-500 text-xs mt-1">{errors.password.message}</span>
         )}
