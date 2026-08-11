@@ -1,32 +1,31 @@
 'use client';
-import React, { useEffect, useRef, useState } from 'react'
-import { InputText } from 'primereact/inputtext';
+import React, { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
-import { IconField } from "primereact/iconfield";
-import { InputIcon } from "primereact/inputicon";
-import { Column } from "primereact/column";
-import { DataTable } from "primereact/datatable";
 import axios from 'axios';
 import { format } from 'date-fns';
 import { Toast } from 'primereact/toast';
 import { ConfirmDialog } from 'primereact/confirmdialog';
 import { usePageBreadcrumbs } from '@/app/hooks/usePageBreadcrumbs';
+import CommonDataTable from '@/app/components/common/DataTable';
+import { getFirstPhotoUrl } from '@/app/components/common/MediaUpload';
 
 export default function EventList() {
-  // Set breadcrumbs for this page - automatically generated from path
   usePageBreadcrumbs({
     pageTitle: 'Events Management',
     pathLabels: {
       '/admin': 'Dashboard',
-      '/admin/events': 'Events'
-    }
+      '/admin/events': 'Events',
+    },
   });
 
   const [eventsData, setEventsData] = useState([]);
-  const [search, setSearch] = useState("");
-  const [page, setPage] = useState(1);
-  const [limit, setLimit] = useState(10);
+  const [search, setSearch] = useState('');
   const [totalRecords, setTotalRecords] = useState(0);
+  const [lazyParams, setLazyParams] = useState({
+    first: 0,
+    rows: 10,
+    page: 1,
+  });
   const toast = useRef(null);
 
   const [deleteDialogVisible, setDeleteDialogVisible] = useState(false);
@@ -34,13 +33,19 @@ export default function EventList() {
 
   const fetchEventList = async () => {
     try {
-      const response = await axios.get(`/api/events?search=${search}&page=${page}&limit=${limit}`);
+      const response = await axios.get('/api/events', {
+        params: {
+          search,
+          page: lazyParams.page,
+          limit: lazyParams.rows,
+        },
+      });
       if (response?.data?.success) {
         setEventsData(response.data.data);
         setTotalRecords(response.data.totalRecords);
       }
     } catch (error) {
-      toast.current.show({
+      toast.current?.show({
         severity: 'error',
         summary: 'Error',
         detail: 'Failed to fetch events',
@@ -50,7 +55,7 @@ export default function EventList() {
 
   useEffect(() => {
     fetchEventList();
-  }, [page, limit, search]);
+  }, [lazyParams, search]);
 
   const formatDate = (dateString) => {
     if (!dateString) return '-';
@@ -61,17 +66,39 @@ export default function EventList() {
     }
   };
 
+  const formatCategories = (value) => {
+    if (!value) return '-';
+    if (Array.isArray(value)) return value.filter(Boolean).join(', ') || '-';
+    return String(value);
+  };
+
+  const imageTemplate = (rowData) => {
+    const imageUrl = getFirstPhotoUrl(rowData?.Eventdata?.data);
+
+    if (!imageUrl) {
+      return <span className="text-gray-400 text-sm">No Image</span>;
+    }
+
+    return (
+      <img
+        src={imageUrl}
+        alt={rowData?.Eventdata?.data?.title || 'Event'}
+        className="h-14 w-24 rounded object-cover"
+      />
+    );
+  };
+
   const handleDelete = async (id) => {
     try {
       await axios.delete(`/api/events/${id}`);
-      toast.current.show({
+      toast.current?.show({
         severity: 'success',
         summary: 'Success',
         detail: 'Event deleted successfully',
       });
       fetchEventList();
     } catch (error) {
-      toast.current.show({
+      toast.current?.show({
         severity: 'error',
         summary: 'Error',
         detail: 'Failed to delete event',
@@ -85,27 +112,79 @@ export default function EventList() {
     setDeleteDialogVisible(true);
   };
 
-  const actionTemplate = (rowData) => {
-    return (
-      <div className="flex gap-2">
-        <Link
-          href={`/admin/events/add-events?id=${rowData._id}`}
-          className="p-button p-button-success p-button-text"
-        >
-          Edit
-        </Link>
-        <button
-          onClick={() => confirmDelete(rowData._id)}
-          className="p-button p-button-danger p-button-text"
-        >
-          Delete
-        </button>
-      </div>
-    );
-  };
+  // Match rebranding action icons (edit + delete)
+  const actionTemplate = (rowData) => (
+    <div className="flex justify-center items-center gap-4">
+      <Link
+        href={`/admin/events/add-events?id=${rowData._id}`}
+        className="leading-none"
+        title="Edit"
+      >
+        <i className="pi pi-pen-to-square text-[18px]" />
+      </Link>
+      <button
+        type="button"
+        onClick={() => confirmDelete(rowData._id)}
+        className="leading-none bg-transparent border-0 cursor-pointer text-red-500 p-0"
+        title="Delete"
+      >
+        <i className="pi pi-trash text-[18px]" />
+      </button>
+    </div>
+  );
+
+  const columns = [
+    {
+      header: 'Image',
+      body: imageTemplate,
+      style: { minWidth: '7rem' },
+    },
+    {
+      field: 'Eventdata.data.title',
+      header: 'Title',
+      sortable: true,
+      style: { minWidth: '10rem' },
+    },
+    {
+      field: 'Eventdata.data.smallDescription',
+      header: 'Description',
+      style: { minWidth: '12rem' },
+    },
+    {
+      header: 'Category',
+      body: (rowData) => formatCategories(rowData?.Eventdata?.data?.category),
+      style: { minWidth: '10rem' },
+    },
+    {
+      field: 'Eventdata.data.location',
+      header: 'Location',
+      style: { minWidth: '8rem' },
+    },
+    {
+      header: 'From',
+      body: (rowData) => formatDate(rowData?.Eventdata?.data?.fromDate),
+      style: { minWidth: '8rem' },
+    },
+    {
+      header: 'To',
+      body: (rowData) => formatDate(rowData?.Eventdata?.data?.toDate),
+      style: { minWidth: '8rem' },
+    },
+    {
+      header: 'Created At',
+      body: (rowData) => formatDate(rowData?.createdAt),
+      style: { minWidth: '8rem' },
+    },
+    {
+      header: 'Action',
+      body: actionTemplate,
+      align: 'center',
+      style: { minWidth: '6rem', background: '#fbf7dc' },
+    },
+  ];
 
   return (
-    <div className="p-4">
+    <div className="p-5">
       <Toast ref={toast} />
       <ConfirmDialog
         visible={deleteDialogVisible}
@@ -119,57 +198,39 @@ export default function EventList() {
         rejectClassName="p-button-secondary"
       />
 
-      <div className="card">
-        <div className="flex justify-between items-center mb-4">
-          <h2 className="text-xl font-semibold">Events</h2>
-          <Link
-            href="/admin/events/add-events"
-            className="p-button p-button-primary"
-          >
-            Add Event
-          </Link>
-        </div>
-
-        <div className="mb-4">
-          <IconField>
-            <InputIcon className="pi pi-search" />
-            <InputText
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder="Search events..."
-              className="w-full"
-            />
-          </IconField>
-        </div>
-
-        <div className="card">
-          <div className="overflow-x-auto">
-            <DataTable
-              value={eventsData}
-              paginator
-              rows={limit}
-              rowsPerPageOptions={[5, 10, 25, 50]}
-              totalRecords={totalRecords}
-              lazy
-              onPage={(e) => {
-                setPage(e.page + 1);
-                setLimit(e.rows);
-              }}
-              loading={false}
-              emptyMessage="No events found."
-            >
-              <Column field="Eventdata.data.title" header="Title" sortable />
-              <Column field="Eventdata.data.smallDescription" header="Description" />
-              <Column field="Eventdata.data.category" header="Category" />
-              <Column field="Eventdata.data.location" header="Location" />
-              <Column header="From" body={(rowData) => formatDate(rowData?.Eventdata?.data?.fromDate)} />
-              <Column header="To" body={(rowData) => formatDate(rowData?.Eventdata?.data?.toDate)} />
-              <Column header="Created At" body={(rowData) => formatDate(rowData?.createdAt)} />
-              <Column header="Action" body={actionTemplate} align="center" style={{ minWidth: "4rem" }} />
-            </DataTable>
-          </div>
-        </div>
+      <div className="flex justify-between items-center mb-5">
+        <h2 className="text-[#19212A] text-[22px] font-[700]">Events</h2>
+        <Link
+          href="/admin/events/add-events"
+          className="text-white bg-primarycolor px-4 py-2 flex gap-2 items-center"
+        >
+          <i className="pi pi-plus text-[14px]" /> Add Event
+        </Link>
       </div>
+
+      <CommonDataTable
+        value={eventsData}
+        columns={columns}
+        totalRecords={totalRecords}
+        first={lazyParams.first}
+        rows={lazyParams.rows}
+        onPage={(e) => {
+          setLazyParams({
+            first: e.first,
+            rows: e.rows,
+            page: e.page + 1,
+          });
+        }}
+        emptyMessage="No events found."
+        headerTitle="All Events"
+        showSearch
+        searchPlaceholder="Search here.."
+        searchValue={search}
+        onSearch={(e) => {
+          setSearch(e.target.value);
+          setLazyParams((prev) => ({ ...prev, page: 1, first: 0 }));
+        }}
+      />
     </div>
   );
 }

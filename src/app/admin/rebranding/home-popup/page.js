@@ -3,17 +3,13 @@ import React, { useEffect, useRef, useState } from 'react';
 import 'primereact/resources/themes/lara-light-blue/theme.css';
 import 'primereact/resources/primereact.min.css';
 import { SubSidebar } from '@/app/components/layout/sub-sidebar';
-import { InputText } from 'primereact/inputtext';
-import { DataTable } from 'primereact/datatable';
-import { Column } from 'primereact/column';
 import { InputSwitch } from 'primereact/inputswitch';
-import { IconField } from 'primereact/iconfield';
-import { InputIcon } from 'primereact/inputicon';
 import { Toast } from 'primereact/toast';
 import { ConfirmDialog, confirmDialog } from 'primereact/confirmdialog';
 import Link from 'next/link';
 import axios from 'axios';
 import { useSelector } from 'react-redux';
+import CommonDataTable from '@/app/components/common/DataTable';
 
 const SideBarNavItems = [
   { label: 'Rebranding', href: '/admin/rebranding' },
@@ -222,6 +218,37 @@ export default function HomePopupList() {
     </div>
   );
 
+  const columns = [
+    { header: 'Sr.No.', body: serialNumberTemplate, style: { minWidth: '4rem' } },
+    { header: 'Photo', body: photoTemplate, style: { minWidth: '7rem' } },
+    {
+      field: 'FlashScreenData.data.status',
+      header: 'Status',
+      body: statusTemplate,
+      style: { minWidth: '6rem' },
+    },
+    {
+      field: 'FlashScreenData.data.fromDate',
+      header: 'From Date',
+      body: (row) => formatDate(row?.FlashScreenData?.data?.fromDate),
+      sortable: true,
+      style: { minWidth: '8rem' },
+    },
+    {
+      field: 'FlashScreenData.data.toDate',
+      header: 'To Date',
+      body: (row) => formatDate(row?.FlashScreenData?.data?.toDate),
+      sortable: true,
+      style: { minWidth: '8rem' },
+    },
+    {
+      header: 'Action',
+      body: actionTemplate,
+      align: 'center',
+      style: { minWidth: '6rem', background: '#fbf7dc' },
+    },
+  ];
+
   return (
     <div className="flex w-full min-w-0 items-start">
       <Toast ref={toast} />
@@ -243,91 +270,41 @@ export default function HomePopupList() {
           </Link>
         </div>
 
-        <div className="bg-white border card-shadow min-w-0 overflow-hidden">
-          <div className="px-5 py-3 border-b border-[#EAEDF3] flex justify-between items-center">
-            <div className="text-[#101828] font-medium">All Flash Screens</div>
-            <IconField iconPosition="left" className="app-search-field">
-              <InputIcon className="pi pi-search" />
-              <InputText
-                placeholder="Search here.."
-                onChange={(e) =>
-                  setLazyParams({
-                    ...lazyParams,
-                    search: e.target.value,
-                    page: 1,
-                    first: 0,
-                  })
-                }
-              />
-            </IconField>
-          </div>
-
-          <div className="min-w-0 overflow-x-auto">
-            <DataTable
-              value={data}
-              className="custTable tableCust"
-              scrollable
-              showGridlines
-              loading={loading}
-              paginator
-              totalRecords={totalRecords}
-              lazy
-              onPage={(event) =>
-                setLazyParams({
-                  ...lazyParams,
-                  first: event.first,
-                  rows: event.rows,
-                  page: event.page + 1,
-                })
-              }
-              onSort={(event) =>
-                setLazyParams({
-                  ...lazyParams,
-                  sortField: event.sortField,
-                  sortOrder: event.sortOrder,
-                })
-              }
-              first={lazyParams.first}
-              rows={lazyParams.rows}
-              sortField={lazyParams.sortField}
-              sortOrder={lazyParams.sortOrder}
-              rowsPerPageOptions={[5, 10, 25, 50]}
-              currentPageReportTemplate={`Rows ${lazyParams.first + 1} - ${
-                lazyParams.first + data.length
-              } of ${totalRecords}`}
-              paginatorTemplate="CurrentPageReport RowsPerPageDropdown PrevPageLink PageLinks NextPageLink"
-            >
-              <Column header="Sr.No." body={serialNumberTemplate} style={{ minWidth: '4rem' }} />
-              <Column header="Photo" body={photoTemplate} style={{ minWidth: '7rem' }} />
-              <Column
-                field="FlashScreenData.data.status"
-                header="Status"
-                body={statusTemplate}
-                style={{ minWidth: '6rem' }}
-              />
-              <Column
-                field="FlashScreenData.data.fromDate"
-                header="From Date"
-                body={(row) => formatDate(row?.FlashScreenData?.data?.fromDate)}
-                sortable
-                style={{ minWidth: '8rem' }}
-              />
-              <Column
-                field="FlashScreenData.data.toDate"
-                header="To Date"
-                body={(row) => formatDate(row?.FlashScreenData?.data?.toDate)}
-                sortable
-                style={{ minWidth: '8rem' }}
-              />
-              <Column
-                header="Action"
-                body={actionTemplate}
-                align="center"
-                style={{ minWidth: '6rem', background: '#fbf7dc' }}
-              />
-            </DataTable>
-          </div>
-        </div>
+        <CommonDataTable
+          value={data}
+          columns={columns}
+          loading={loading}
+          totalRecords={totalRecords}
+          first={lazyParams.first}
+          rows={lazyParams.rows}
+          sortField={lazyParams.sortField}
+          sortOrder={lazyParams.sortOrder}
+          onPage={(event) =>
+            setLazyParams({
+              ...lazyParams,
+              first: event.first,
+              rows: event.rows,
+              page: event.page + 1,
+            })
+          }
+          onSort={(event) =>
+            setLazyParams({
+              ...lazyParams,
+              sortField: event.sortField,
+              sortOrder: event.sortOrder,
+            })
+          }
+          headerTitle="All Flash Screens"
+          showSearch
+          onSearch={(e) =>
+            setLazyParams({
+              ...lazyParams,
+              search: e.target.value,
+              page: 1,
+              first: 0,
+            })
+          }
+        />
       </div>
     </div>
   );

@@ -1,21 +1,17 @@
-"use client";
-import React, { useEffect, useRef, useState } from "react";
-import { InputText } from "primereact/inputtext";
-import Link from "next/link";
-import { IconField } from "primereact/iconfield";
-import { InputIcon } from "primereact/inputicon";
-import { Column } from "primereact/column";
-import { DataTable } from "primereact/datatable";
-import axios from "axios";
-import { format } from "date-fns";
-import { Toast } from "primereact/toast";
-import { ConfirmDialog } from "primereact/confirmdialog";
+'use client';
+import React, { useEffect, useRef, useState } from 'react';
+import Link from 'next/link';
+import axios from 'axios';
+import { format } from 'date-fns';
+import { Toast } from 'primereact/toast';
+import { ConfirmDialog } from 'primereact/confirmdialog';
+import CommonDataTable from '@/app/components/common/DataTable';
 
 export default function NewsList() {
   const [newsData, setNewsData] = useState([]);
   const [deleteId, setDeleteId] = useState(null);
   const [visible, setVisible] = useState(false);
-  const [searchQuery, setSearchQuery] = useState("");
+  const [searchQuery, setSearchQuery] = useState('');
   const [totalRecords, setTotalRecords] = useState(0);
   const [lazyParams, setLazyParams] = useState({
     first: 0,
@@ -25,10 +21,9 @@ export default function NewsList() {
 
   const toast = useRef(null);
 
-  // 🔹 Fetch paginated news
-  const fetchNewsList = async (query = "", page = 1, limit = 10) => {
+  const fetchNewsList = async (query = '', page = 1, limit = 10) => {
     try {
-      const response = await axios.get("/api/news", {
+      const response = await axios.get('/api/news', {
         params: { search: query, page, limit },
       });
 
@@ -38,9 +33,9 @@ export default function NewsList() {
       }
     } catch (error) {
       toast.current.show({
-        severity: "error",
-        summary: "Error",
-        detail: "Failed to fetch news",
+        severity: 'error',
+        summary: 'Error',
+        detail: 'Failed to fetch news',
         life: 3000,
       });
     }
@@ -50,10 +45,9 @@ export default function NewsList() {
     fetchNewsList(searchQuery, lazyParams.page, lazyParams.rows);
   }, [lazyParams, searchQuery]);
 
-  // 🔹 debounce search
   useEffect(() => {
     const delayDebounce = setTimeout(() => {
-      setLazyParams((prev) => ({ ...prev, page: 1, first: 0 })); // reset to page 1 on search
+      setLazyParams((prev) => ({ ...prev, page: 1, first: 0 }));
     }, 500);
     return () => clearTimeout(delayDebounce);
   }, [searchQuery]);
@@ -62,19 +56,19 @@ export default function NewsList() {
     try {
       const response = await axios.delete(`/api/news/${id}`);
       if (response?.data?.success) {
-        fetchNewsList(searchQuery, lazyParams.page, lazyParams.rows); // refetch after delete
+        fetchNewsList(searchQuery, lazyParams.page, lazyParams.rows);
         toast.current.show({
-          severity: "success",
-          summary: "Deleted",
-          detail: "News deleted successfully",
+          severity: 'success',
+          summary: 'Deleted',
+          detail: 'News deleted successfully',
           life: 3000,
         });
       }
     } catch (error) {
       toast.current.show({
-        severity: "error",
-        summary: "Error",
-        detail: "Failed to delete news",
+        severity: 'error',
+        summary: 'Error',
+        detail: 'Failed to delete news',
         life: 3000,
       });
     }
@@ -87,21 +81,68 @@ export default function NewsList() {
 
   const actionTemplate = (rowData) => (
     <div className="flex justify-center items-center gap-4">
-      <Link href={`/admin/news/add-news?id=${rowData?._id}`}>
-        <i className="pi pi-pen-to-square text-[18px]"></i>
+      <Link
+        href={`/admin/news/add-news?id=${rowData?._id}`}
+        className="leading-none"
+        title="Edit"
+      >
+        <i className="pi pi-pen-to-square text-[18px]" />
       </Link>
       <button
-        onClick={() => confirmDelete(rowData?._id)}
-        className="text-red-500"
         type="button"
+        onClick={() => confirmDelete(rowData?._id)}
+        className="leading-none bg-transparent border-0 cursor-pointer text-red-500 p-0"
+        title="Delete"
       >
-        <i className="pi pi-trash text-[18px]"></i>
+        <i className="pi pi-trash text-[18px]" />
       </button>
     </div>
   );
 
   const formatDate = (value) =>
-    value ? format(new Date(value), "dd MMM yyyy") : "-";
+    value ? format(new Date(value), 'dd MMM yyyy') : '-';
+
+  const formatCategories = (value) => {
+    if (!value) return '-';
+    if (Array.isArray(value)) return value.filter(Boolean).join(', ') || '-';
+    return String(value);
+  };
+
+  const columns = [
+    { field: 'Newsdata.data.title', header: 'Title', sortable: true },
+    { field: 'Newsdata.data.smallDescription', header: 'Description' },
+    {
+      header: 'Category',
+      body: (rowData) => formatCategories(rowData?.Newsdata?.data?.category),
+      style: { minWidth: '10rem' },
+    },
+    { field: 'Newsdata.data.location', header: 'Location' },
+    {
+      header: 'From',
+      body: (rowData) => formatDate(rowData?.Newsdata?.data?.fromDate),
+    },
+    {
+      header: 'To',
+      body: (rowData) => formatDate(rowData?.Newsdata?.data?.toDate),
+    },
+    {
+      header: 'Created At',
+      body: (rowData) => formatDate(rowData?.createdAt),
+    },
+    {
+      header: 'Action',
+      body: actionTemplate,
+      frozen: true,
+      alignFrozen: 'right',
+      align: 'center',
+      style: {
+        minWidth: '6rem',
+        background: '#fbf7dc',
+        zIndex: 1,
+        boxShadow: '-4px 0 6px -1px rgba(0, 0, 0, 0.1)',
+      },
+    },
+  ];
 
   return (
     <div className="grid grid-cols-1">
@@ -132,79 +173,35 @@ export default function NewsList() {
           </Link>
         </div>
 
-        <div className="bg-white border card-shadow">
-          <div className="px-5 py-3 border-b flex justify-between items-center">
+        <CommonDataTable
+          value={newsData}
+          columns={columns}
+          totalRecords={totalRecords}
+          first={lazyParams.first}
+          rows={lazyParams.rows}
+          onPage={(e) => {
+            setLazyParams({
+              ...lazyParams,
+              first: e.first,
+              rows: e.rows,
+              page: e.page + 1,
+            });
+          }}
+          tableClassName="custTable"
+          headerTitle={
             <div className="flex items-center gap-4">
-              <div className="text-[16px] font-medium">All News</div>
-              <div className="bg-gray-100 px-3 py-1 text-sm rounded-full">
+              <span>All News</span>
+              <span className="bg-gray-100 px-3 py-1 text-sm rounded-full font-normal">
                 Total {totalRecords}
-              </div>
+              </span>
             </div>
-            <IconField iconPosition="left">
-              <InputIcon className="pi pi-search" />
-              <InputText
-                placeholder="Search"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-              />
-            </IconField>
-          </div>
-
-          <div className="overflow-auto">
-            <DataTable
-              value={newsData}
-              lazy
-              paginator
-              totalRecords={totalRecords}
-              first={lazyParams.first}
-              rows={lazyParams.rows}
-              onPage={(e) => {
-                setLazyParams({
-                  ...lazyParams,
-                  first: e.first,
-                  rows: e.rows,
-                  page: e.page + 1,
-                });
-              }}
-              rowsPerPageOptions={[5, 10, 25, 50]}
-              currentPageReportTemplate="Rows {first} - {last} of {totalRecords}"
-              paginatorTemplate="CurrentPageReport RowsPerPageDropdown PrevPageLink PageLinks NextPageLink"
-              className="custTable"
-              showGridlines
-              responsiveLayout="scroll"
-            >
-              <Column field="Newsdata.data.title" header="Title" sortable />
-              <Column field="Newsdata.data.smallDescription" header="Description" />
-              <Column field="Newsdata.data.category" header="Category" />
-              <Column field="Newsdata.data.location" header="Location" />
-              <Column
-                header="From"
-                body={(rowData) => formatDate(rowData?.Newsdata?.data?.fromDate)}
-              />
-              <Column
-                header="To"
-                body={(rowData) => formatDate(rowData?.Newsdata?.data?.toDate)}
-              />
-              <Column
-                header="Created At"
-                body={(rowData) => formatDate(rowData?.createdAt)}
-              />
-              <Column
-                header="Action"
-                body={actionTemplate}
-                frozen
-                alignFrozen="right"
-                align="center"
-                style={{
-                  minWidth: "4rem",
-                  background: "#fbf7dc",
-                  zIndex: 1,
-                  boxShadow: "-4px 0 6px -1px rgba(0, 0, 0, 0.1)",
-                }}
-              />
-            </DataTable>
-          </div>
-        </div>
+          }
+          showSearch
+          searchPlaceholder="Search here.."
+          searchValue={searchQuery}
+          onSearch={(e) => setSearchQuery(e.target.value)}
+          dataTableProps={{ responsiveLayout: 'scroll' }}
+        />
       </div>
     </div>
   );

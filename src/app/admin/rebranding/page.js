@@ -3,17 +3,13 @@ import React, { useEffect, useRef, useState } from 'react';
 import 'primereact/resources/themes/lara-light-blue/theme.css';
 import 'primereact/resources/primereact.min.css';
 import { SubSidebar } from '@/app/components/layout/sub-sidebar';
-import { InputText } from 'primereact/inputtext';
-import { DataTable } from 'primereact/datatable';
-import { Column } from 'primereact/column';
 import { InputSwitch } from 'primereact/inputswitch';
-import { IconField } from "primereact/iconfield";
-import { InputIcon } from "primereact/inputicon";
 import { Toast } from 'primereact/toast';
 import { ConfirmDialog, confirmDialog } from 'primereact/confirmdialog';
 import Link from 'next/link';
 import axios from 'axios';
 import { useSelector } from 'react-redux';
+import CommonDataTable from '@/app/components/common/DataTable';
 
 export default function Rebranding() {
   const [data, setData] = useState([]);
@@ -193,21 +189,31 @@ export default function Rebranding() {
     </div>
   );
 
+  const resolveBannerMediaType = (rowData) => {
+    const stored = rowData?.RebrandingData?.data?.mediaType;
+    if (stored === 'Photo' || stored === 'Video') return stored;
+    if (String(stored || '').toLowerCase() === 'video') return 'Video';
+    if (String(stored || '').toLowerCase() === 'image') return 'Photo';
+
+    const mediaUrl = rowData?.RebrandingData?.data?.photo || '';
+    if (
+      mediaUrl.includes('/video/upload/') ||
+      /\.(mp4|webm|ogg|mov|m4v)(\?|$)/i.test(mediaUrl)
+    ) {
+      return 'Video';
+    }
+    return mediaUrl ? 'Photo' : '-';
+  };
+
   const BannerPic = (rowData) => {
     const mediaUrl = rowData?.RebrandingData?.data?.photo;
-    const mediaType =
-      rowData?.RebrandingData?.data?.mediaType ||
-      (mediaUrl &&
-      (mediaUrl.includes('/video/upload/') ||
-        /\.(mp4|webm|ogg|mov|m4v)(\?|$)/i.test(mediaUrl))
-        ? 'video'
-        : 'image');
+    const mediaType = resolveBannerMediaType(rowData);
 
     if (!mediaUrl) {
       return <span className="text-gray-400 text-sm">No Media</span>;
     }
 
-    if (mediaType === 'video') {
+    if (mediaType === 'Video') {
       return (
         <video
           src={mediaUrl}
@@ -224,6 +230,22 @@ export default function Rebranding() {
         alt={rowData?.RebrandingData?.data?.title || 'Banner'}
         className="h-14 w-24 rounded object-cover"
       />
+    );
+  };
+
+  const mediaTypeTemplate = (rowData) => {
+    const type = resolveBannerMediaType(rowData);
+    if (type === '-') return <span className="text-gray-400 text-sm">-</span>;
+    return (
+      <span
+        className={
+          type === 'Video'
+            ? 'text-[#1d4ed8] font-medium'
+            : 'text-[#166534] font-medium'
+        }
+      >
+        {type}
+      </span>
     );
   };
 
@@ -275,6 +297,60 @@ export default function Rebranding() {
     });
   };
 
+  const columns = [
+    { header: 'Sr.No.', body: serialNumberTemplate, style: { minWidth: '3rem' } },
+    { header: 'Banner Media', body: BannerPic, style: { minWidth: '6rem' } },
+    {
+      header: 'Type',
+      body: mediaTypeTemplate,
+      style: { minWidth: '5rem' },
+    },
+    {
+      field: 'RebrandingData.data.sortNo',
+      header: 'Sort Number',
+      sortable: true,
+      style: { minWidth: '7rem' },
+    },
+    {
+      field: 'RebrandingData.data.title',
+      header: 'Banner Title',
+      sortable: true,
+      style: { minWidth: '10rem' },
+    },
+    {
+      field: 'RebrandingData.data.description',
+      header: 'Banner Description',
+      sortable: true,
+      style: { minWidth: '12rem' },
+    },
+    {
+      field: 'RebrandingData.data.status',
+      header: 'Status',
+      body: StatusTemplate,
+      style: { minWidth: '6rem' },
+    },
+    {
+      field: 'RebrandingData.data.fromDate',
+      header: 'From (Date)',
+      body: fromDateTemplate,
+      sortable: true,
+      style: { minWidth: '8rem' },
+    },
+    {
+      field: 'RebrandingData.data.toDate',
+      header: 'To (Date)',
+      body: toDateTemplate,
+      sortable: true,
+      style: { minWidth: '8rem' },
+    },
+    {
+      header: 'Action',
+      body: actionTemplate,
+      align: 'center',
+      style: { minWidth: '6rem', background: '#fbf7dc' },
+    },
+  ];
+
   return (
     <div className="flex w-full min-w-0 items-start">
       <Toast ref={toast} />
@@ -294,54 +370,21 @@ export default function Rebranding() {
           </Link>
         </div>
 
-        <div className="bg-white border card-shadow min-w-0 overflow-hidden">
-          <div className="px-5 py-3 border-b border-[#EAEDF3] flex justify-between items-center">
-            <div className="text-[#101828] font-medium">All Banners</div>
-            <IconField iconPosition="left" className="app-search-field">
-              <InputIcon className="pi pi-search" />
-              <InputText placeholder="Search here.." onChange={handleSearch} />
-            </IconField>
-          </div>
-
-          <div className="min-w-0 overflow-x-auto">
-            <DataTable
-              value={data}
-              className="custTable tableCust"
-              scrollable
-              showGridlines
-              loading={loading}
-              paginator
-              totalRecords={totalRecords}
-              lazy
-              onPage={onPage}
-              onSort={onSort}
-              first={lazyParams.first}
-              rows={lazyParams.rows}
-              sortField={lazyParams.sortField}
-              sortOrder={lazyParams.sortOrder}
-              rowsPerPageOptions={[5, 10, 25, 50]}
-              currentPageReportTemplate={`Rows ${lazyParams.first + 1} - ${
-                lazyParams.first + data.length
-              } of ${totalRecords}`}
-              paginatorTemplate="CurrentPageReport RowsPerPageDropdown PrevPageLink PageLinks NextPageLink"
-            >
-              <Column header="Sr.No." body={serialNumberTemplate} style={{ minWidth: '3rem' }} />
-              <Column header="Banner Media" body={BannerPic} style={{ minWidth: '6rem' }} />
-              <Column field="RebrandingData.data.sortNo" header="Sort Number" sortable style={{ minWidth: '7rem' }} />
-              <Column field="RebrandingData.data.title" header="Banner Title" sortable style={{ minWidth: '10rem' }} />
-              <Column field="RebrandingData.data.description" header="Banner Description" sortable style={{ minWidth: '12rem' }} />
-              <Column field="RebrandingData.data.status" header="Status" body={StatusTemplate} style={{ minWidth: '6rem' }} />
-              <Column field="RebrandingData.data.fromDate" header="From (Date)" body={fromDateTemplate} sortable style={{ minWidth: '8rem' }} />
-              <Column field="RebrandingData.data.toDate" header="To (Date)" body={toDateTemplate} sortable style={{ minWidth: '8rem' }} />
-              <Column
-                header="Action"
-                body={actionTemplate}
-                align="center"
-                style={{ minWidth: '6rem', background: '#fbf7dc' }}
-              />
-            </DataTable>
-          </div>
-        </div>
+        <CommonDataTable
+          value={data}
+          columns={columns}
+          loading={loading}
+          totalRecords={totalRecords}
+          first={lazyParams.first}
+          rows={lazyParams.rows}
+          sortField={lazyParams.sortField}
+          sortOrder={lazyParams.sortOrder}
+          onPage={onPage}
+          onSort={onSort}
+          headerTitle="All Banners"
+          showSearch
+          onSearch={handleSearch}
+        />
       </div>
     </div>
   );

@@ -578,20 +578,30 @@ color:#3C4146;
 }
 
 /* Shared PrimeReact table search field */
+.app-search-field.p-icon-field,
 .app-search-field {
   position: relative;
-  display: inline-block;
+  display: inline-flex;
+  align-items: center;
 }
 
+.app-search-field.p-icon-field-left > .p-inputtext,
 .app-search-field .p-inputtext {
   min-width: 14rem;
-  padding-left: 2.5rem;
+  /* Override global .p-inputtext { padding: 5px 12px } so icon doesn't overlap text */
+  padding: 5px 12px 5px 2.5rem !important;
 }
 
+.app-search-field.p-icon-field > .p-input-icon,
 .app-search-field .p-input-icon {
+  position: absolute;
+  top: 50%;
   left: 0.75rem;
   margin-top: 0 !important;
   transform: translateY(-50%);
+  z-index: 1;
+  color: #6b7280;
+  pointer-events: none;
 }
 /* ***************** end********************* */
 .action-shadow-table {
@@ -767,4 +777,29 @@ color:#3C4146;
 
 .active-slide {
   color: #fff !important; 
+}
+
+/* Category chips (news) */
+.app-category-chips.p-chips,
+.app-category-chips {
+  display: flex !important;
+  width: 100%;
+}
+.app-category-chips .p-chips-multiple-container {
+  width: 100%;
+  min-height: 38px;
+  padding: 4px 8px;
+  border: 1px solid #d1d5db;
+  border-radius: 0;
+  background: #fff;
+}
+.app-category-chips .p-chips-token {
+  background: #eef2ff;
+  color: #1e3a8a;
+  border-radius: 4px;
+  padding: 2px 8px;
+  margin: 2px;
+}
+.app-category-chips .p-chips-input-token input {
+  font-size: 14px;
 }

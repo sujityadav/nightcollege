@@ -42,7 +42,9 @@ export async function GET(req) {
         $or: [
           { "Newsdata.data.title": { $regex: search, $options: "i" } },
           { "Newsdata.data.smallDescription": { $regex: search, $options: "i" } },
+          // Support legacy string category and new string[] chips
           { "Newsdata.data.category": { $regex: search, $options: "i" } },
+          { "Newsdata.data.category": search },
           { "Newsdata.data.location": { $regex: search, $options: "i" } },
         ],
       };

@@ -41,6 +41,7 @@ export async function GET(req) {
           { "Eventdata.data.title": { $regex: search, $options: "i" } },
           { "Eventdata.data.smallDescription": { $regex: search, $options: "i" } },
           { "Eventdata.data.category": { $regex: search, $options: "i" } },
+          { "Eventdata.data.category": search },
           { "Eventdata.data.location": { $regex: search, $options: "i" } },
         ],
       };

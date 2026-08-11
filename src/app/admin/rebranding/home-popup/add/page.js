@@ -6,7 +6,6 @@ import axios from 'axios';
 import Link from 'next/link';
 import Image from 'next/image';
 
-import { Calendar } from 'primereact/calendar';
 import { Button } from 'primereact/button';
 import { Toast } from 'primereact/toast';
 import { ConfirmDialog, confirmDialog } from 'primereact/confirmdialog';
@@ -14,6 +13,7 @@ import { ConfirmDialog, confirmDialog } from 'primereact/confirmdialog';
 import 'primereact/resources/themes/lara-light-blue/theme.css';
 import 'primereact/resources/primereact.min.css';
 import { SubSidebar } from '@/app/components/layout/sub-sidebar';
+import DateRange, { validateDateRange } from '@/app/components/common/DateRange';
 
 const SideBarNavItems = [
   { label: 'Rebranding', href: '/admin/rebranding' },
@@ -24,7 +24,6 @@ const SideBarNavItems = [
 export default function AddFlashScreen() {
   const [fromDate, setFromDate] = useState(null);
   const [toDate, setToDate] = useState(null);
-  const [dateError, setDateError] = useState('');
   const [photoError, setPhotoError] = useState('');
   const [photoFile, setPhotoFile] = useState(null);
   const [photoPreview, setPhotoPreview] = useState('');
@@ -59,7 +58,6 @@ export default function AddFlashScreen() {
       setPhotoFile(null);
       setOriginalPhotoUrl(data.photo || '');
       setStatus(Number(data.status ?? 1));
-      setDateError('');
       setPhotoError('');
     } catch (err) {
       toast.current?.show({
@@ -71,32 +69,6 @@ export default function AddFlashScreen() {
     } finally {
       setLoading(false);
     }
-  };
-
-  const validateDates = (fromValue = fromDate, toValue = toDate, { requireBoth = false } = {}) => {
-    if (!fromValue || !toValue) {
-      if (requireBoth) {
-        const message = 'From date and To date are required';
-        setDateError(message);
-        return message;
-      }
-      setDateError('');
-      return '';
-    }
-
-    const from = new Date(fromValue);
-    const to = new Date(toValue);
-    from.setHours(0, 0, 0, 0);
-    to.setHours(0, 0, 0, 0);
-
-    if (from.getTime() > to.getTime()) {
-      const message = 'From date should be less than or equal to To date';
-      setDateError(message);
-      return message;
-    }
-
-    setDateError('');
-    return '';
   };
 
   const handleFileUpload = (e) => {
@@ -157,7 +129,7 @@ export default function AddFlashScreen() {
   const onSubmit = async (e) => {
     e.preventDefault();
 
-    const dateValidationError = validateDates(fromDate, toDate, { requireBoth: true });
+    const dateValidationError = validateDateRange(fromDate, toDate, { requireBoth: true });
     if (dateValidationError) {
       toast.current?.show({
         severity: 'warn',
@@ -266,47 +238,15 @@ export default function AddFlashScreen() {
           noValidate
         >
           <div className="mx-auto w-full max-w-[720px] space-y-3">
-            <div className="flex gap-5">
-              <div className="flex flex-col gap-1 w-full">
-                <label className="text-[#212325] text-[14px] font-[500]">
-                  From Date <span className="text-red-500">*</span>
-                </label>
-                <Calendar
-                  value={fromDate}
-                  onChange={(e) => {
-                    setFromDate(e.value);
-                    validateDates(e.value, toDate);
-                  }}
-                  maxDate={toDate || undefined}
-                  locale="en"
-                  dateFormat="dd/mm/yy"
-                  mask="99/99/9999"
-                  placeholder="dd/mm/yyyy"
-                  className="w-full"
-                  showIcon
-                />
-              </div>
-              <div className="flex flex-col gap-1 w-full">
-                <label className="text-[#212325] text-[14px] font-[500]">
-                  To Date <span className="text-red-500">*</span>
-                </label>
-                <Calendar
-                  value={toDate}
-                  onChange={(e) => {
-                    setToDate(e.value);
-                    validateDates(fromDate, e.value);
-                  }}
-                  minDate={fromDate || undefined}
-                  locale="en"
-                  dateFormat="dd/mm/yy"
-                  mask="99/99/9999"
-                  placeholder="dd/mm/yyyy"
-                  className="w-full"
-                  showIcon
-                />
-              </div>
-            </div>
-            {dateError && <span className="text-red-500 text-sm">{dateError}</span>}
+            <DateRange
+              fromDate={fromDate}
+              toDate={toDate}
+              onFromDateChange={setFromDate}
+              onToDateChange={setToDate}
+              fromLabel="From Date"
+              toLabel="To Date"
+              required
+            />
 
             <div className="flex flex-col gap-1">
               <label className="text-[#212325] text-[14px] font-[500]">
