@@ -5,18 +5,19 @@ import { useForm } from 'react-hook-form';
 import { useRouter, useSearchParams } from 'next/navigation';
 import axios from 'axios';
 import Link from 'next/link';
-import Image from 'next/image';
 import { Button } from 'primereact/button';
-import { confirmDialog, ConfirmDialog } from 'primereact/confirmdialog';
+import { ConfirmDialog } from 'primereact/confirmdialog';
 import { InputText } from 'primereact/inputtext';
 import { Toast } from 'primereact/toast';
 import TextEditor from '@/app/components/common/editor';
+import MediaUpload, { DEFAULT_MAX_MEDIA_SIZE_MB, uploadMediaFile } from '@/app/components/common/MediaUpload';
 
 export default function AddPublication() {
   const { register, handleSubmit, reset, setValue, formState: { errors } } = useForm();
   const [description, setDescription] = useState('');
-  const [photo, setPhoto] = useState(null);
+  const [mediaFile, setMediaFile] = useState(null);
   const [preview, setPreview] = useState('');
+  const [mediaError, setMediaError] = useState('');
   const [loading, setLoading] = useState(false);
   const toast = useRef(null);
   const router = useRouter();
@@ -35,6 +36,8 @@ export default function AddPublication() {
         reset({ title: publication.title || '', description: publication.description || '' });
         setDescription(publication.description || '');
         setPreview(publication.photo || '');
+        setMediaFile(null);
+        setMediaError('');
       } catch (error) {
         toast.current?.show({ severity: 'error', summary: 'Error', detail: 'Unable to load publication', life: 3000 });
       } finally {
@@ -49,45 +52,27 @@ export default function AddPublication() {
     setValue('description', value, { shouldValidate: true });
   };
 
-  const onPhotoChange = (event) => {
-    const selectedFile = event.target.files?.[0];
-    if (!selectedFile) return;
-    if (!selectedFile.type.startsWith('image/')) {
-      toast.current?.show({ severity: 'warn', summary: 'Invalid file', detail: 'Please choose an image file.', life: 3000 });
-      return;
-    }
-    setPhoto(selectedFile);
-    setPreview(URL.createObjectURL(selectedFile));
+  const handleMediaChange = ({ file, previewUrl }) => {
+    setMediaFile(file);
+    setPreview(previewUrl);
+    setMediaError('');
   };
 
-  const removePhoto = () => confirmDialog({
-    header: 'Remove Photo',
-    message: 'Remove this photo from the publication? Save the form to keep this change.',
-    icon: 'pi pi-exclamation-triangle',
-    acceptLabel: 'Remove',
-    rejectLabel: 'Cancel',
-    acceptClassName: 'p-button-danger',
-    accept: () => {
-      setPhoto(null);
-      setPreview('');
-      toast.current?.show({ severity: 'info', summary: 'Photo removed', detail: 'Save the form to update the publication.', life: 2500 });
-    },
-  });
+  const handleMediaClear = () => {
+    setMediaFile(null);
+    setPreview('');
+    setMediaError('');
+  };
 
-  const uploadPhoto = async () => {
-    if (!(photo instanceof File)) return preview;
-    const formData = new FormData();
-    formData.append('photo', photo);
-    const response = await axios.post('/api/upload', formData);
-    const imageUrl = response.data?.result?.[0]?.url;
-    if (!imageUrl) throw new Error('Photo upload failed');
-    return imageUrl;
+  const handleMediaError = (message) => {
+    setMediaError(message);
+    toast.current?.show({ severity: 'warn', summary: 'Upload', detail: message, life: 3000 });
   };
 
   const onSubmit = async (formData) => {
     try {
       setLoading(true);
-      const photoUrl = await uploadPhoto();
+      const photoUrl = await uploadMediaFile(mediaFile, preview);
       const payload = { data: { title: formData.title, description, photo: photoUrl } };
       const response = publicationId
         ? await axios.put(`/api/college-publication/${publicationId}`, payload)
@@ -122,17 +107,16 @@ export default function AddPublication() {
             {errors.description && <span className="text-sm text-red-500">{errors.description.message}</span>}
           </div>
 
-          <div className="flex flex-col gap-2">
-            <label>Photo Upload</label>
-            <div className="relative flex cursor-pointer justify-center border-2 border-dashed bg-[#fffef5] p-4">
-              <input type="file" accept="image/*" onChange={onPhotoChange} className="absolute inset-0 cursor-pointer opacity-0" />
-              <div className="text-center">
-                <Image src="/images/admin/svg/upload.svg" width={40} height={40} alt="Upload" />
-                <p className="text-[#6C768B]"><span className="font-semibold">Click to upload</span> or drag and drop</p>
-              </div>
-            </div>
-            {preview && <div className="relative w-fit"><img src={preview} alt="Publication preview" className="h-32 w-32 rounded object-cover" /><button type="button" onClick={removePhoto} className="absolute -right-2 -top-2 flex h-7 w-7 items-center justify-center rounded-full border-0 bg-red-600 text-white" aria-label="Remove photo"><i className="pi pi-times" /></button></div>}
-          </div>
+          <MediaUpload
+            allowVideo={false}
+            maxSizeMB={DEFAULT_MAX_MEDIA_SIZE_MB}
+            previewUrl={preview}
+            mediaType="Photo"
+            error={mediaError}
+            onChange={handleMediaChange}
+            onClear={handleMediaClear}
+            onError={handleMediaError}
+          />
 
           <div className="mt-6 flex justify-center gap-6">
             <Link href="/admin/college-publication" className="cancelbtn px-4 py-2">Cancel</Link>

@@ -1,5 +1,5 @@
 'use client';
-import React, { useRef, useState, useEffect } from 'react';
+import React, { useCallback, useRef, useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { useSelector } from 'react-redux';
@@ -9,9 +9,10 @@ import { InputText } from 'primereact/inputtext';
 import { Calendar } from 'primereact/calendar';
 import { Button } from 'primereact/button';
 import { Toast } from 'primereact/toast';
+import { ConfirmDialog } from 'primereact/confirmdialog';
 import Link from 'next/link';
-import Image from 'next/image';
 import TextEditor from '@/app/components/common/editor';
+import MediaUpload, { DEFAULT_MAX_MEDIA_SIZE_MB, uploadMediaFile } from '@/app/components/common/MediaUpload';
 
 import 'primereact/resources/themes/lara-light-blue/theme.css';
 import 'primereact/resources/primereact.min.css';
@@ -22,7 +23,9 @@ export default function AddAlumni() {
   const [editorContent, setEditorContent] = useState('');
   const [isUpdateMode, setIsUpdateMode] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [profilePhoto, setProfilePhoto] = useState(null);
+  const [mediaFile, setMediaFile] = useState(null);
+  const [mediaPreview, setMediaPreview] = useState('');
+  const [mediaError, setMediaError] = useState('');
 
   const user = useSelector((state) => state.auth.user);
   const toast = useRef(null);
@@ -36,15 +39,7 @@ export default function AddAlumni() {
     setValue('bio', value);
   };
 
-  // Fetch data if in update mode
-  useEffect(() => {
-    if (alumniId) {
-      setIsUpdateMode(true);
-      fetchAlumniData(alumniId);
-    }
-  }, [alumniId]);
-
-  const fetchAlumniData = async (id) => {
+  const fetchAlumniData = useCallback(async (id) => {
     try {
       setLoading(true);
       const res = await axios.get(`/api/alumni/getbyId`, {
@@ -64,25 +59,26 @@ export default function AddAlumni() {
       });
       setEditorContent(alumni?.bio);
       setBatchYear(new Date(alumni?.batchYear));
-      setProfilePhoto(alumni?.profilePhoto);
+      setMediaPreview(alumni?.profilePhoto || alumni?.photo || '');
+      setMediaFile(null);
+      setMediaError('');
     } catch (err) {
       console.error('Failed to fetch alumni:', err);
     } finally {
       setLoading(false);
     }
-  };
+  }, [reset, user?.token]);
 
   const onSubmit = async (formData) => {
     formData.batchYear = batchYear;
     formData.bio = editorContent;
-    formData.profilePhoto = profilePhoto;
-
-    const payload = {
-      data: formData,
-      ...(alumniId && { _id: alumniId }),
-    };
-
     try {
+      const profilePhoto = await uploadMediaFile(mediaFile, mediaPreview);
+      formData.profilePhoto = profilePhoto;
+      const payload = {
+        data: formData,
+        ...(alumniId && { _id: alumniId }),
+      };
       const url = alumniId ? `/api/alumni/${alumniId}` : `/api/alumni`;
       const method = alumniId ? 'put' : 'post';
 
@@ -110,14 +106,35 @@ export default function AddAlumni() {
     }
   };
 
-  const handlePhotoUpload = (e) => {
-    const file = e.target.files[0];
-    setProfilePhoto(file);
+  const handleMediaChange = ({ file, previewUrl }) => {
+    setMediaFile(file);
+    setMediaPreview(previewUrl);
+    setMediaError('');
+  };
+
+  // Fetch data if in update mode
+  useEffect(() => {
+    if (alumniId) {
+      setIsUpdateMode(true);
+      fetchAlumniData(alumniId);
+    }
+  }, [alumniId, fetchAlumniData]);
+
+  const handleMediaClear = () => {
+    setMediaFile(null);
+    setMediaPreview('');
+    setMediaError('');
+  };
+
+  const handleMediaError = (message) => {
+    setMediaError(message);
+    toast.current?.show({ severity: 'warn', summary: 'Upload', detail: message, life: 3000 });
   };
 
   return (
     <div className="flex w-full">
       <Toast ref={toast} />
+      <ConfirmDialog />
       <div className='p-[20px] xl:p-[25px] w-full'>
         <h2 className='text-[#19212A] text-[22px] font-[700] mb-3'>
           {isUpdateMode ? 'Update Alumni' : 'Add Alumni'}
@@ -162,17 +179,17 @@ export default function AddAlumni() {
               {errors.bio && <span className="text-red-500 text-sm">This field is required</span>}
             </div>
 
-            <div className='flex flex-col gap-1'>
-              <label>Profile Photo</label>
-              <div className="flex border-2 border-dashed p-4 justify-center group relative cursor-pointer bg-[#fffef5]">
-                <input type="file" accept="image/*" onChange={handlePhotoUpload} className="absolute inset-0 opacity-0 cursor-pointer" />
-                <div className="text-center">
-                  <Image src="/images/admin/svg/upload.svg" width={40} height={40} alt='Upload' />
-                  <p className="text-[#6C768B]"><span className="font-semibold">Click to upload</span> or drag and drop</p>
-                </div>
-              </div>
-              {profilePhoto && <p className="text-sm text-green-600 mt-1">Selected: {profilePhoto.name}</p>}
-            </div>
+            <MediaUpload
+              label="Profile Photo"
+              allowVideo={false}
+              maxSizeMB={DEFAULT_MAX_MEDIA_SIZE_MB}
+              previewUrl={mediaPreview}
+              mediaType="Photo"
+              error={mediaError}
+              onChange={handleMediaChange}
+              onClear={handleMediaClear}
+              onError={handleMediaError}
+            />
 
             <div className='mt-6 flex justify-center gap-6'>
               <Link href="/admin/alumni" className='cancelbtn px-4 py-2'>Cancel</Link>

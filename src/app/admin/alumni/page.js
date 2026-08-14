@@ -1,17 +1,12 @@
 'use client';
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import 'primereact/resources/themes/lara-light-blue/theme.css';
 import 'primereact/resources/primereact.min.css';
-import { InputText } from 'primereact/inputtext';
 import Link from 'next/link';
-import { IconField } from "primereact/iconfield";
-import { InputIcon } from "primereact/inputicon";
-import { Column } from "primereact/column";
-import { DataTable } from "primereact/datatable";
 import axios from 'axios';
-import { format } from 'date-fns';
 import { Toast } from 'primereact/toast';
 import { confirmDialog, ConfirmDialog } from 'primereact/confirmdialog';
+import CommonDataTable from '@/app/components/common/DataTable';
 
 export default function AlumniList() {
   const [alumniData, setAlumniData] = useState([]);
@@ -28,11 +23,7 @@ export default function AlumniList() {
 
   const toast = useRef(null);
 
-  useEffect(() => {
-    fetchAlumniList();
-  }, [lazyParams]);
-
-  const fetchAlumniList = async () => {
+  const fetchAlumniList = useCallback(async () => {
     setLoading(true);
     try {
       const response = await axios.get("/api/alumni", {
@@ -54,7 +45,11 @@ export default function AlumniList() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [lazyParams.page, lazyParams.rows, lazyParams.search, lazyParams.sortField, lazyParams.sortOrder]);
+
+  useEffect(() => {
+    fetchAlumniList();
+  }, [fetchAlumniList]);
 
   const handleDelete = async (id) => {
     try {
@@ -127,7 +122,13 @@ export default function AlumniList() {
     );
   };
 
-  const formatDate = (value) => (value ? format(new Date(value), 'dd MMM yyyy') : '-');
+  const columns = [
+    { header: 'Photo', body: photoTemplate, style: { minWidth: '6rem' } },
+    { header: 'Name', sortable: true, sortField: 'AlumniData.data.name', body: (rowData) => rowData?.AlumniData?.data?.name || rowData?.AlumniData?.data?.fullName || '-', style: { minWidth: '12rem' } },
+    { header: 'Title', sortable: true, sortField: 'AlumniData.data.title', body: (rowData) => rowData?.AlumniData?.data?.title || rowData?.AlumniData?.data?.position || '-', style: { minWidth: '12rem' } },
+    { header: 'Description', body: (rowData) => <div className="max-w-md line-clamp-2" dangerouslySetInnerHTML={{ __html: rowData?.AlumniData?.data?.description || rowData?.AlumniData?.data?.bio || '-' }} />, style: { minWidth: '20rem' } },
+    { header: 'Action', body: actionTemplate, align: 'center', style: { minWidth: '5rem', background: '#fbf7dc', boxShadow: '-4px 0 6px -1px rgba(0, 0, 0, 0.1)' } },
+  ];
 
   return (
     <div className="grid grid-cols-1">
@@ -142,58 +143,22 @@ export default function AlumniList() {
           </Link>
         </div>
 
-        <div className='bg-white border card-shadow'>
-          <div className='px-[20px] py-[14px] border-b border-[#EAEDF3] flex justify-between'>
-            <div className="flex items-center gap-4">
-              <span className="text-[#101828] text-[16px] font-medium">All Alumni</span>
-              <span className="bg-[#F6F7F9] px-3 py-1 text-[#6C768B] text-[12px] rounded-full font-medium">
-                {totalRecords} Records
-              </span>
-            </div>
-
-            <IconField iconPosition="left" className="app-search-field">
-              <InputIcon className="pi pi-search"></InputIcon>
-              <InputText
-                placeholder="Search here.."
-                value={lazyParams.search}
-                onChange={(e) =>
-                  setLazyParams({ ...lazyParams, page: 1, first: 0, search: e.target.value })
-                }
-              />
-            </IconField>
-          </div>
-
-          <div className='overflow-auto'>
-            <DataTable
-              value={alumniData}
-              lazy
-              loading={loading}
-              paginator
-              totalRecords={totalRecords}
-              first={lazyParams.first}
-              rows={lazyParams.rows}
-              onPage={(e) => setLazyParams({ ...lazyParams, ...e, page: e.page + 1 })}
-              onSort={(e) => setLazyParams({ ...lazyParams, sortField: e.sortField, sortOrder: e.sortOrder })}
-              sortField={lazyParams.sortField}
-              sortOrder={lazyParams.sortOrder}
-              className="custTable tableCust"
-              scrollable
-              showGridlines
-              responsiveLayout="scroll"
-              paginatorTemplate="CurrentPageReport RowsPerPageDropdown PrevPageLink PageLinks NextPageLink"
-              currentPageReportTemplate="Rows {first} - {last} of {totalRecords}"
-              rowsPerPageOptions={[5, 10, 25, 50]}
-            >
-              <Column header="Photo" body={photoTemplate} style={{ minWidth: '6rem' }} />
-              <Column header="Name" sortable sortField="AlumniData.data.name" body={(rowData) => rowData?.AlumniData?.data?.name || rowData?.AlumniData?.data?.fullName || '-'} />
-              <Column header="Title" sortable sortField="AlumniData.data.title" body={(rowData) => rowData?.AlumniData?.data?.title || rowData?.AlumniData?.data?.position || '-'} />
-              <Column header="Description" body={(rowData) => <div className="max-w-md line-clamp-2" dangerouslySetInnerHTML={{ __html: rowData?.AlumniData?.data?.description || rowData?.AlumniData?.data?.bio || '-' }} />} />
-              <Column header="Action" body={actionTemplate} align="center"
-                style={{ minWidth: "5rem", background: "#fbf7dc", boxShadow: "-4px 0 6px -1px rgba(0, 0, 0, 0.1)" }}
-              />
-            </DataTable>
-          </div>
-        </div>
+        <CommonDataTable
+          value={alumniData}
+          columns={columns}
+          loading={loading}
+          totalRecords={totalRecords}
+          first={lazyParams.first}
+          rows={lazyParams.rows}
+          sortField={lazyParams.sortField}
+          sortOrder={lazyParams.sortOrder}
+          onPage={(event) => setLazyParams((current) => ({ ...current, first: event.first, rows: event.rows, page: event.page + 1 }))}
+          onSort={(event) => setLazyParams((current) => ({ ...current, sortField: event.sortField, sortOrder: event.sortOrder }))}
+          headerTitle={<div className="flex items-center gap-4"><span>All Alumni</span><span className="bg-[#F6F7F9] px-3 py-1 text-[#6C768B] text-[12px] rounded-full font-medium">{totalRecords} Records</span></div>}
+          showSearch
+          searchValue={lazyParams.search}
+          onSearch={(event) => setLazyParams((current) => ({ ...current, page: 1, first: 0, search: event.target.value }))}
+        />
       </div>
     </div>
   );

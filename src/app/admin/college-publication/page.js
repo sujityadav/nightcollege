@@ -1,15 +1,11 @@
 'use client';
 
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import axios from 'axios';
 import Link from 'next/link';
-import { Column } from 'primereact/column';
 import { ConfirmDialog, confirmDialog } from 'primereact/confirmdialog';
-import { DataTable } from 'primereact/datatable';
-import { IconField } from 'primereact/iconfield';
-import { InputIcon } from 'primereact/inputicon';
-import { InputText } from 'primereact/inputtext';
 import { Toast } from 'primereact/toast';
+import CommonDataTable from '@/app/components/common/DataTable';
 
 export default function CollegePublicationList() {
   const [publications, setPublications] = useState([]);
@@ -18,7 +14,7 @@ export default function CollegePublicationList() {
   const [totalRecords, setTotalRecords] = useState(0);
   const toast = useRef(null);
 
-  const fetchPublications = async () => {
+  const fetchPublications = useCallback(async () => {
     try {
       setLoading(true);
       const response = await axios.get('/api/college-publication', {
@@ -31,11 +27,11 @@ export default function CollegePublicationList() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [params.page, params.rows, params.search, params.sortField, params.sortOrder]);
 
   useEffect(() => {
     fetchPublications();
-  }, [params]);
+  }, [fetchPublications]);
 
   const deletePublication = async (id) => {
     try {
@@ -69,6 +65,17 @@ export default function CollegePublicationList() {
     </div>
   );
 
+  const columns = [
+    { header: 'Photo', body: photoTemplate, style: { minWidth: '7rem' } },
+    { field: 'PublicationData.data.title', header: 'Title', sortable: true, style: { minWidth: '14rem' } },
+    {
+      header: 'Description',
+      body: (rowData) => <div className="max-w-md line-clamp-2" dangerouslySetInnerHTML={{ __html: rowData?.PublicationData?.data?.description || '-' }} />,
+      style: { minWidth: '20rem' },
+    },
+    { header: 'Action', body: actionTemplate, align: 'center', style: { minWidth: '6rem', background: '#fbf7dc' } },
+  ];
+
   return (
     <div className="w-full p-[20px] xl:p-[25px]">
       <Toast ref={toast} />
@@ -78,28 +85,22 @@ export default function CollegePublicationList() {
         <Link href="/admin/college-publication/add-publication" className="flex items-center gap-2 border bg-primarycolor px-4 py-2 text-white"><i className="pi pi-plus text-[14px]" /> Add Publication</Link>
       </div>
 
-      <div className="border bg-white card-shadow">
-        <div className="flex items-center justify-between border-b border-[#EAEDF3] px-5 py-3">
-          <div className="font-medium text-[#101828]">All Publications</div>
-          <IconField iconPosition="left" className="app-search-field">
-            <InputIcon className="pi pi-search" />
-            <InputText placeholder="Search here.." value={params.search} onChange={(event) => setParams((current) => ({ ...current, search: event.target.value, first: 0, page: 1 }))} />
-          </IconField>
-        </div>
-
-        <div className="overflow-auto">
-          <DataTable value={publications} lazy loading={loading} paginator totalRecords={totalRecords} first={params.first} rows={params.rows}
-            sortField={params.sortField} sortOrder={params.sortOrder} className="custTable tableCust" scrollable showGridlines responsiveLayout="scroll"
-            onPage={(event) => setParams((current) => ({ ...current, ...event, page: event.page + 1 }))}
-            onSort={(event) => setParams((current) => ({ ...current, sortField: event.sortField, sortOrder: event.sortOrder }))}
-            rowsPerPageOptions={[5, 10, 25, 50]} paginatorTemplate="CurrentPageReport RowsPerPageDropdown PrevPageLink PageLinks NextPageLink" currentPageReportTemplate="Rows {first} - {last} of {totalRecords}">
-            <Column header="Photo" body={photoTemplate} style={{ minWidth: '7rem' }} />
-            <Column field="PublicationData.data.title" header="Title" sortable style={{ minWidth: '14rem' }} />
-            <Column header="Description" body={(rowData) => <div className="max-w-md line-clamp-2" dangerouslySetInnerHTML={{ __html: rowData?.PublicationData?.data?.description || '-' }} />} style={{ minWidth: '20rem' }} />
-            <Column header="Action" body={actionTemplate} align="center" style={{ minWidth: '6rem', background: '#fbf7dc' }} />
-          </DataTable>
-        </div>
-      </div>
+      <CommonDataTable
+        value={publications}
+        columns={columns}
+        loading={loading}
+        totalRecords={totalRecords}
+        first={params.first}
+        rows={params.rows}
+        sortField={params.sortField}
+        sortOrder={params.sortOrder}
+        onPage={(event) => setParams((current) => ({ ...current, first: event.first, rows: event.rows, page: event.page + 1 }))}
+        onSort={(event) => setParams((current) => ({ ...current, sortField: event.sortField, sortOrder: event.sortOrder }))}
+        headerTitle="All Publications"
+        showSearch
+        searchValue={params.search}
+        onSearch={(event) => setParams((current) => ({ ...current, search: event.target.value, first: 0, page: 1 }))}
+      />
     </div>
   );
 }
