@@ -12,6 +12,7 @@ import { Toast } from 'primereact/toast';
 import Link from 'next/link';
 import Image from 'next/image';
 import TextEditor from '@/app/components/common/editor';
+import { usePageBreadcrumbs } from '@/app/hooks/usePageBreadcrumbs';
 
 import 'primereact/resources/themes/lara-light-blue/theme.css';
 import 'primereact/resources/primereact.min.css';
@@ -29,6 +30,15 @@ export default function AddEvents() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const comityId = searchParams.get('id'); // <-- read id from query
+  const isEditMode = Boolean(comityId);
+
+  usePageBreadcrumbs({
+    pageTitle: isEditMode ? 'Update Department' : 'Add Department',
+    breadcrumbs: [
+      { label: 'All Departments', href: '/admin/all-departments' },
+      { label: isEditMode ? 'Update Department' : 'Add Department', isCurrent: true },
+    ],
+  });
 
   // Sync editor content manually
   const handleEditorChange = (value) => {
@@ -114,14 +124,14 @@ export default function AddEvents() {
       <Toast ref={toast} />
       <div className='p-[20px] xl:p-[25px] 3xl:p-[1.563vw] w-full'>
         <h2 className='text-[#19212A] text-[22px] font-[700] mb-3'>
-          {isUpdateMode ? 'Update DepartMents' : 'Add DepartMents'}
+          {isUpdateMode ? 'Update Department' : 'Add Department'}
         </h2>
 
         <form onSubmit={handleSubmit(onSubmit)} className='bg-white card-shadow p-[25px]'>
           <div className='px-[250px] space-y-3'>
 
             <div className='flex flex-col gap-1'>
-              <label>DepartMents Title</label>
+              <label>Department Title</label>
               <InputText {...register('title', { required: true })} placeholder="Enter your title" />
               {errors.title && <span className="text-red-500 text-sm">This field is required</span>}
             </div>

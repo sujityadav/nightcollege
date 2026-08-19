@@ -24,6 +24,9 @@ export default function Left() {
     Cookies.remove("token");
     router.push("/login");
   };
+  const isPathActive = (path: string) =>
+    pathname === path || pathname.startsWith(`${path}/`);
+
   // Menu array with PrimeReact icon class
   const menuItems = [
     { label: "Rebranding", href: "/admin/rebranding", icon: "pi pi-home" },
@@ -32,13 +35,29 @@ export default function Left() {
     { label: "News", href: "/admin/news", icon: "pi pi-chart-bar" },
     { label: "Announcements", href: "/admin/announcements", icon: "pi pi-megaphone" },
      { label: "All Committees", href: "/admin/all-committees", icon: "pi pi-th-large" },
-    { label: "All Department", href: "/admin/all-departments", icon: "pi pi-building" },
+    {
+      label: "All Department",
+      href: "/admin/all-departments",
+      icon: "pi pi-building",
+      activePaths: [
+        "/admin/all-departments",
+        "/admin/departments",
+        "/admin/sub-departments",
+        "/admin/departmentalactivity",
+      ],
+    },
     { label: "Administration", href: "/admin/administration", icon: "pi pi-briefcase" },
     { label: "Infrastructure Facilities ", href: "/admin/infrastructure-facilities ", icon: "pi pi-database" },
     { label: "All Staff", href: "/admin/all-staff", icon: "pi pi-id-card" },
     { label: "College Publication", href: "/admin/college-publication", icon: "pi pi-book" },
     { label: "Alumni", href: "/admin/alumni", icon: "pi pi-id-card" },
     { label: "Student Corner", href: "/admin/student-corner", icon: "pi pi-user" },
+    {
+      label: "Quick Links",
+      href: "/admin/quick-links",
+      icon: "pi pi-link",
+      activePaths: ["/admin/quick-links"],
+    },
     // { label: "Logout", href: "#", icon: "pi pi-sign-out" },
   ];
 
@@ -65,8 +84,9 @@ export default function Left() {
           <ul className="p-4 ">
            {menuItems.map((item, index) => {
         const href = item.href.trim();
-        const isActive =
-          pathname === href || pathname.startsWith(`${href}/`);
+        const isActive = item.activePaths?.length
+          ? item.activePaths.some(isPathActive)
+          : isPathActive(href);
         return (
           <Link
             key={index}
