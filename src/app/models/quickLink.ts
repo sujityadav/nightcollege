@@ -22,7 +22,7 @@ const QuickLinkSchema = new Schema<IQuickLink>(
       enum: ['Content', 'Link', 'Document'],
       required: true,
     },
-    slug: { type: String, trim: true },
+    slug: { type: String, trim: true, lowercase: true, default: '' },
     sortOrder: { type: Number, required: true, default: 0 },
     status: { type: Boolean, default: true },
     content: { type: String, default: '' },
@@ -31,6 +31,14 @@ const QuickLinkSchema = new Schema<IQuickLink>(
     documentName: { type: String, default: '' },
   },
   { timestamps: true }
+);
+
+QuickLinkSchema.index(
+  { slug: 1 },
+  {
+    unique: true,
+    partialFilterExpression: { type: 'Content', slug: { $gt: '' } },
+  }
 );
 
 const QuickLink =

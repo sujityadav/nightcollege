@@ -11,8 +11,14 @@ export async function POST(req) {
         { status: 400 }
       );
     }
+
     const created = await Events.create({
-      Eventdata: body,
+      Eventdata: {
+        data: {
+          ...body.data,
+          status: body.data.status ?? 1,
+        },
+      },
     });
     return NextResponse.json(
       { success: true, message: "Data stored", entry: created },

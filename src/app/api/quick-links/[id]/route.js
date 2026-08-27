@@ -1,20 +1,42 @@
 import { NextResponse } from 'next/server';
 import { connectDB } from '../../../lib/mongodb';
 import QuickLink from '../../../models/quickLink';
+import { normalizeSlug, validateSlug } from '../../../utils/quickLinkSlug';
 
-const validatePayload = (data) => {
+const checkDuplicateSlug = async (slug, excludeId = null) => {
+  const query = { slug: normalizeSlug(slug), type: 'Content' };
+  if (excludeId) {
+    query._id = { $ne: excludeId };
+  }
+  return QuickLink.findOne(query);
+};
+
+const validatePayload = async (data, excludeId = null) => {
   if (data.sortOrder !== undefined && data.sortOrder !== '' && Number.isNaN(Number(data.sortOrder))) {
     return 'Sort order must be a number';
   }
 
   if (data.type === 'Content') {
-    if (!data.slug?.trim()) return 'Slug is required for Content type';
-    if (/\s/.test(data.slug)) return 'Slug cannot contain spaces';
+    const slugError = validateSlug(data.slug);
+    if (slugError) return slugError;
     if (!data.content?.trim()) return 'Content is required for Content type';
+
+    const duplicate = await checkDuplicateSlug(data.slug, excludeId);
+    if (duplicate) return 'This slug is already in use';
   }
 
-  if (data.type === 'Link' && !data.linkUrl?.trim()) {
-    return 'Link URL is required for Link type';
+  if (data.type === 'Link') {
+    const trimmed = data.linkUrl?.trim() || '';
+    if (!trimmed) return 'Link URL is required for Link type';
+
+    try {
+      const parsed = new URL(trimmed);
+      if (!['http:', 'https:'].includes(parsed.protocol)) {
+        return 'Link should be valid';
+      }
+    } catch {
+      return 'Link should be valid';
+    }
   }
 
   if (data.type === 'Document' && !data.documentUrl?.trim()) {
@@ -32,6 +54,9 @@ export async function GET(req, { params }) {
       ? NextResponse.json({ success: true, data })
       : NextResponse.json({ success: false, message: 'Not found' }, { status: 404 });
   } catch (error) {
+    if (error.code === 11000) {
+      return NextResponse.json({ success: false, message: 'This slug is already in use' }, { status: 400 });
+    }
     return NextResponse.json({ success: false, message: error.message }, { status: 500 });
   }
 }
@@ -40,7 +65,7 @@ export async function PUT(req, { params }) {
   try {
     await connectDB();
     const payload = await req.json();
-    const validationError = validatePayload(payload);
+    const validationError = await validatePayload(payload, params.id);
 
     if (validationError) {
       return NextResponse.json({ success: false, message: validationError }, { status: 400 });
@@ -51,7 +76,7 @@ export async function PUT(req, { params }) {
       type: payload.type,
       sortOrder: Number(payload.sortOrder),
       status: payload.status,
-      slug: payload.type === 'Content' ? payload.slug?.trim() : '',
+      slug: payload.type === 'Content' ? normalizeSlug(payload.slug) : '',
       content: payload.type === 'Content' ? payload.content : '',
       linkUrl: payload.type === 'Link' ? payload.linkUrl?.trim() : '',
       documentUrl: payload.type === 'Document' ? payload.documentUrl : '',
@@ -67,6 +92,9 @@ export async function PUT(req, { params }) {
       ? NextResponse.json({ success: true, data })
       : NextResponse.json({ success: false, message: 'Not found' }, { status: 404 });
   } catch (error) {
+    if (error.code === 11000) {
+      return NextResponse.json({ success: false, message: 'This slug is already in use' }, { status: 400 });
+    }
     return NextResponse.json({ success: false, message: error.message }, { status: 500 });
   }
 }
@@ -79,6 +107,9 @@ export async function DELETE(req, { params }) {
       ? NextResponse.json({ success: true })
       : NextResponse.json({ success: false, message: 'Not found' }, { status: 404 });
   } catch (error) {
+    if (error.code === 11000) {
+      return NextResponse.json({ success: false, message: 'This slug is already in use' }, { status: 400 });
+    }
     return NextResponse.json({ success: false, message: error.message }, { status: 500 });
   }
 }

@@ -12,6 +12,7 @@ import { Toast } from 'primereact/toast';
 import Link from 'next/link';
 import Image from 'next/image';
 import TextEditor from '@/app/components/common/editor';
+import { usePageBreadcrumbs } from '@/app/hooks/usePageBreadcrumbs';
 
 import 'primereact/resources/themes/lara-light-blue/theme.css';
 import 'primereact/resources/primereact.min.css';
@@ -21,14 +22,67 @@ export default function AddEvents() {
   const [fromDate, setFromDate] = useState(null);
   const [toDate, setToDate] = useState(null);
   const [editorContent, setEditorContent] = useState('');
-  const [isUpdateMode, setIsUpdateMode] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [depatmentId, setDepatmentId] = useState(null);
+  const [SubdepatmentId, setSubdepatmentId] = useState(null);
 
   const user = useSelector((state) => state.auth.user);
   const toast = useRef(null);
   const router = useRouter();
   const searchParams = useSearchParams();
-  const comityId = searchParams.get('id'); // <-- read id from query
+  const comityId = searchParams.get('id');
+  const subDepartmentId = searchParams.get('subDepartmentId');
+  const isEditMode = Boolean(comityId);
+  const activityListUrl = `/admin/departmentalactivity?subDepartmentId=${subDepartmentId}`;
+
+  const subjectsListUrl = depatmentId ? `/admin/subjects?depatmentId=${depatmentId}` : null;
+  const subPointsListUrl =
+    SubdepatmentId && depatmentId
+      ? `/admin/sub-points?SubdepatmentId=${SubdepatmentId}&depatmentId=${depatmentId}`
+      : SubdepatmentId
+        ? `/admin/sub-points?SubdepatmentId=${SubdepatmentId}`
+        : null;
+
+  usePageBreadcrumbs({
+    pageTitle: isEditMode ? 'Update Departmental Activity' : 'Add Departmental Activity',
+    breadcrumbs: [
+      { label: 'All Departments', href: '/admin/all-departments' },
+      ...(subjectsListUrl ? [{ label: 'Subjects', href: subjectsListUrl }] : []),
+      ...(subPointsListUrl ? [{ label: 'Sub Points', href: subPointsListUrl }] : []),
+      { label: 'Departmental Activity', href: activityListUrl },
+      {
+        label: isEditMode ? 'Update Departmental Activity' : 'Add Departmental Activity',
+        isCurrent: true,
+      },
+    ],
+  });
+
+  useEffect(() => {
+    if (!subDepartmentId) return;
+
+    const fetchParentBreadcrumbData = async () => {
+      try {
+        const response = await axios.get('/api/subdepartment/getbyId', {
+          params: { id: subDepartmentId },
+        });
+        const subjectId = response.data?.data?.[0]?.SubDepartmentsData?.data?.SubdepatmentId;
+        if (subjectId) setSubdepatmentId(subjectId);
+
+        if (subjectId) {
+          const subjectResponse = await axios.get('/api/innerdepartments/getbyId', {
+            params: { id: subjectId },
+          });
+          const parentId =
+            subjectResponse.data?.data?.[0]?.InnerDepartmentsData?.data?.depatmentId;
+          if (parentId) setDepatmentId(parentId);
+        }
+      } catch (error) {
+        console.error('Failed to fetch breadcrumb data:', error);
+      }
+    };
+
+    fetchParentBreadcrumbData();
+  }, [subDepartmentId]);
 
   // Sync editor content manually
   const handleEditorChange = (value) => {
@@ -36,12 +90,9 @@ export default function AddEvents() {
     setValue('largeDescription', value);
   };
 
-  // Fetch data if in update mode
   useEffect(() => {
-    if (comityId) {
-      setIsUpdateMode(true);
-      fetchDepartmentsData(comityId);
-    }
+    if (!comityId) return;
+    fetchDepartmentsData(comityId);
   }, [comityId]);
 
   const fetchDepartmentsData = async (id) => {
@@ -103,7 +154,7 @@ export default function AddEvents() {
           detail: `Content ${comityId ? 'updated' : 'saved'} successfully ✅`,
           life: 3000,
         });
-        router.push(`/admin/departmentalactivity?subDepartmentId=${searchParams.get('subDepartmentId')}`);
+        router.push(activityListUrl);
       }
     } catch (err) {
       console.error('Failed to submit:', err);
@@ -115,7 +166,7 @@ export default function AddEvents() {
       <Toast ref={toast} />
       <div className='p-[20px] xl:p-[25px] 3xl:p-[1.563vw] w-full'>
         <h2 className='text-[#19212A] text-[22px] font-[700] mb-3'>
-          {isUpdateMode ? 'Update Department' : 'Add Department'}
+          {isEditMode ? 'Update Departmental Activity' : 'Add Departmental Activity'}
         </h2>
 
         <form onSubmit={handleSubmit(onSubmit)} className='bg-white card-shadow p-[25px]'>
@@ -143,13 +194,13 @@ export default function AddEvents() {
            
 
             <div className='mt-6 flex justify-center gap-6'>
-              <Link href="/admin/departments" className='cancelbtn px-4 py-2'>Cancel</Link>
+              <Link href={activityListUrl} className='cancelbtn px-4 py-2'>Cancel</Link>
               <Button
                 type='submit'
                 className='text-white bg-primarycolor border-[#af251c] px-4 py-2 rounded-none'
                 loading={loading}
               >
-                {isUpdateMode ? 'Update' : 'Save'}
+                {isEditMode ? 'Update' : 'Save'}
               </Button>
             </div>
 

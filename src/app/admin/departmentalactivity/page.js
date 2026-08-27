@@ -8,14 +8,62 @@ import { format } from 'date-fns';
 import { useSearchParams } from 'next/navigation';
 import { Toast } from 'primereact/toast';
 import { ConfirmDialog, confirmDialog } from 'primereact/confirmdialog';
+import { usePageBreadcrumbs } from '@/app/hooks/usePageBreadcrumbs';
 import CommonDataTable from '@/app/components/common/DataTable';
 
 export default function EventList() {
   const [eventsData, setEventsData] = useState([]);
   const [search, setSearch] = useState('');
+  const [depatmentId, setDepatmentId] = useState(null);
+  const [SubdepatmentId, setSubdepatmentId] = useState(null);
   const toast = useRef(null);
   const searchParams = useSearchParams();
   const subDepartmentId = searchParams.get('subDepartmentId');
+
+  const subjectsListUrl = depatmentId ? `/admin/subjects?depatmentId=${depatmentId}` : null;
+  const subPointsListUrl =
+    SubdepatmentId && depatmentId
+      ? `/admin/sub-points?SubdepatmentId=${SubdepatmentId}&depatmentId=${depatmentId}`
+      : SubdepatmentId
+        ? `/admin/sub-points?SubdepatmentId=${SubdepatmentId}`
+        : null;
+
+  usePageBreadcrumbs({
+    pageTitle: 'Departmental Activity',
+    breadcrumbs: [
+      { label: 'All Departments', href: '/admin/all-departments' },
+      ...(subjectsListUrl ? [{ label: 'Subjects', href: subjectsListUrl }] : []),
+      ...(subPointsListUrl ? [{ label: 'Sub Points', href: subPointsListUrl }] : []),
+      { label: 'Departmental Activity', isCurrent: true },
+    ],
+  });
+
+  useEffect(() => {
+    if (!subDepartmentId) return;
+
+    const fetchParentBreadcrumbData = async () => {
+      try {
+        const response = await axios.get('/api/subdepartment/getbyId', {
+          params: { id: subDepartmentId },
+        });
+        const subjectId = response.data?.data?.[0]?.SubDepartmentsData?.data?.SubdepatmentId;
+        if (subjectId) setSubdepatmentId(subjectId);
+
+        if (subjectId) {
+          const subjectResponse = await axios.get('/api/innerdepartments/getbyId', {
+            params: { id: subjectId },
+          });
+          const parentId =
+            subjectResponse.data?.data?.[0]?.InnerDepartmentsData?.data?.depatmentId;
+          if (parentId) setDepatmentId(parentId);
+        }
+      } catch (error) {
+        console.error('Failed to fetch breadcrumb data:', error);
+      }
+    };
+
+    fetchParentBreadcrumbData();
+  }, [subDepartmentId]);
 
   useEffect(() => {
     const fetchDepartmentsList = async () => {

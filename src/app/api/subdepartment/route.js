@@ -33,12 +33,19 @@ export async function POST(req) {
 export async function GET(req) {
   try {
     await connectDB();
-     const { searchParams } = new URL(req.url);
-    const departmentId = searchParams.get("departmentId");
-    console.log("departmentId", departmentId)
+    const { searchParams } = new URL(req.url);
+    const SubdepatmentId = searchParams.get("SubdepatmentId");
+
+    if (!SubdepatmentId) {
+      return NextResponse.json(
+        { success: false, message: "SubdepatmentId is required" },
+        { status: 400 }
+      );
+    }
+
     const entries = await SubDepartments.find({
-  "SubDepartmentsData.data.depatmentId": departmentId
-}).sort({ createdAt: -1 });
+      "SubDepartmentsData.data.SubdepatmentId": SubdepatmentId,
+    }).sort({ "SubDepartmentsData.data.sortOrder": 1, createdAt: -1 });
 
     return NextResponse.json(
       { success: true, data: entries },

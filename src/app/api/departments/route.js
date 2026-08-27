@@ -38,8 +38,8 @@ export async function GET(req) {
 
     const page = parseInt(searchParams.get("page")) || 1;
     const limit = parseInt(searchParams.get("limit")) || 10;
-    const sortBy = searchParams.get("sortBy") || "createdAt";
-    const order = searchParams.get("order") === "asc" ? 1 : -1;
+    const sortField = searchParams.get("sortField") || "DepartmentsData.data.sortOrder";
+    const sortOrder = parseInt(searchParams.get("sortOrder")) || 1;
     const search = searchParams.get("search") || "";
 
     // Build filter for search (example: searching by "name")
@@ -55,7 +55,7 @@ export async function GET(req) {
 
     // Fetch paginated + sorted + searched data
     const entries = await Departments.find(filter)
-      .sort({ [sortBy]: order })
+      .sort({ [sortField]: sortOrder })
       .skip((page - 1) * limit)
       .limit(limit);
 
@@ -71,8 +71,8 @@ export async function GET(req) {
             totalPages: Math.ceil(total / limit),
           },
           sort: {
-            sortBy,
-            order: order === 1 ? "asc" : "desc",
+            sortField,
+            sortOrder,
           },
           success: true,
           search: search || null,

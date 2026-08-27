@@ -10,8 +10,14 @@ import { InputText } from 'primereact/inputtext';
 import { Button } from 'primereact/button';
 import { Toast } from 'primereact/toast';
 import { RadioButton } from 'primereact/radiobutton';
+import { InputSwitch } from 'primereact/inputswitch';
 import TextEditor from '@/app/components/common/editor';
-import { uploadMediaFile, DEFAULT_MAX_MEDIA_SIZE_MB } from '@/app/components/common/MediaUpload';
+import { uploadDocumentFile, DEFAULT_MAX_MEDIA_SIZE_MB } from '@/app/components/common/MediaUpload';
+import {
+  canViewQuickLinkDocumentOnSite,
+  getQuickLinkDocumentViewPath,
+} from '@/app/utils/quickLinkDocument';
+import { slugify, validateSlug } from '@/app/utils/quickLinkSlug';
 import { usePageBreadcrumbs } from '@/app/hooks/usePageBreadcrumbs';
 
 import 'primereact/resources/themes/lara-light-blue/theme.css';
@@ -19,16 +25,26 @@ import 'primereact/resources/primereact.min.css';
 
 const TYPE_OPTIONS = ['Content', 'Link', 'Document'];
 
-const slugify = (text) =>
-  text
-    .trim()
-    .toLowerCase()
-    .replace(/\s+/g, '-')
-    .replace(/[^a-z0-9-]/g, '')
-    .replace(/-+/g, '-')
-    .replace(/^-|-$/g, '');
-
 const fieldLabelClass = 'text-[#212325] text-[14px] font-[500]';
+
+const validateLinkUrl = (value) => {
+  const trimmed = (value || '').trim();
+
+  if (!trimmed) {
+    return 'Link is required';
+  }
+
+  try {
+    const parsed = new URL(trimmed);
+    if (!['http:', 'https:'].includes(parsed.protocol)) {
+      return 'Link should be valid';
+    }
+  } catch {
+    return 'Link should be valid';
+  }
+
+  return '';
+};
 
 export default function QuickLinkFormPage() {
   const { register, handleSubmit, reset, setValue, watch, formState: { errors } } = useForm({
@@ -42,12 +58,13 @@ export default function QuickLinkFormPage() {
 
   const [type, setType] = useState('Content');
   const [content, setContent] = useState('');
-  const [slugManuallyEdited, setSlugManuallyEdited] = useState(false);
   const [documentFile, setDocumentFile] = useState(null);
   const [documentUrl, setDocumentUrl] = useState('');
   const [documentName, setDocumentName] = useState('');
   const [documentError, setDocumentError] = useState('');
+  const [removedDocumentUrl, setRemovedDocumentUrl] = useState('');
   const [contentError, setContentError] = useState('');
+  const [slugError, setSlugError] = useState('');
   const [linkError, setLinkError] = useState('');
   const [status, setStatus] = useState(true);
   const [loading, setLoading] = useState(false);
@@ -57,6 +74,13 @@ export default function QuickLinkFormPage() {
   const id = useSearchParams().get('id');
   const isEditMode = Boolean(id);
   const titleValue = watch('title');
+  const slugValue = watch('slug');
+
+  const applySlugFromTitle = (title, currentSlug) => {
+    if (title?.trim() && !currentSlug?.trim()) {
+      setValue('slug', slugify(title));
+    }
+  };
 
   usePageBreadcrumbs({
     pageTitle: isEditMode ? 'Update Quick Link' : 'Add Quick Link',
@@ -67,10 +91,10 @@ export default function QuickLinkFormPage() {
   });
 
   useEffect(() => {
-    if (!slugManuallyEdited && type === 'Content' && titleValue) {
-      setValue('slug', slugify(titleValue));
+    if (type === 'Content') {
+      applySlugFromTitle(titleValue, slugValue);
     }
-  }, [titleValue, slugManuallyEdited, type, setValue]);
+  }, [titleValue, slugValue, type, setValue]);
 
   useEffect(() => {
     if (!id) return;
@@ -91,7 +115,6 @@ export default function QuickLinkFormPage() {
         setDocumentUrl(item.documentUrl || '');
         setDocumentName(item.documentName || '');
         setStatus(item.status ?? true);
-        setSlugManuallyEdited(true);
       } catch {
         toast.current?.show({
           severity: 'error',
@@ -128,16 +151,26 @@ export default function QuickLinkFormPage() {
     setDocumentFile(file);
     setDocumentName(file.name);
     setDocumentUrl('');
+    setRemovedDocumentUrl('');
+    setDocumentError('');
+  };
+
+  const handleDocumentDelete = () => {
+    if (documentUrl && !documentFile) {
+      setRemovedDocumentUrl(documentUrl);
+    }
+    setDocumentFile(null);
+    setDocumentUrl('');
+    setDocumentName('');
     setDocumentError('');
   };
 
   const validateTypeFields = (formData) => {
     if (type === 'Content') {
-      if (!formData.slug?.trim()) {
-        return 'Slug is required';
-      }
-      if (/\s/.test(formData.slug)) {
-        return 'Slug cannot contain spaces';
+      const slugValidationError = validateSlug(formData.slug);
+      if (slugValidationError) {
+        setSlugError(slugValidationError);
+        return slugValidationError;
       }
       if (!content?.trim() || content === '<p><br></p>') {
         setContentError('Content is required');
@@ -146,9 +179,10 @@ export default function QuickLinkFormPage() {
     }
 
     if (type === 'Link') {
-      if (!formData.linkUrl?.trim()) {
-        setLinkError('Link is required');
-        return 'Link is required';
+      const linkValidationError = validateLinkUrl(formData.linkUrl);
+      if (linkValidationError) {
+        setLinkError(linkValidationError);
+        return linkValidationError;
       }
     }
 
@@ -165,12 +199,14 @@ export default function QuickLinkFormPage() {
   const submit = async (formData) => {
     const typeValidationError = validateTypeFields(formData);
     if (typeValidationError) {
-      toast.current?.show({
-        severity: 'warn',
-        summary: 'Validation',
-        detail: typeValidationError,
-        life: 3000,
-      });
+      if (type !== 'Link' && type !== 'Content') {
+        toast.current?.show({
+          severity: 'warn',
+          summary: 'Validation',
+          detail: typeValidationError,
+          life: 3000,
+        });
+      }
       return;
     }
 
@@ -180,8 +216,16 @@ export default function QuickLinkFormPage() {
       let uploadedDocumentName = documentName;
 
       if (type === 'Document' && documentFile) {
-        uploadedDocumentUrl = await uploadMediaFile(documentFile, documentUrl);
+        uploadedDocumentUrl = await uploadDocumentFile(documentFile, documentUrl);
         uploadedDocumentName = documentFile.name;
+      }
+
+      if (removedDocumentUrl && removedDocumentUrl !== uploadedDocumentUrl) {
+        try {
+          await axios.delete('/api/upload', { data: { url: removedDocumentUrl } });
+        } catch (cleanupError) {
+          console.warn('Old document cleanup warning:', cleanupError);
+        }
       }
 
       const payload = {
@@ -213,22 +257,25 @@ export default function QuickLinkFormPage() {
       });
       router.push('/admin/quick-links');
     } catch (error) {
-      toast.current?.show({
-        severity: 'error',
-        summary: 'Error',
-        detail: error.message || 'Could not save quick link',
-        life: 3000,
-      });
+      const apiMessage = error.response?.data?.message;
+      if (apiMessage?.toLowerCase().includes('slug')) {
+        setSlugError(apiMessage);
+      } else {
+        toast.current?.show({
+          severity: 'error',
+          summary: 'Error',
+          detail: apiMessage || error.message || 'Could not save quick link',
+          life: 3000,
+        });
+      }
     } finally {
       setLoading(false);
     }
   };
 
-  const slugRegister = register('slug', {
-    required: type === 'Content' ? 'Slug is required' : false,
-    validate: (value) =>
-      type !== 'Content' || !/\s/.test(value || '') || 'Slug cannot contain spaces',
-  });
+  const slugRegister = register('slug');
+
+  const linkUrlRegister = register('linkUrl');
 
   return (
     <div className="p-[20px] xl:p-[25px] w-full">
@@ -260,10 +307,15 @@ export default function QuickLinkFormPage() {
                     name="type"
                     value={option}
                     onChange={(e) => {
-                      setType(e.value);
+                      const newType = e.value;
+                      setType(newType);
                       setContentError('');
+                      setSlugError('');
                       setLinkError('');
                       setDocumentError('');
+                      if (newType === 'Content') {
+                        applySlugFromTitle(titleValue, slugValue);
+                      }
                     }}
                     checked={type === option}
                   />
@@ -285,14 +337,25 @@ export default function QuickLinkFormPage() {
                 placeholder="enter-slug"
                 {...slugRegister}
                 onChange={(e) => {
-                  setSlugManuallyEdited(true);
+                  setSlugError('');
+                  const value = e.target.value.replace(/[^a-zA-Z-]/g, '');
                   slugRegister.onChange({
                     ...e,
-                    target: { ...e.target, value: e.target.value.replace(/\s/g, '') },
+                    target: { ...e.target, value },
                   });
                 }}
               />
-              {errors.slug?.message && <span className="text-red-500 text-sm">{errors.slug.message}</span>}
+              {slugError && <span className="text-red-500 text-sm">{slugError}</span>}
+              {!slugError && id && watch('slug') && (
+                <Link
+                  href={`/page/${watch('slug')}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-primarycolor text-sm"
+                >
+                  View page
+                </Link>
+              )}
             </div>
           )}
 
@@ -334,14 +397,14 @@ export default function QuickLinkFormPage() {
               <InputText
                 className="border rounded-none"
                 placeholder="https://example.com"
-                {...register('linkUrl', { required: type === 'Link' ? 'Link is required' : false })}
+                {...linkUrlRegister}
                 onChange={(e) => {
-                  setValue('linkUrl', e.target.value);
                   setLinkError('');
+                  linkUrlRegister.onChange(e);
                 }}
               />
-              {(errors.linkUrl?.message || linkError) && (
-                <span className="text-red-500 text-sm">{errors.linkUrl?.message || linkError}</span>
+              {(linkError) && (
+                <span className="text-red-500 text-sm">{linkError}</span>
               )}
             </div>
           )}
@@ -377,26 +440,51 @@ export default function QuickLinkFormPage() {
                   </span>
                 </div>
               </div>
-              {(documentName || documentUrl) && (
+              {(documentName || documentUrl || documentFile) && (
                 <div className="mt-3 p-3 border flex items-center justify-between gap-3">
                   <span className="text-sm text-[#494E5F] break-all">
                     {documentName || documentUrl}
                   </span>
-                  {documentUrl && !documentFile ? (
-                    <a
-                      href={documentUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-primarycolor text-sm whitespace-nowrap"
+                  <div className="flex items-center gap-3 shrink-0">
+                    {documentUrl && !documentFile && canViewQuickLinkDocumentOnSite(documentUrl, documentName) && id ? (
+                      <Link
+                        href={getQuickLinkDocumentViewPath(id)}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-primarycolor text-sm whitespace-nowrap"
+                      >
+                        View
+                      </Link>
+                    ) : null}
+                    {documentUrl && !documentFile && !canViewQuickLinkDocumentOnSite(documentUrl, documentName) ? (
+                      <a
+                        href={documentUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-primarycolor text-sm whitespace-nowrap"
+                      >
+                        Download
+                      </a>
+                    ) : null}
+                    <button
+                      type="button"
+                      onClick={handleDocumentDelete}
+                      className="text-red-500 text-sm whitespace-nowrap bg-transparent border-0 cursor-pointer p-0"
                     >
-                      View
-                    </a>
-                  ) : null}
+                      Delete
+                    </button>
+                  </div>
                 </div>
               )}
               {documentError && <span className="text-red-500 text-sm">{documentError}</span>}
             </div>
           )}
+
+          <div className="flex items-center gap-3">
+            <label className={fieldLabelClass}>Status</label>
+            <InputSwitch checked={status} onChange={(e) => setStatus(e.value)} />
+            <span className="text-sm text-[#6C768B]">{status ? 'Active' : 'Inactive'}</span>
+          </div>
 
           <div className="mt-6 flex justify-center gap-6">
             <Link href="/admin/quick-links" className="cancelbtn px-4 py-2 leading-none">

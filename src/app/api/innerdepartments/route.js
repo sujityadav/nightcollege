@@ -38,7 +38,7 @@ export async function GET(req) {
     console.log("departmentId", departmentId)
     const entries = await InnerDepartments.find({
   "InnerDepartmentsData.data.depatmentId": departmentId
-}).sort({ createdAt: -1 });
+}).sort({ "InnerDepartmentsData.data.sortOrder": 1, createdAt: -1 });
 
     return NextResponse.json(
       { success: true, data: entries },

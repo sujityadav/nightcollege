@@ -1,10 +1,11 @@
 import { v2 as cloudinary } from "cloudinary";
 
 function ensureCloudinaryConfig() {
+  const strip = (value) => String(value || '').trim().replace(/^['"]|['"]$/g, '');
   cloudinary.config({
-    cloud_name: (process.env.CLOUDARY_CLOUD_NAME || "").trim(),
-    api_key: (process.env.CLOUDARY_KEY || "").trim(),
-    api_secret: (process.env.CLOUDARY_SECRET || "").trim(),
+    cloud_name: strip(process.env.CLOUDARY_CLOUD_NAME),
+    api_key: strip(process.env.CLOUDARY_KEY),
+    api_secret: strip(process.env.CLOUDARY_SECRET),
     secure: true,
   });
 }

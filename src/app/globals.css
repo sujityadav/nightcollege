@@ -803,3 +803,19 @@ color:#3C4146;
 .app-category-chips .p-chips-input-token input {
   font-size: 14px;
 }
+
+.quick-link-content img {
+  max-width: 100%;
+  height: auto;
+  display: block;
+}
+
+.quick-link-content .se-image-container,
+.quick-link-content figure {
+  margin: 1rem 0;
+}
+
+.quick-link-content .se-image-container img {
+  max-width: 100%;
+  height: auto;
+}

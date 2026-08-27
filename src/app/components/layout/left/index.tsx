@@ -41,8 +41,8 @@ export default function Left() {
       icon: "pi pi-building",
       activePaths: [
         "/admin/all-departments",
-        "/admin/departments",
-        "/admin/sub-departments",
+        "/admin/subjects",
+        "/admin/sub-points",
         "/admin/departmentalactivity",
       ],
     },

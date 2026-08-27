@@ -14,8 +14,14 @@ export async function POST(req) {
         { status: 400 }
       );
     }
+
     const created = await News.create({
-      Newsdata: body,
+      Newsdata: {
+        data: {
+          ...body.data,
+          status: body.data.status ?? 1,
+        },
+      },
     });
     return NextResponse.json(
       { success: true, message: "Data stored", entry: created },

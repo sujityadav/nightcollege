@@ -13,7 +13,8 @@ import Link from 'next/link';
 import TextEditor from '@/app/components/common/editor';
 import DateRange, { validateDateRange } from '@/app/components/common/DateRange';
 import MediaUpload, {
-  uploadMediaFile,
+  uploadMediaItems,
+  normalizePhotoList,
   DEFAULT_MAX_MEDIA_SIZE_MB,
 } from '@/app/components/common/MediaUpload';
 import 'primereact/resources/themes/lara-light-blue/theme.css';
@@ -43,10 +44,10 @@ export default function AddNews() {
   const [editorContent, setEditorContent] = useState('');
   const [isUpdateMode, setIsUpdateMode] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [mediaFile, setMediaFile] = useState(null);
-  const [mediaPreview, setMediaPreview] = useState('');
+  const [mediaItems, setMediaItems] = useState([]);
   const [mediaError, setMediaError] = useState('');
-  const [originalMediaUrl, setOriginalMediaUrl] = useState('');
+  const [originalPhotoUrls, setOriginalPhotoUrls] = useState([]);
+  const [status, setStatus] = useState(1);
   const user = useSelector((state) => state.auth.user);
   const toast = useRef(null);
   const router = useRouter();
@@ -92,11 +93,19 @@ export default function AddNews() {
           ? new Date(news[0]?.Newsdata?.data?.toDate)
           : null
       );
-      const photo = news[0]?.Newsdata?.data?.photo || '';
-      setMediaPreview(photo);
-      setMediaFile(null);
+      const newsData = news[0]?.Newsdata?.data || {};
+      const photos = normalizePhotoList(newsData.photos || newsData.photo);
+      setMediaItems(
+        photos.map((url, index) => ({
+          id: `existing-${index}-${url}`,
+          previewUrl: url,
+          file: null,
+          mediaType: 'Photo',
+        }))
+      );
       setMediaError('');
-      setOriginalMediaUrl(photo);
+      setOriginalPhotoUrls(photos);
+      setStatus(Number(newsData.status ?? 1));
     } catch (err) {
       console.error('Failed to fetch news:', err);
     } finally {
@@ -104,15 +113,13 @@ export default function AddNews() {
     }
   };
 
-  const handleMediaChange = ({ file, previewUrl }) => {
-    setMediaFile(file);
-    setMediaPreview(previewUrl);
+  const handleMediaItemsChange = (items) => {
+    setMediaItems(items);
     setMediaError('');
   };
 
   const handleMediaClear = () => {
-    setMediaFile(null);
-    setMediaPreview('');
+    setMediaItems([]);
     setMediaError('');
   };
 
@@ -152,8 +159,11 @@ export default function AddNews() {
     setCategoryError('');
 
     const maxBytes = DEFAULT_MAX_MEDIA_SIZE_MB * 1024 * 1024;
-    if (mediaFile && mediaFile.size > maxBytes) {
-      const message = `File size must be ${DEFAULT_MAX_MEDIA_SIZE_MB} MB or less.`;
+    const oversizedItem = mediaItems.find(
+      (item) => item.file instanceof File && item.file.size > maxBytes
+    );
+    if (oversizedItem) {
+      const message = `Each file must be ${DEFAULT_MAX_MEDIA_SIZE_MB} MB or less.`;
       setMediaError(message);
       toast.current?.show({
         severity: 'warn',
@@ -167,14 +177,16 @@ export default function AddNews() {
     try {
       setLoading(true);
 
-      const mediaUrl = await uploadMediaFile(mediaFile, mediaPreview);
+      const photoUrls = await uploadMediaItems(mediaItems);
 
       formData.fromDate = fromDate;
       formData.toDate = toDate;
       formData.largeDescription = editorContent;
       formData.category = cleanedCategories;
-      formData.photo = mediaUrl;
+      formData.photos = photoUrls;
+      formData.photo = photoUrls[0] || '';
       formData.mediaType = 'Photo';
+      formData.status = newsId ? status : 1;
 
       const payload = { data: formData, ...(newsId && { _id: newsId }) };
 
@@ -188,9 +200,10 @@ export default function AddNews() {
         },
       });
       if (response?.data?.success) {
-        if (originalMediaUrl && mediaUrl && originalMediaUrl !== mediaUrl) {
+        const removedUrls = originalPhotoUrls.filter((url) => !photoUrls.includes(url));
+        for (const url of removedUrls) {
           try {
-            await axios.delete('/api/upload', { data: { url: originalMediaUrl } });
+            await axios.delete('/api/upload', { data: { url } });
           } catch (cleanupError) {
             console.warn('Old media cleanup warning:', cleanupError);
           }
@@ -326,11 +339,12 @@ export default function AddNews() {
 
             <MediaUpload
               allowVideo={false}
+              multiple
+              label="Photo Upload"
               maxSizeMB={DEFAULT_MAX_MEDIA_SIZE_MB}
-              previewUrl={mediaPreview}
-              mediaType="Photo"
+              items={mediaItems}
               error={mediaError}
-              onChange={handleMediaChange}
+              onItemsChange={handleMediaItemsChange}
               onClear={handleMediaClear}
               onError={handleMediaError}
             />

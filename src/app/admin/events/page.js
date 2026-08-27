@@ -5,6 +5,7 @@ import axios from 'axios';
 import { format } from 'date-fns';
 import { Toast } from 'primereact/toast';
 import { ConfirmDialog } from 'primereact/confirmdialog';
+import { InputSwitch } from 'primereact/inputswitch';
 import { usePageBreadcrumbs } from '@/app/hooks/usePageBreadcrumbs';
 import CommonDataTable from '@/app/components/common/DataTable';
 import { getFirstPhotoUrl } from '@/app/components/common/MediaUpload';
@@ -30,6 +31,7 @@ export default function EventList() {
 
   const [deleteDialogVisible, setDeleteDialogVisible] = useState(false);
   const [deleteId, setDeleteId] = useState(null);
+  const [updatingStatusId, setUpdatingStatusId] = useState(null);
 
   const fetchEventList = async () => {
     try {
@@ -112,6 +114,74 @@ export default function EventList() {
     setDeleteDialogVisible(true);
   };
 
+  const handleStatusToggle = async (rowData, checked) => {
+    const newStatus = checked ? 1 : 0;
+    const previousStatus = Number(rowData?.Eventdata?.data?.status ?? 0);
+
+    setEventsData((prev) =>
+      prev.map((item) =>
+        item._id === rowData._id
+          ? {
+              ...item,
+              Eventdata: {
+                ...item.Eventdata,
+                data: {
+                  ...item.Eventdata?.data,
+                  status: newStatus,
+                },
+              },
+            }
+          : item
+      )
+    );
+    setUpdatingStatusId(rowData._id);
+
+    try {
+      const response = await axios.put(`/api/events/${rowData._id}`, {
+        data: {
+          ...rowData.Eventdata?.data,
+          status: newStatus,
+        },
+      });
+
+      if (!response?.data?.success) {
+        throw new Error(response?.data?.message || 'Failed to update status');
+      }
+
+      toast.current?.show({
+        severity: 'success',
+        summary: 'Status updated',
+        detail: `Event marked as ${newStatus === 1 ? 'active' : 'inactive'}`,
+        life: 2500,
+      });
+    } catch (error) {
+      setEventsData((prev) =>
+        prev.map((item) =>
+          item._id === rowData._id
+            ? {
+                ...item,
+                Eventdata: {
+                  ...item.Eventdata,
+                  data: {
+                    ...item.Eventdata?.data,
+                    status: previousStatus,
+                  },
+                },
+              }
+            : item
+        )
+      );
+      toast.current?.show({
+        severity: 'error',
+        summary: 'Error',
+        detail: 'Failed to update status',
+        life: 3000,
+      });
+    } finally {
+      setUpdatingStatusId(null);
+    }
+  };
+
   // Match rebranding action icons (edit + delete)
   const actionTemplate = (rowData) => (
     <div className="flex justify-center items-center gap-4">
@@ -174,6 +244,18 @@ export default function EventList() {
       header: 'Created At',
       body: (rowData) => formatDate(rowData?.createdAt),
       style: { minWidth: '8rem' },
+    },
+    {
+      header: 'Status',
+      body: (rowData) => (
+        <InputSwitch
+          checked={Number(rowData?.Eventdata?.data?.status) === 1}
+          disabled={updatingStatusId === rowData._id}
+          onChange={(event) => handleStatusToggle(rowData, event.value)}
+        />
+      ),
+      align: 'center',
+      style: { minWidth: '6rem' },
     },
     {
       header: 'Action',

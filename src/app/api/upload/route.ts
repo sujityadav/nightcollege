@@ -3,10 +3,12 @@ import { v2 as cloudinary, UploadApiResponse } from "cloudinary";
 import { deleteCloudinaryImage } from "@/app/lib/cloudinary";
 
 function ensureCloudinaryConfig() {
+  const strip = (value: string | undefined) =>
+    String(value || "").trim().replace(/^['"]|['"]$/g, "");
   cloudinary.config({
-    cloud_name: (process.env.CLOUDARY_CLOUD_NAME || "").trim(),
-    api_key: (process.env.CLOUDARY_KEY || "").trim(),
-    api_secret: (process.env.CLOUDARY_SECRET || "").trim(),
+    cloud_name: strip(process.env.CLOUDARY_CLOUD_NAME),
+    api_key: strip(process.env.CLOUDARY_KEY),
+    api_secret: strip(process.env.CLOUDARY_SECRET),
     secure: true,
   });
 }
@@ -17,6 +19,12 @@ function sanitizePublicId(fileName: string) {
     .replace(/[^a-zA-Z0-9_-]/g, "-")
     .replace(/-+/g, "-")
     .replace(/^-|-$/g, "");
+}
+
+function getUploadResourceType(file: File) {
+  const isPdf =
+    file.type === "application/pdf" || file.name.toLowerCase().endsWith(".pdf");
+  return isPdf ? "raw" : "auto";
 }
 
 export async function POST(req: NextRequest) {
@@ -41,7 +49,7 @@ export async function POST(req: NextRequest) {
             {
               folder: "nightcollege",
               public_id: sanitizePublicId(file.name),
-              resource_type: "auto",
+              resource_type: getUploadResourceType(file),
             },
             (error, result) => {
               if (error) reject(error);

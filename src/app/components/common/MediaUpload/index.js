@@ -56,6 +56,11 @@ export async function uploadMediaFile(file, existingPreviewUrl = '') {
   return mediaUrl;
 }
 
+/** Upload a document file (PDFs stored as raw on Cloudinary). */
+export async function uploadDocumentFile(file, existingPreviewUrl = '') {
+  return uploadMediaFile(file, existingPreviewUrl);
+}
+
 /** Normalize stored photo value (string or array) into a URL array */
 export function normalizePhotoList(value) {
   if (Array.isArray(value)) {

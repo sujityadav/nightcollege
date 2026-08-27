@@ -49,6 +49,7 @@ export default function AddEvents() {
   const [mediaItems, setMediaItems] = useState([]);
   const [mediaError, setMediaError] = useState('');
   const [originalPhotoUrls, setOriginalPhotoUrls] = useState([]);
+  const [status, setStatus] = useState(1);
 
   const user = useSelector((state) => state.auth.user);
   const toast = useRef(null);
@@ -110,6 +111,7 @@ export default function AddEvents() {
       );
       setMediaError('');
       setOriginalPhotoUrls(photos);
+      setStatus(Number(event[0]?.Eventdata?.data?.status ?? 1));
     } catch (err) {
       console.error('Failed to fetch event:', err);
     } finally {
@@ -190,6 +192,7 @@ export default function AddEvents() {
       formData.photos = photoUrls;
       formData.photo = photoUrls[0] || '';
       formData.mediaType = 'Photo';
+      formData.status = eventId ? status : 1;
 
       const payload = {
         data: formData,

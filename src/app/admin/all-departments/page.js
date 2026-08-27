@@ -18,8 +18,8 @@ export default function EventList() {
     first: 0,
     rows: 10,
     page: 1,
-    sortField: 'createdAt',
-    sortOrder: -1,
+    sortField: 'DepartmentsData.data.sortOrder',
+    sortOrder: 1,
   });
   const [globalFilter, setGlobalFilter] = useState('');
   const toast = useRef(null);
@@ -127,7 +127,7 @@ export default function EventList() {
       sortable: true,
       body: (rowData) => (
         <a
-          href={`/admin/departments?depatmentId=${rowData._id}`}
+          href={`/admin/subjects?depatmentId=${rowData._id}`}
           style={{ color: 'blue', textDecoration: 'underline' }}
         >
           {rowData.DepartmentsData.data.title}
@@ -139,6 +139,13 @@ export default function EventList() {
       field: 'DepartmentsData.data.smallDescription',
       header: 'Description',
       style: { minWidth: '12rem' },
+    },
+    {
+      field: 'DepartmentsData.data.sortOrder',
+      header: 'Sort Order',
+      sortable: true,
+      body: (rowData) => rowData?.DepartmentsData?.data?.sortOrder ?? '-',
+      style: { minWidth: '6rem' },
     },
     {
       header: 'Created At',

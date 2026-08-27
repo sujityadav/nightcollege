@@ -5,7 +5,9 @@ import axios from 'axios';
 import { format } from 'date-fns';
 import { Toast } from 'primereact/toast';
 import { ConfirmDialog } from 'primereact/confirmdialog';
+import { InputSwitch } from 'primereact/inputswitch';
 import CommonDataTable from '@/app/components/common/DataTable';
+import { getFirstPhotoUrl } from '@/app/components/common/MediaUpload';
 
 export default function NewsList() {
   const [newsData, setNewsData] = useState([]);
@@ -18,6 +20,7 @@ export default function NewsList() {
     rows: 10,
     page: 1,
   });
+  const [updatingStatusId, setUpdatingStatusId] = useState(null);
 
   const toast = useRef(null);
 
@@ -79,6 +82,74 @@ export default function NewsList() {
     setVisible(true);
   };
 
+  const handleStatusToggle = async (rowData, checked) => {
+    const newStatus = checked ? 1 : 0;
+    const previousStatus = Number(rowData?.Newsdata?.data?.status ?? 0);
+
+    setNewsData((prev) =>
+      prev.map((item) =>
+        item._id === rowData._id
+          ? {
+              ...item,
+              Newsdata: {
+                ...item.Newsdata,
+                data: {
+                  ...item.Newsdata?.data,
+                  status: newStatus,
+                },
+              },
+            }
+          : item
+      )
+    );
+    setUpdatingStatusId(rowData._id);
+
+    try {
+      const response = await axios.put(`/api/news/${rowData._id}`, {
+        data: {
+          ...rowData.Newsdata?.data,
+          status: newStatus,
+        },
+      });
+
+      if (!response?.data?.success) {
+        throw new Error(response?.data?.message || 'Failed to update status');
+      }
+
+      toast.current.show({
+        severity: 'success',
+        summary: 'Status updated',
+        detail: `News marked as ${newStatus === 1 ? 'active' : 'inactive'}`,
+        life: 2500,
+      });
+    } catch (error) {
+      setNewsData((prev) =>
+        prev.map((item) =>
+          item._id === rowData._id
+            ? {
+                ...item,
+                Newsdata: {
+                  ...item.Newsdata,
+                  data: {
+                    ...item.Newsdata?.data,
+                    status: previousStatus,
+                  },
+                },
+              }
+            : item
+        )
+      );
+      toast.current.show({
+        severity: 'error',
+        summary: 'Error',
+        detail: 'Failed to update status',
+        life: 3000,
+      });
+    } finally {
+      setUpdatingStatusId(null);
+    }
+  };
+
   const actionTemplate = (rowData) => (
     <div className="flex justify-center items-center gap-4">
       <Link
@@ -108,7 +179,28 @@ export default function NewsList() {
     return String(value);
   };
 
+  const imageTemplate = (rowData) => {
+    const imageUrl = getFirstPhotoUrl(rowData?.Newsdata?.data);
+
+    if (!imageUrl) {
+      return <span className="text-gray-400 text-sm">No Image</span>;
+    }
+
+    return (
+      <img
+        src={imageUrl}
+        alt={rowData?.Newsdata?.data?.title || 'News'}
+        className="h-14 w-24 rounded object-cover"
+      />
+    );
+  };
+
   const columns = [
+    {
+      header: 'Image',
+      body: imageTemplate,
+      style: { minWidth: '7rem' },
+    },
     { field: 'Newsdata.data.title', header: 'Title', sortable: true },
     { field: 'Newsdata.data.smallDescription', header: 'Description' },
     {
@@ -128,6 +220,18 @@ export default function NewsList() {
     {
       header: 'Created At',
       body: (rowData) => formatDate(rowData?.createdAt),
+    },
+    {
+      header: 'Status',
+      body: (rowData) => (
+        <InputSwitch
+          checked={Number(rowData?.Newsdata?.data?.status) === 1}
+          disabled={updatingStatusId === rowData._id}
+          onChange={(event) => handleStatusToggle(rowData, event.value)}
+        />
+      ),
+      align: 'center',
+      style: { minWidth: '6rem' },
     },
     {
       header: 'Action',

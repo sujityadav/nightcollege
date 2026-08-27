@@ -35,15 +35,16 @@ interface TextEditorProps {
   imageArray?: Array<{ url: string; name: string; size: number }>;
 }
 
-const TextEditor: React.FC<TextEditorProps> = ({ value = "", onChange, onImageUploadSuccess,imageArray }) => {
+const TextEditor: React.FC<TextEditorProps> = ({ value = "", onChange, onImageUploadSuccess, imageArray }) => {
   const editorRef = useRef<any>(null);
   const [editorLoaded, setEditorLoaded] = useState(false);
+  const syncedValueRef = useRef(value);
 
   const onChangeHandler = (content: string) => {
+    syncedValueRef.current = content;
     onChange(content);
   };
 
-  // Called when image upload succeeds
   const handleImageUpload = (
     targetElement: any,
     index: number,
@@ -51,14 +52,16 @@ const TextEditor: React.FC<TextEditorProps> = ({ value = "", onChange, onImageUp
     info: any,
     remainingFilesCount: number
   ) => {
-    if (state === "create") {
-      // console.log("✅ Image uploaded:", targetElement.src);
-      // Pass uploaded image info to parent
+    if (state === "create" && editorRef.current) {
+      const updatedContent = editorRef.current.getContents();
+      syncedValueRef.current = updatedContent;
+      onChange(updatedContent);
+
       if (onImageUploadSuccess) {
         onImageUploadSuccess({
           url: targetElement.src,
           name: info?.name || `image-${index}`,
-          size: info?.size || 0
+          size: info?.size || 0,
         });
       }
     }
@@ -70,16 +73,19 @@ const TextEditor: React.FC<TextEditorProps> = ({ value = "", onChange, onImageUp
 
   const handleEditorReady = (editorInstance: any) => {
     editorRef.current = editorInstance;
+    if (value) {
+      editorInstance.setContents(value);
+    }
+    syncedValueRef.current = value;
     setEditorLoaded(true);
   };
 
   useEffect(() => {
-    if (editorLoaded && editorRef.current && value) {
-      const currentContent = editorRef.current.getContents();
-      if (value !== currentContent) {
-        editorRef.current.setContents(value);
-      }
-    }
+    if (!editorLoaded || !editorRef.current) return;
+    if (value === syncedValueRef.current) return;
+
+    editorRef.current.setContents(value || '');
+    syncedValueRef.current = value || '';
   }, [value, editorLoaded]);
 
   useEffect(() => {
