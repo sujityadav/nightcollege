@@ -819,3 +819,7 @@ color:#3C4146;
   max-width: 100%;
   height: auto;
 }
+.p-button-label
+{
+  font-weight: 500;
+}
