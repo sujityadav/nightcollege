@@ -1,12 +1,9 @@
-
-import { useState } from 'react';
 import Top from '../components/layout/top';
 import Left from '../components/layout/left';
-import { Metadata } from 'next';
 import { StoreProvider } from '@/StoreProvider';
 import { BreadcrumbProvider } from '@/app/context/BreadcrumbContext';
 
-export default async function Layout({ children }: { children: React.ReactNode }) {
+export default function Layout({ children }: { children: React.ReactNode }) {
  
 
 

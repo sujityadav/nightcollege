@@ -48,8 +48,9 @@ const validatePayload = async (data, excludeId = null) => {
 
 export async function GET(req, { params }) {
   try {
+    const { id } = await params;
     await connectDB();
-    const data = await QuickLink.findById(params.id);
+    const data = await QuickLink.findById(id);
     return data
       ? NextResponse.json({ success: true, data })
       : NextResponse.json({ success: false, message: 'Not found' }, { status: 404 });
@@ -63,9 +64,10 @@ export async function GET(req, { params }) {
 
 export async function PUT(req, { params }) {
   try {
+    const { id } = await params;
     await connectDB();
     const payload = await req.json();
-    const validationError = await validatePayload(payload, params.id);
+    const validationError = await validatePayload(payload, id);
 
     if (validationError) {
       return NextResponse.json({ success: false, message: validationError }, { status: 400 });
@@ -83,7 +85,7 @@ export async function PUT(req, { params }) {
       documentName: payload.type === 'Document' ? payload.documentName || '' : '',
     };
 
-    const data = await QuickLink.findByIdAndUpdate(params.id, updateData, {
+    const data = await QuickLink.findByIdAndUpdate(id, updateData, {
       new: true,
       runValidators: true,
     });
@@ -101,8 +103,9 @@ export async function PUT(req, { params }) {
 
 export async function DELETE(req, { params }) {
   try {
+    const { id } = await params;
     await connectDB();
-    const data = await QuickLink.findByIdAndDelete(params.id);
+    const data = await QuickLink.findByIdAndDelete(id);
     return data
       ? NextResponse.json({ success: true })
       : NextResponse.json({ success: false, message: 'Not found' }, { status: 404 });

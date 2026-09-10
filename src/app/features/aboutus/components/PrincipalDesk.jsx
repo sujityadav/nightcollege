@@ -13,6 +13,7 @@ const PrincipalDesk = () => {
     handleEditorChange,
     handleSave,
     isLoading,
+    isDataLoaded,
     toast,
      setTitle,
     title
@@ -30,7 +31,11 @@ const PrincipalDesk = () => {
 
           <div className='flex flex-col gap-1'>
             <label className='text-[#212325] text-[14px] font-[500]'>Description</label>
-            <TextEditor value={editorContent} onChange={handleEditorChange} />
+            {isDataLoaded ? (
+              <TextEditor value={editorContent} onChange={handleEditorChange} />
+            ) : (
+              <div className="h-[400px] flex items-center justify-center text-gray-500">Loading editor...</div>
+            )}
           </div>
         </div>
 

@@ -13,6 +13,7 @@ const AboutEditor = () => {
     handleEditorChange,
     handleSave,
     isLoading,
+    isDataLoaded,
     toast,
     setEditorContent,
     setImageArray,
@@ -34,10 +35,20 @@ const AboutEditor = () => {
 
           <div className='flex flex-col gap-1'>
             <label className='text-[#212325] text-[14px] font-[500]'>Description</label>
-            <TextEditor type="about"  value={editorContent}  onImageUploadSuccess={(image) => {
-    setImageArray((prev) => [...prev, image]);
-    
-  }} setEditorContent={setEditorContent} imageArray={imageArray} onChange={handleEditorChange} />
+            {isDataLoaded ? (
+              <TextEditor
+                type="about"
+                value={editorContent}
+                onImageUploadSuccess={(image) => {
+                  setImageArray((prev) => [...prev, image]);
+                }}
+                setEditorContent={setEditorContent}
+                imageArray={imageArray}
+                onChange={handleEditorChange}
+              />
+            ) : (
+              <div className="h-[400px] flex items-center justify-center text-gray-500">Loading editor...</div>
+            )}
           </div>
         </div>
 

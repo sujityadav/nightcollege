@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server";
 import { connectDB } from "../../lib/mongodb";
-import  DepartmentlActivity  from "../../models/departmentalactivity";
-import { Types } from "mongoose";
+import DepartmentlActivity from "../../models/departmentalactivity";
 export async function POST(req) {
   try {
     await connectDB();
@@ -33,12 +32,19 @@ export async function POST(req) {
 export async function GET(req) {
   try {
     await connectDB();
-     const { searchParams } = new URL(req.url);
-    const departmentId = searchParams.get("departmentId");
-    console.log("departmentId", departmentId)
+    const { searchParams } = new URL(req.url);
+    const subDepartmentId = searchParams.get("subDepartmentId");
+
+    if (!subDepartmentId) {
+      return NextResponse.json(
+        { success: false, message: "subDepartmentId is required" },
+        { status: 400 }
+      );
+    }
+
     const entries = await DepartmentlActivity.find({
-  "DepartmentlActivityData.data.depatmentId": departmentId
-}).sort({ createdAt: -1 });
+      "DepartmentlActivityData.data.subDepartmentId": subDepartmentId,
+    }).sort({ createdAt: -1 });
 
     return NextResponse.json(
       { success: true, data: entries },

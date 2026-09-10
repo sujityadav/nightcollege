@@ -4,7 +4,7 @@ import SubDepartments from "../../../models/subdepartments";
 export async function PUT(req, { params }) {
   try {
     await connectDB();
-    const { id } = params;
+    const { id } = await params;
     const body = await req.json();
      console.log("body", body.data);
     const updated = await SubDepartments.findByIdAndUpdate(
@@ -26,7 +26,7 @@ export async function PUT(req, { params }) {
 export async function DELETE(req, { params }) {
   try {
     await connectDB();
-    const { id } = params;
+    const { id } = await params;
     const updated = await SubDepartments.findByIdAndDelete(
   id,
 );

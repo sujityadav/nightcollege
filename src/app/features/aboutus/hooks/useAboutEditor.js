@@ -10,6 +10,7 @@ export const useAboutEditor = (type) => {
   const [imageArray, setImageArray] = useState([]);
   const [title, setTitle] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [isDataLoaded, setIsDataLoaded] = useState(false);
   const [existingId, setExistingId] = useState(null); // For edit mode
   const toast = useRef(null);
   const user = useSelector((state) => state.auth.user);
@@ -51,6 +52,8 @@ export const useAboutEditor = (type) => {
       }
     } catch (err) {
       console.warn('No existing about-us data found');
+    } finally {
+      setIsDataLoaded(true);
     }
   };
   const handleSave = async (type) => {
@@ -103,6 +106,7 @@ export const useAboutEditor = (type) => {
     handleEditorChange,
     handleSave,
     isLoading,
+    isDataLoaded,
     toast,
     setEditorContent,
     setImageArray,

@@ -5,8 +5,9 @@ import { normalizeSlug } from '../../../../utils/quickLinkSlug';
 
 export async function GET(req, { params }) {
   try {
+    const { slug: slugParam } = await params;
     await connectDB();
-    const slug = normalizeSlug(params.slug);
+    const slug = normalizeSlug(slugParam);
 
     const item = await QuickLink.findOne({
       slug,

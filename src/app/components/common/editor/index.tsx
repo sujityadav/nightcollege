@@ -3,7 +3,7 @@ import React, { useEffect, useRef, useState } from "react";
 import dynamic from "next/dynamic";
 import "suneditor/dist/css/suneditor.min.css";
 
-const SunEditor = dynamic(() => import("suneditor-react").then(mod => mod.default), { ssr: false });
+const SunEditor = dynamic(() => import("suneditor-react"), { ssr: false });
 
 const editorOptions = {
   height: "400px",
@@ -31,14 +31,16 @@ const editorOptions = {
 interface TextEditorProps {
   value?: string;
   onChange: (content: string) => void;
-  onImageUploadSuccess?: (image: { url: string; name: string; size: number }) => void; // callback to parent
+  onImageUploadSuccess?: (image: { url: string; name: string; size: number }) => void;
   imageArray?: Array<{ url: string; name: string; size: number }>;
 }
 
 const TextEditor: React.FC<TextEditorProps> = ({ value = "", onChange, onImageUploadSuccess, imageArray }) => {
   const editorRef = useRef<any>(null);
-  const [editorLoaded, setEditorLoaded] = useState(false);
   const syncedValueRef = useRef(value);
+  const [editorKey, setEditorKey] = useState(0);
+  const [defaultValue, setDefaultValue] = useState(value);
+  const [editorReady, setEditorReady] = useState(false);
 
   const onChangeHandler = (content: string) => {
     syncedValueRef.current = content;
@@ -71,25 +73,24 @@ const TextEditor: React.FC<TextEditorProps> = ({ value = "", onChange, onImageUp
     console.error("❌ Image upload error:", { errorMessage, result });
   };
 
-  const handleEditorReady = (editorInstance: any) => {
-    editorRef.current = editorInstance;
-    if (value) {
-      editorInstance.setContents(value);
-    }
-    syncedValueRef.current = value;
-    setEditorLoaded(true);
+  const handleEditorReady = (sunEditor: any) => {
+    editorRef.current = sunEditor;
+    setEditorReady(true);
   };
 
+  // Remount the editor when value changes externally (e.g. async fetch).
+  // Calling setContents after mount triggers a SunEditor bug in Next.js.
   useEffect(() => {
-    if (!editorLoaded || !editorRef.current) return;
     if (value === syncedValueRef.current) return;
 
-    editorRef.current.setContents(value || '');
-    syncedValueRef.current = value || '';
-  }, [value, editorLoaded]);
+    syncedValueRef.current = value;
+    setDefaultValue(value);
+    setEditorReady(false);
+    setEditorKey((key) => key + 1);
+  }, [value]);
 
   useEffect(() => {
-    if (!editorLoaded || !editorRef.current || !imageArray?.length) return;
+    if (!editorReady || !editorRef.current || !imageArray?.length) return;
 
     const editor = editorRef.current;
 
@@ -101,17 +102,15 @@ const TextEditor: React.FC<TextEditorProps> = ({ value = "", onChange, onImageUp
         );
       }
     });
-  }, [imageArray, editorLoaded]);
+  }, [imageArray, editorReady]);
 
   return (
     <div>
       <SunEditor
-        getSunEditorInstance={(sunEditor) => {
-          editorRef.current = sunEditor;
-          handleEditorReady(sunEditor);
-        }}
+        key={editorKey}
+        getSunEditorInstance={handleEditorReady}
         setOptions={editorOptions}
-        defaultValue={value}
+        defaultValue={defaultValue}
         onChange={onChangeHandler}
         onImageUpload={handleImageUpload}
         onImageUploadError={handleImageUploadError}

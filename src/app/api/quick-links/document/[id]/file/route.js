@@ -34,8 +34,9 @@ function getContentType(viewType, documentName = '') {
 
 export async function GET(req, { params }) {
   try {
+    const { id } = await params;
     await connectDB();
-    const item = await QuickLink.findById(params.id);
+    const item = await QuickLink.findById(id);
 
     if (!item || item.type !== 'Document' || !item.status || !item.documentUrl) {
       return NextResponse.json({ success: false, message: 'Document not found' }, { status: 404 });

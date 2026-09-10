@@ -4,8 +4,9 @@ import CollegePublication from '../../../models/collegePublication';
 
 export async function GET(_req, { params }) {
   try {
+    const { id } = await params;
     await connectDB();
-    const publication = await CollegePublication.findById(params.id);
+    const publication = await CollegePublication.findById(id);
     if (!publication) return NextResponse.json({ success: false, message: 'Publication not found' }, { status: 404 });
     return NextResponse.json({ success: true, data: publication });
   } catch (error) {
@@ -15,6 +16,7 @@ export async function GET(_req, { params }) {
 
 export async function PUT(req, { params }) {
   try {
+    const { id } = await params;
     await connectDB();
     const body = await req.json();
     if (!body?.data?.title || !body?.data?.description) {
@@ -22,7 +24,7 @@ export async function PUT(req, { params }) {
     }
 
     const publication = await CollegePublication.findByIdAndUpdate(
-      params.id,
+      id,
       { 'PublicationData.data': body.data },
       { new: true, runValidators: true }
     );
@@ -35,8 +37,9 @@ export async function PUT(req, { params }) {
 
 export async function DELETE(_req, { params }) {
   try {
+    const { id } = await params;
     await connectDB();
-    const publication = await CollegePublication.findByIdAndDelete(params.id);
+    const publication = await CollegePublication.findByIdAndDelete(id);
     if (!publication) return NextResponse.json({ success: false, message: 'Publication not found' }, { status: 404 });
     return NextResponse.json({ success: true, message: 'Publication deleted successfully' });
   } catch (error) {
