@@ -1,5 +1,5 @@
 'use client';
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import 'primereact/resources/themes/lara-light-blue/theme.css';
 import 'primereact/resources/primereact.min.css';
 import Link from 'next/link';
@@ -7,18 +7,30 @@ import axios from 'axios';
 import { format } from 'date-fns';
 import { useSearchParams } from 'next/navigation';
 import { Toast } from 'primereact/toast';
-import { ConfirmDialog, confirmDialog } from 'primereact/confirmdialog';
+import { ConfirmDialog } from 'primereact/confirmdialog';
+import { InputSwitch } from 'primereact/inputswitch';
 import { usePageBreadcrumbs } from '@/app/hooks/usePageBreadcrumbs';
 import CommonDataTable from '@/app/components/common/DataTable';
+import { getFirstPhotoUrl } from '@/app/components/common/MediaUpload';
 
-export default function EventList() {
-  const [eventsData, setEventsData] = useState([]);
+export default function DepartmentalActivityList() {
+  const [activitiesData, setActivitiesData] = useState([]);
   const [search, setSearch] = useState('');
+  const [totalRecords, setTotalRecords] = useState(0);
+  const [lazyParams, setLazyParams] = useState({
+    first: 0,
+    rows: 10,
+    page: 1,
+  });
   const [depatmentId, setDepatmentId] = useState(null);
   const [SubdepatmentId, setSubdepatmentId] = useState(null);
   const toast = useRef(null);
   const searchParams = useSearchParams();
   const subDepartmentId = searchParams.get('subDepartmentId');
+
+  const [deleteDialogVisible, setDeleteDialogVisible] = useState(false);
+  const [deleteId, setDeleteId] = useState(null);
+  const [updatingStatusId, setUpdatingStatusId] = useState(null);
 
   const subjectsListUrl = depatmentId ? `/admin/subjects?depatmentId=${depatmentId}` : null;
   const subPointsListUrl =
@@ -65,84 +77,183 @@ export default function EventList() {
     fetchParentBreadcrumbData();
   }, [subDepartmentId]);
 
-  useEffect(() => {
-    const fetchDepartmentsList = async () => {
+  const fetchActivityList = async () => {
+    if (!subDepartmentId) return;
+    try {
       const response = await axios.get('/api/departmentalactivity', {
-        params: { subDepartmentId },
+        params: {
+          subDepartmentId,
+          search,
+          page: lazyParams.page,
+          limit: lazyParams.rows,
+        },
       });
       if (response?.data?.success) {
-        setEventsData(response?.data?.data);
-      }
-    };
-    fetchDepartmentsList();
-  }, [subDepartmentId]);
-
-  const filteredData = useMemo(() => {
-    if (!search.trim()) return eventsData;
-    const query = search.toLowerCase();
-    return eventsData.filter((item) => {
-      const title = item?.DepartmentlActivityData?.data?.title?.toLowerCase() || '';
-      const description = item?.DepartmentlActivityData?.data?.smallDescription?.toLowerCase() || '';
-      return title.includes(query) || description.includes(query);
-    });
-  }, [eventsData, search]);
-
-  const handleDelete = async (id) => {
-    try {
-      const response = await axios.delete(`/api/departmentalactivity/${id}`);
-      if (response?.data?.success) {
-        setEventsData(eventsData.filter((item) => item._id !== id));
-        toast.current.show({
-          severity: 'success',
-          summary: 'Success',
-          detail: 'Activity deleted successfully',
-          life: 3000,
-        });
+        setActivitiesData(response.data.data);
+        setTotalRecords(response.data.totalRecords);
       }
     } catch (error) {
-      console.error('Failed to delete activity:', error);
-      toast.current.show({
+      toast.current?.show({
         severity: 'error',
         summary: 'Error',
-        detail: 'Failed to delete activity',
-        life: 3000,
+        detail: 'Failed to fetch departmental activities',
       });
     }
   };
 
+  useEffect(() => {
+    fetchActivityList();
+  }, [subDepartmentId, lazyParams, search]);
+
+  const formatDate = (dateString) => {
+    if (!dateString) return '-';
+    try {
+      return format(new Date(dateString), 'dd/MM/yyyy');
+    } catch {
+      return '-';
+    }
+  };
+
+  const formatCategories = (value) => {
+    if (!value) return '-';
+    if (Array.isArray(value)) return value.filter(Boolean).join(', ') || '-';
+    return String(value);
+  };
+
+  const imageTemplate = (rowData) => {
+    const imageUrl = getFirstPhotoUrl(rowData?.DepartmentlActivityData?.data);
+
+    if (!imageUrl) {
+      return <span className="text-gray-400 text-sm">No Image</span>;
+    }
+
+    return (
+      <img
+        src={imageUrl}
+        alt={rowData?.DepartmentlActivityData?.data?.title || 'Departmental Activity'}
+        className="h-14 w-24 rounded object-cover"
+      />
+    );
+  };
+
+  const handleDelete = async (id) => {
+    try {
+      await axios.delete(`/api/departmentalactivity/${id}`);
+      toast.current?.show({
+        severity: 'success',
+        summary: 'Success',
+        detail: 'Departmental activity deleted successfully',
+      });
+      fetchActivityList();
+    } catch (error) {
+      toast.current?.show({
+        severity: 'error',
+        summary: 'Error',
+        detail: 'Failed to delete departmental activity',
+      });
+    }
+    setDeleteDialogVisible(false);
+  };
+
   const confirmDelete = (id) => {
-    confirmDialog({
-      message: 'Are you sure you want to delete this activity?',
-      header: 'Confirmation',
-      icon: 'pi pi-exclamation-triangle',
-      acceptLabel: 'Yes',
-      rejectLabel: 'No',
-      acceptClassName: 'p-button-danger',
-      accept: () => handleDelete(id),
-    });
+    setDeleteId(id);
+    setDeleteDialogVisible(true);
+  };
+
+  const handleStatusToggle = async (rowData, checked) => {
+    const newStatus = checked ? 1 : 0;
+    const previousStatus = Number(rowData?.DepartmentlActivityData?.data?.status ?? 0);
+
+    setActivitiesData((prev) =>
+      prev.map((item) =>
+        item._id === rowData._id
+          ? {
+              ...item,
+              DepartmentlActivityData: {
+                ...item.DepartmentlActivityData,
+                data: {
+                  ...item.DepartmentlActivityData?.data,
+                  status: newStatus,
+                },
+              },
+            }
+          : item
+      )
+    );
+    setUpdatingStatusId(rowData._id);
+
+    try {
+      const response = await axios.put(`/api/departmentalactivity/${rowData._id}`, {
+        data: {
+          ...rowData.DepartmentlActivityData?.data,
+          status: newStatus,
+        },
+      });
+
+      if (!response?.data?.success) {
+        throw new Error(response?.data?.message || 'Failed to update status');
+      }
+
+      toast.current?.show({
+        severity: 'success',
+        summary: 'Status updated',
+        detail: `Departmental activity marked as ${newStatus === 1 ? 'active' : 'inactive'}`,
+        life: 2500,
+      });
+    } catch (error) {
+      setActivitiesData((prev) =>
+        prev.map((item) =>
+          item._id === rowData._id
+            ? {
+                ...item,
+                DepartmentlActivityData: {
+                  ...item.DepartmentlActivityData,
+                  data: {
+                    ...item.DepartmentlActivityData?.data,
+                    status: previousStatus,
+                  },
+                },
+              }
+            : item
+        )
+      );
+      toast.current?.show({
+        severity: 'error',
+        summary: 'Error',
+        detail: 'Failed to update status',
+        life: 3000,
+      });
+    } finally {
+      setUpdatingStatusId(null);
+    }
   };
 
   const actionTemplate = (rowData) => (
     <div className="flex justify-center items-center gap-4">
       <Link
-        href={`/admin/departmentalactivity/create-departmentalactivity?id=${rowData?._id}&subDepartmentId=${subDepartmentId}`}
+        href={`/admin/departmentalactivity/create-departmentalactivity?id=${rowData._id}&subDepartmentId=${subDepartmentId}`}
         className="leading-none"
+        title="Edit"
       >
-        <i className="pi pi-pen-to-square text-[18px] xl:text-[0.938vw]" />
+        <i className="pi pi-pen-to-square text-[18px]" />
       </Link>
       <button
         type="button"
-        onClick={() => confirmDelete(rowData?._id)}
-        className="leading-none bg-transparent border-0 cursor-pointer text-red-500"
+        onClick={() => confirmDelete(rowData._id)}
+        className="leading-none bg-transparent border-0 cursor-pointer text-red-500 p-0"
+        title="Delete"
       >
-        <i className="pi pi-trash text-[18px] xl:text-[0.938vw]" />
+        <i className="pi pi-trash text-[18px]" />
       </button>
     </div>
   );
 
-  const formatDate = (value) => (value ? format(new Date(value), 'dd MMM yyyy') : '-');
-
   const columns = [
+    {
+      header: 'Image',
+      body: imageTemplate,
+      style: { minWidth: '7rem' },
+    },
     {
       field: 'DepartmentlActivityData.data.title',
       header: 'Title',
@@ -155,59 +266,98 @@ export default function EventList() {
       style: { minWidth: '12rem' },
     },
     {
+      header: 'Category',
+      body: (rowData) => formatCategories(rowData?.DepartmentlActivityData?.data?.category),
+      style: { minWidth: '10rem' },
+    },
+    {
+      field: 'DepartmentlActivityData.data.location',
+      header: 'Location',
+      style: { minWidth: '8rem' },
+    },
+    {
+      header: 'From',
+      body: (rowData) => formatDate(rowData?.DepartmentlActivityData?.data?.fromDate),
+      style: { minWidth: '8rem' },
+    },
+    {
+      header: 'To',
+      body: (rowData) => formatDate(rowData?.DepartmentlActivityData?.data?.toDate),
+      style: { minWidth: '8rem' },
+    },
+    {
       header: 'Created At',
       body: (rowData) => formatDate(rowData?.createdAt),
       style: { minWidth: '8rem' },
     },
     {
+      header: 'Status',
+      body: (rowData) => (
+        <InputSwitch
+          checked={Number(rowData?.DepartmentlActivityData?.data?.status) === 1}
+          disabled={updatingStatusId === rowData._id}
+          onChange={(event) => handleStatusToggle(rowData, event.value)}
+        />
+      ),
+      align: 'center',
+      style: { minWidth: '6rem' },
+    },
+    {
       header: 'Action',
       body: actionTemplate,
       align: 'center',
-      style: {
-        minWidth: '4rem',
-        background: '#fbf7dc',
-        boxShadow: '-4px 0 6px -1px rgba(0, 0, 0, 0.1)',
-      },
+      style: { minWidth: '6rem', background: '#fbf7dc' },
     },
   ];
 
   return (
-    <div className="grid grid-cols-1">
+    <div className="p-5">
       <Toast ref={toast} />
-      <ConfirmDialog />
+      <ConfirmDialog
+        visible={deleteDialogVisible}
+        onHide={() => setDeleteDialogVisible(false)}
+        message="Are you sure you want to delete this departmental activity?"
+        header="Confirmation"
+        icon="pi pi-exclamation-triangle"
+        accept={() => handleDelete(deleteId)}
+        reject={() => setDeleteDialogVisible(false)}
+        acceptClassName="p-button-danger"
+        rejectClassName="p-button-secondary"
+      />
 
-      <div className="p-[20px] xl:p-[25px] 3xl:p-[1.563vw] w-full">
-        <div className="flex justify-between mb-5">
-          <h2 className="text-[#19212A] text-[14px] xl:text-[22px] 3xl:text-[1.146vw] font-[700] m-0">
-            Departmental Activity
-          </h2>
-          <Link
-            href={`/admin/departmentalactivity/create-departmentalactivity?subDepartmentId=${subDepartmentId}`}
-            className="text-white border bg-primarycolor border-[#af251c] px-[14px] xl:px-[16px] 3xl:px-[0.833vw] py-[8px] xl:py-[10px] 3xl:py-[0.521vw] leading-[100%] rounded-none p-button-raised flex gap-2 items-center"
-          >
-            <i className="pi pi-plus text-[14px]" /> Add Departmental Activity
-          </Link>
-        </div>
-
-        <CommonDataTable
-          value={filteredData}
-          columns={columns}
-          lazy={false}
-          totalRecords={filteredData.length}
-          headerTitle={
-            <div className="flex items-center gap-4">
-              <span>All Departmental Activities</span>
-              <span className="bg-[#F6F7F9] px-[12px] xl:px-[0.625vw] py-[4px] xl:py-[0.208vw] text-[#6C768B] text-[12px] xl:text-[0.625vw] rounded-[16px] xl:rounded-[0.833vw] font-medium">
-                {filteredData.length} Records
-              </span>
-            </div>
-          }
-          showSearch
-          searchPlaceholder="Search here.."
-          searchValue={search}
-          onSearch={(event) => setSearch(event.target.value)}
-        />
+      <div className="flex justify-between items-center mb-5">
+        <h2 className="text-[#19212A] text-[22px] font-[700]">Departmental Activity</h2>
+        <Link
+          href={`/admin/departmentalactivity/create-departmentalactivity?subDepartmentId=${subDepartmentId}`}
+          className="text-white bg-primarycolor px-4 py-2 flex gap-2 items-center"
+        >
+          <i className="pi pi-plus text-[14px]" /> Add Departmental Activity
+        </Link>
       </div>
+
+      <CommonDataTable
+        value={activitiesData}
+        columns={columns}
+        totalRecords={totalRecords}
+        first={lazyParams.first}
+        rows={lazyParams.rows}
+        onPage={(e) => {
+          setLazyParams({
+            first: e.first,
+            rows: e.rows,
+            page: e.page + 1,
+          });
+        }}
+        emptyMessage="No departmental activities found."
+        headerTitle="All Departmental Activities"
+        showSearch
+        searchPlaceholder="Search here.."
+        searchValue={search}
+        onSearch={(e) => {
+          setSearch(e.target.value);
+          setLazyParams((prev) => ({ ...prev, page: 1, first: 0 }));
+        }}
+      />
     </div>
   );
 }

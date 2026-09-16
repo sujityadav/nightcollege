@@ -6,20 +6,19 @@ export async function PUT(req, { params }) {
     await connectDB();
     const { id } = await params;
     const body = await req.json();
-     console.log("body", body.data);
     const updated = await DepartmentlActivity.findByIdAndUpdate(
-  id,
-  { 'DepartmentlActivityData.data': body.data }, // ✅ correct path
-  { new: true, runValidators: true }
-);
+      id,
+      { 'DepartmentlActivityData.data': body.data },
+      { new: true, runValidators: true }
+    );
 
     if (!updated) {
-      return NextResponse.json({ success: false, message: 'Event not found' }, { status: 404 });
+      return NextResponse.json({ success: false, message: 'Departmental activity not found' }, { status: 404 });
     }
 
-    return NextResponse.json({ success: true, message: 'Event updated', data: updated }, { status: 200 });
+    return NextResponse.json({ success: true, message: 'Departmental activity updated', data: updated }, { status: 200 });
   } catch (error) {
-    return NextResponse.json({ success: false, message: 'Error updating event', error: error.message }, { status: 500 });
+    return NextResponse.json({ success: false, message: 'Error updating departmental activity', error: error.message }, { status: 500 });
   }
 }
 

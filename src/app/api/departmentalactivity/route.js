@@ -1,12 +1,12 @@
 import { NextResponse } from "next/server";
 import { connectDB } from "../../lib/mongodb";
 import DepartmentlActivity from "../../models/departmentalactivity";
+
 export async function POST(req) {
   try {
     await connectDB();
 
     const body = await req.json();
-
 
     if (!body?.data) {
       return NextResponse.json(
@@ -14,8 +14,14 @@ export async function POST(req) {
         { status: 400 }
       );
     }
+
     const created = await DepartmentlActivity.create({
-      DepartmentlActivityData: body,
+      DepartmentlActivityData: {
+        data: {
+          ...body.data,
+          status: body.data.status ?? 1,
+        },
+      },
     });
     return NextResponse.json(
       { success: true, message: "Data stored", entry: created },
@@ -34,6 +40,9 @@ export async function GET(req) {
     await connectDB();
     const { searchParams } = new URL(req.url);
     const subDepartmentId = searchParams.get("subDepartmentId");
+    const search = searchParams.get("search") || "";
+    const page = parseInt(searchParams.get("page")) || 1;
+    const limit = parseInt(searchParams.get("limit")) || 10;
 
     if (!subDepartmentId) {
       return NextResponse.json(
@@ -42,12 +51,35 @@ export async function GET(req) {
       );
     }
 
-    const entries = await DepartmentlActivity.find({
+    let query = {
       "DepartmentlActivityData.data.subDepartmentId": subDepartmentId,
-    }).sort({ createdAt: -1 });
+    };
+
+    if (search) {
+      query = {
+        $and: [
+          { "DepartmentlActivityData.data.subDepartmentId": subDepartmentId },
+          {
+            $or: [
+              { "DepartmentlActivityData.data.title": { $regex: search, $options: "i" } },
+              { "DepartmentlActivityData.data.smallDescription": { $regex: search, $options: "i" } },
+              { "DepartmentlActivityData.data.category": { $regex: search, $options: "i" } },
+              { "DepartmentlActivityData.data.category": search },
+              { "DepartmentlActivityData.data.location": { $regex: search, $options: "i" } },
+            ],
+          },
+        ],
+      };
+    }
+
+    const totalRecords = await DepartmentlActivity.countDocuments(query);
+    const entries = await DepartmentlActivity.find(query)
+      .sort({ createdAt: -1 })
+      .skip((page - 1) * limit)
+      .limit(limit);
 
     return NextResponse.json(
-      { success: true, data: entries },
+      { success: true, data: entries, totalRecords },
       { status: 200 }
     );
   } catch (error) {

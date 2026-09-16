@@ -42,7 +42,7 @@ export default function Desk() {
                <div className='font-[700] text-primarycolor leading-none'>Our Principal</div>
               <p className='font-[400] font15 mt-3 leading-[120%] text-[#5a5a5a]'>I feel great pleasure to introduce Deshbhakt Babasaheb Bhahusaheb Khanjire Shikshan Sansth Night College of Arts & Commerce, Ichalkaranji as Co-educational renowned college in Maharashtra which was established in 1983. In today life academic excellence is most important.</p>
 
-               <Link href='' class="arrow-link mt-2">Read more<span class="arrow"></span></Link>
+               <Link href='' className="arrow-link mt-2">Read more<span className="arrow"></span></Link>
             </div>
           </div>
 
@@ -62,7 +62,7 @@ export default function Desk() {
               <div className='font-[700] text-primarycolor leading-none'>Our Chairperson</div>
               <p className='font-[400] font15 mt-3 leading-[120%] text-[#5a5a5a]'>I feel great pleasure to introduce Deshbhakt Babasaheb Bhahusaheb Khanjire Shikshan Sansth Night College of Arts & Commerce, Ichalkaranji as Co-educational renowned college in Maharashtra which was established in 1983. In today life academic excellence is most important.</p>
 
-               <Link href='' class="arrow-link mt-2">Read more<span class="arrow"></span></Link>
+               <Link href='' className="arrow-link mt-2">Read more<span className="arrow"></span></Link>
             </div>
           </div>
         </div>
