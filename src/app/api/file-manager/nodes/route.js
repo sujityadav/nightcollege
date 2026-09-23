@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { connectDB } from "@/app/lib/mongodb";
 import FileManagerNode from "@/app/models/fileManagerNode";
 import FileManagerYear from "@/app/models/fileManagerYear";
+import { resolveUniqueFileName } from "@/app/lib/fileManagerResolve";
 
 const sortMap = { name: "name", date: "updatedAt", size: "size" };
 
@@ -92,24 +93,37 @@ export async function POST(req) {
         },
         { status: 400 },
       );
+
+    let finalName = name.trim();
+    if (type === "file") {
+      finalName = await resolveUniqueFileName(finalName, { parentId, yearId });
+    }
+
     const parentPath = parentId
       ? (await FileManagerNode.findById(parentId))?.path || ""
       : year
         ? `My Files/${year}`
         : "Other Files";
     const node = await FileManagerNode.create({
-      name: name.trim(),
+      name: finalName,
       type,
       parentId: parentId || null,
       yearId: yearId || null,
       year,
-      path: `${parentPath}/${name.trim()}`,
+      path: `${parentPath}/${finalName}`,
       size: Number(size) || 0,
       mimeType,
       url,
       isFolder: type === "folder",
     });
-    return NextResponse.json({ success: true, data: node }, { status: 201 });
+    return NextResponse.json(
+      {
+        success: true,
+        data: node,
+        ...(finalName !== name.trim() && { renamedFrom: name.trim() }),
+      },
+      { status: 201 },
+    );
   } catch (error) {
     return NextResponse.json(
       { success: false, message: error.message },

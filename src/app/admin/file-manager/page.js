@@ -17,6 +17,13 @@ import { IconField } from "primereact/iconfield";
 import { InputIcon } from "primereact/inputicon";
 import { InputText } from "primereact/inputtext";
 import { Toast } from "primereact/toast";
+import {
+  getFileManagerContentApiPath,
+  getFileManagerFullUrl,
+  getFileManagerNameValidationError,
+  getFileManagerPublicPathFromItem,
+  sanitizeFileManagerNameInput,
+} from "@/app/utils/fileManagerDocument";
 
 const SECTIONS = [
   ["files", "My Files", "pi pi-folder-open"],
@@ -142,6 +149,18 @@ export default function FileManager() {
     });
   };
 
+  useEffect(() => {
+    if (!menuItem) return;
+
+    const closeMenu = (event) => {
+      if (event.target.closest("[data-file-menu]")) return;
+      setMenuItem(null);
+    };
+
+    document.addEventListener("mousedown", closeMenu);
+    return () => document.removeEventListener("mousedown", closeMenu);
+  }, [menuItem]);
+
   const loadYears = useCallback(async () => {
     const response = await axios.get("/api/file-manager/years");
     const list = response.data.data || [];
@@ -218,8 +237,12 @@ export default function FileManager() {
         ...current,
         [selectedYearId]: [...breadcrumbs, item],
       }));
-    } else if (item.url) {
-      window.open(item.url, "_blank", "noopener,noreferrer");
+      return;
+    }
+
+    const publicPath = getFileManagerPublicPathFromItem(item);
+    if (publicPath) {
+      window.open(publicPath, "_blank", "noopener,noreferrer");
     }
   };
 
@@ -313,6 +336,7 @@ export default function FileManager() {
     setLoading(true);
     try {
       const folderCache = new Map();
+      const renamedFiles = [];
       for (const file of files) {
         let uploadParentId = currentParentId || null;
         if (preserveFolders && file.webkitRelativePath) {
@@ -335,7 +359,7 @@ export default function FileManager() {
         const uploaded = await axios.post("/api/upload", data);
         const url = uploaded.data?.result?.[0]?.url;
         if (!url) throw new Error(`Unable to upload ${file.name}`);
-        await axios.post("/api/file-manager/nodes", {
+        const nodeResponse = await axios.post("/api/file-manager/nodes", {
           name: file.name,
           type: "file",
           yearId: selectedYearId || null,
@@ -344,12 +368,17 @@ export default function FileManager() {
           mimeType: file.type,
           url,
         });
+        if (nodeResponse.data?.renamedFrom) {
+          renamedFiles.push(
+            `${nodeResponse.data.renamedFrom} → ${nodeResponse.data.data.name}`,
+          );
+        }
       }
-      notify(
-        "success",
-        "Upload complete",
-        `${files.length} file${files.length > 1 ? "s" : ""} added.`,
-      );
+      const summary =
+        renamedFiles.length > 0
+          ? `${files.length} file${files.length > 1 ? "s" : ""} added. Renamed: ${renamedFiles.join(", ")}`
+          : `${files.length} file${files.length > 1 ? "s" : ""} added.`;
+      notify("success", "Upload complete", summary);
       loadItems();
     } catch (error) {
       notify(
@@ -462,8 +491,13 @@ export default function FileManager() {
   const contextAction = (action, item) => {
     setMenuItem(null);
     if (action === "open") return openItem(item);
-    if (action === "download")
-      return window.open(item.url, "_blank", "noopener,noreferrer");
+    if (action === "download") {
+      const contentPath = getFileManagerContentApiPath(item);
+      if (!contentPath) {
+        return notify("warn", "Download unavailable", "This file does not have a shareable path yet.");
+      }
+      return window.open(`${contentPath}?download=1`, "_blank", "noopener,noreferrer");
+    }
     if (action === "preview") return setDialog({ type: "preview", item });
     if (action === "properties") return setDialog({ type: "properties", item });
     if (action === "rename") {
@@ -474,7 +508,10 @@ export default function FileManager() {
       setMoveTarget({ yearId: selectedYearId, parentId: "" });
       return setDialog({ type: action, item });
     }
-    if (action === "copyPath") return copyToClipboard(item.url || item.path);
+    if (action === "copyPath") {
+      const fileUrl = getFileManagerFullUrl(item, window.location.origin);
+      return copyToClipboard(fileUrl, "File link");
+    }
     if (action === "share")
       return patchItem(item, "share").then(() =>
         copyToClipboard(item.url || item.path || window.location.href, "Share link"),
@@ -521,49 +558,8 @@ export default function FileManager() {
         className="hidden"
         onChange={(event) => uploadFiles(event.target.files, true)}
       />
-      <div className="mx-auto flex  gap-4">
-        <aside className="hidden w-56 shrink-0 rounded-xl border bg-white p-3 shadow-sm lg:block">
-          <div className="mb-5 flex items-center gap-2 px-2 text-lg font-bold text-[#19212A]">
-            <i className="pi pi-cloud text-primarycolor" /> File Manager
-          </div>
-          <nav className="space-y-1">
-            {SECTIONS.map(([id, label, icon]) => (
-              <button
-                key={id}
-                onClick={() => {
-                  setSection(id);
-                  setMenuItem(null);
-                }}
-                className={`flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left text-sm transition ${section === id ? "bg-[#fff1ef] font-semibold text-primarycolor" : "text-[#475569] hover:bg-slate-100"}`}
-              >
-                <i className={icon} />
-                {label}
-              </button>
-            ))}
-          </nav>
-          <div className="mt-6 border-t pt-4">
-            <p className="mb-2 px-2 text-xs font-semibold uppercase tracking-wide text-slate-400">
-              Academic years
-            </p>
-            {years
-              .filter((year) => !year.isArchived)
-              .slice(0, 6)
-              .map((year) => (
-                <button
-                  key={year._id}
-                  onClick={() => chooseYear(year._id)}
-                  className={`flex w-full items-center gap-2 rounded px-2 py-2 text-left text-sm ${selectedYearId === year._id && section === "files" ? "font-semibold text-primarycolor" : "text-slate-600 hover:bg-slate-50"}`}
-                >
-                  <i className="pi pi-folder text-[#e5a400]" />
-                  {year.name}
-                  {year.isCurrent && (
-                    <i className="pi pi-check-circle ml-auto text-xs text-green-600" />
-                  )}
-                </button>
-              ))}
-          </div>
-        </aside>
-        <main className="min-w-0 flex-1 rounded-xl border bg-white shadow-sm">
+      <div className="mx-auto">
+        <main className="min-w-0 rounded-xl border bg-white shadow-sm">
           <div className="border-b px-4 py-4 lg:px-6">
             <div className="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
               <div>
@@ -738,6 +734,7 @@ export default function FileManager() {
                           </div>
                         </div>
                         <button
+                          data-file-menu
                           onClick={() =>
                             setMenuItem(
                               menuItem?._id === year._id
@@ -751,7 +748,10 @@ export default function FileManager() {
                         </button>
                       </div>
                       {menuItem?._id === year._id && menuItem.isYear && (
-                        <div className="mt-3 flex flex-wrap gap-2 border-t pt-3 text-xs">
+                        <div
+                          data-file-menu
+                          className="mt-3 flex flex-wrap gap-2 border-t pt-3 text-xs"
+                        >
                           <button
                             onClick={() => {
                               setDialogValue(year.name);
@@ -894,9 +894,14 @@ export default function FileManager() {
                   else if (dialog?.type === "folder") createFolder();
                   else if (dialog?.type === "subfolder")
                     createFolder(dialog.item._id);
-                  else if (dialog?.type === "rename")
+                  else if (dialog?.type === "rename") {
+                    const nameError = getFileManagerNameValidationError(dialogValue);
+                    if (nameError) {
+                      notify("error", "Invalid name", nameError);
+                      return;
+                    }
                     patchItem(dialog.item, "rename", { name: dialogValue });
-                  else if (dialog?.type === "renameYear")
+                  } else if (dialog?.type === "renameYear")
                     updateYear(dialog.item, "rename", dialogValue);
                   else if (dialog?.type === "move" || dialog?.type === "copy") {
                     const targetYear = years.find(
@@ -920,15 +925,28 @@ export default function FileManager() {
           dialog?.type === "subfolder" ||
           dialog?.type === "rename" ||
           dialog?.type === "renameYear") && (
-          <InputText
-            autoFocus
-            value={dialogValue}
-            onChange={(event) => setDialogValue(event.target.value)}
-            placeholder={
-              dialog?.type === "year" ? "e.g. 2026-27" : "Enter name"
-            }
-            className="w-full"
-          />
+          <div>
+            <InputText
+              autoFocus
+              value={dialogValue}
+              onChange={(event) => {
+                const value =
+                  dialog?.type === "rename"
+                    ? sanitizeFileManagerNameInput(event.target.value)
+                    : event.target.value;
+                setDialogValue(value);
+              }}
+              placeholder={
+                dialog?.type === "year" ? "e.g. 2026-27" : "Enter name"
+              }
+              className="w-full"
+            />
+            {dialog?.type === "rename" && (
+              <p className="mt-2 text-xs text-slate-500">
+                Only letters, numbers, and dots (.) are allowed.
+              </p>
+            )}
+          </div>
         )}
         {(dialog?.type === "move" || dialog?.type === "copy") && (
           <div className="space-y-4">
@@ -1021,22 +1039,23 @@ function MenuButton({ item, menuItem, onMenu, onAction }) {
           ? [
               ["download", "Download", "pi pi-download"],
               ["preview", "Preview", "pi pi-eye"],
-              ["copyPath", "Copy file path", "pi pi-link"],
+              ["copyPath", "Copy", "pi pi-link"],
+              ["rename", "Rename", "pi pi-pencil"],
             ]
           : [
               ["subfolder", "Create subfolder", "pi pi-folder-plus"],
               ["upload", "Upload files", "pi pi-upload"],
+              ["rename", "Rename", "pi pi-pencil"],
+              ["move", "Move", "pi pi-arrow-right-arrow-left"],
+              ["copy", "Copy", "pi pi-copy"],
+              ["share", "Share", "pi pi-share-alt"],
+              ["star", item.isStarred ? "Remove star" : "Add star", "pi pi-star"],
+              ["properties", "Properties", "pi pi-info-circle"],
+              ["delete", "Delete", "pi pi-trash"],
             ]),
-        ["rename", "Rename", "pi pi-pencil"],
-        ["move", "Move", "pi pi-arrow-right-arrow-left"],
-        ["copy", "Copy", "pi pi-copy"],
-        ["share", "Share", "pi pi-share-alt"],
-        ["star", item.isStarred ? "Remove star" : "Add star", "pi pi-star"],
-        ["properties", "Properties", "pi pi-info-circle"],
-        ["delete", "Delete", "pi pi-trash"],
       ];
   return (
-    <div className="relative">
+    <div className="relative" data-file-menu>
       <button
         onClick={(event) => {
           event.stopPropagation();
@@ -1048,6 +1067,7 @@ function MenuButton({ item, menuItem, onMenu, onAction }) {
       </button>
       {isOpen && (
         <div
+          data-file-menu
           className="fixed z-[1000] w-48 rounded-lg border border-[#d9dee8] bg-white py-1 shadow-xl"
           style={menuItem.menuPosition}
         >
@@ -1071,10 +1091,13 @@ function MenuButton({ item, menuItem, onMenu, onAction }) {
 }
 
 function Preview({ item }) {
+  const fileUrl = getFileManagerContentApiPath(item);
+  const publicPath = getFileManagerPublicPathFromItem(item);
+
   if (item.mimeType?.startsWith("image/"))
     return (
       <Image
-        src={item.url}
+        src={fileUrl || item.url}
         alt={item.name}
         width={1200}
         height={900}
@@ -1086,7 +1109,7 @@ function Preview({ item }) {
     return (
       <iframe
         title={item.name}
-        src={item.url}
+        src={fileUrl || item.url}
         className="h-[65vh] w-full border-0"
       />
     );
@@ -1095,7 +1118,7 @@ function Preview({ item }) {
       <i className={`${iconFor(item)} mb-3 text-5xl`} />
       <p>Preview is not available for this file type.</p>
       <a
-        href={item.url}
+        href={publicPath || item.url}
         target="_blank"
         rel="noreferrer"
         className="text-primarycolor underline"

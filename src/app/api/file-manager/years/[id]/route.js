@@ -5,6 +5,7 @@ import FileManagerNode from "@/app/models/fileManagerNode";
 
 export async function PATCH(req, { params }) {
   try {
+    const { id } = await params;
     await connectDB();
     const { action, name } = await req.json();
     if (action === "setCurrent")
@@ -23,7 +24,7 @@ export async function PATCH(req, { params }) {
         { status: 400 },
       );
     const year = await FileManagerYear.findByIdAndUpdate(
-      params.id,
+      id,
       { $set: update },
       { new: true },
     );
@@ -34,7 +35,7 @@ export async function PATCH(req, { params }) {
       );
     if (update.name)
       await FileManagerNode.updateMany(
-        { yearId: params.id },
+        { yearId: id },
         { $set: { year: update.name } },
       );
     return NextResponse.json({ success: true, data: year });
@@ -48,9 +49,10 @@ export async function PATCH(req, { params }) {
 
 export async function DELETE(_req, { params }) {
   try {
+    const { id } = await params;
     await connectDB();
-    await FileManagerNode.deleteMany({ yearId: params.id });
-    const year = await FileManagerYear.findByIdAndDelete(params.id);
+    await FileManagerNode.deleteMany({ yearId: id });
+    const year = await FileManagerYear.findByIdAndDelete(id);
     return year
       ? NextResponse.json({ success: true })
       : NextResponse.json(

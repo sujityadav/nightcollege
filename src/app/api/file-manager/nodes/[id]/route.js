@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { connectDB } from "@/app/lib/mongodb";
 import FileManagerNode from "@/app/models/fileManagerNode";
+import { getFileManagerNameValidationError } from "@/app/utils/fileManagerDocument";
 
 async function descendants(rootId) {
   const collected = [String(rootId)];
@@ -42,8 +43,9 @@ async function copyBranch(source, parentId, yearId, year, parentPath) {
 
 export async function GET(_req, { params }) {
   try {
+    const { id } = await params;
     await connectDB();
-    const data = await FileManagerNode.findById(params.id);
+    const data = await FileManagerNode.findById(id);
     return data
       ? NextResponse.json({ success: true, data })
       : NextResponse.json(
@@ -60,9 +62,10 @@ export async function GET(_req, { params }) {
 
 export async function PATCH(req, { params }) {
   try {
+    const { id } = await params;
     await connectDB();
     const body = await req.json();
-    const node = await FileManagerNode.findById(params.id);
+    const node = await FileManagerNode.findById(id);
     if (!node)
       return NextResponse.json(
         { success: false, message: "Item not found" },
@@ -84,8 +87,38 @@ export async function PATCH(req, { params }) {
           { success: false, message: "Name is required" },
           { status: 400 },
         );
+
+      const newName = body.name.trim();
+      const nameError = getFileManagerNameValidationError(newName);
+      if (nameError) {
+        return NextResponse.json(
+          { success: false, message: nameError },
+          { status: 400 },
+        );
+      }
+
+      if (newName !== node.name) {
+        const duplicate = await FileManagerNode.findOne({
+          name: newName,
+          parentId: node.parentId || null,
+          yearId: node.yearId || null,
+          isTrashed: false,
+          _id: { $ne: node._id },
+        });
+
+        if (duplicate) {
+          return NextResponse.json(
+            {
+              success: false,
+              message: `A ${node.type} with this name already exists here`,
+            },
+            { status: 400 },
+          );
+        }
+      }
+
       const oldPath = node.path;
-      node.name = body.name.trim();
+      node.name = newName;
       node.path = `${oldPath.slice(0, oldPath.lastIndexOf("/") + 1)}${node.name}`;
       await FileManagerNode.updateMany(
         {
@@ -174,8 +207,9 @@ export async function PATCH(req, { params }) {
 
 export async function DELETE(_req, { params }) {
   try {
+    const { id } = await params;
     await connectDB();
-    const ids = await descendants(params.id);
+    const ids = await descendants(id);
     await FileManagerNode.updateMany(
       { _id: { $in: ids } },
       { $set: { isTrashed: true } },
