@@ -41,7 +41,7 @@ export async function GET(req) {
 
     const user = await User.findOne({ email });
     if (!user) {
-      return NextResponse.json({ success: false, message: "User not found" }, { status: 404 });
+      return NextResponse.json({ success: false, message: "Invalid credentials" }, { status: 401 });
     }
 
 

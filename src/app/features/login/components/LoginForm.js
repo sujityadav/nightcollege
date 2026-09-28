@@ -2,8 +2,8 @@
 import { InputText } from 'primereact/inputtext';
 import { useLoginForm } from '../hooks/useLoginForm';
 import { loginAction } from '../actions/loginAction';
-import { useState } from 'react';
-import { ProgressSpinner } from 'primereact/progressspinner';
+import { useRef, useState } from 'react';
+import { Toast } from 'primereact/toast';
 import Cookies from 'js-cookie';
 import { setAuth } from '@/redux/authSlice';
 import { useDispatch } from "react-redux";
@@ -17,25 +17,41 @@ export default function LoginForm() {
   const [showPassword, setShowPassword] = useState(false);
   const dispatch = useDispatch();
   const router = useRouter();
+  const toast = useRef(null);
+
   const onSubmit = async (data) => {
     setLoading(true);
     try {
       const response = await loginAction(data);
-    if(response?.data?.success){
+      if (response?.data?.success) {
         const token = response?.data?.updatedUser?.token;
-        setLoading(false);
         dispatch(setAuth({ token, user: response.data.updatedUser }));
-        Cookies.set("token", token, { expires: 7 });
-        router.push("/admin/about-us");
-    }
+        Cookies.set('token', token, { expires: 7 });
+        router.push('/admin/about-us');
+        return;
+      }
+
+      toast.current?.show({
+        severity: 'error',
+        summary: 'Login failed',
+        detail: 'Invalid credentials',
+        life: 4000,
+      });
     } catch (error) {
-      console.error('Login error:', error);
+      toast.current?.show({
+        severity: 'error',
+        summary: 'Login failed',
+        detail: error?.message || 'Something went wrong. Please try again.',
+        life: 4000,
+      });
+    } finally {
       setLoading(false);
-    } 
+    }
   };
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="relative">
+      <Toast ref={toast} />
       <div className="flex flex-col items-start mb-6 w-full">
         <label className="text-sm font-medium text-[#2d2d2d] mb-1">Username</label>
         <InputText
