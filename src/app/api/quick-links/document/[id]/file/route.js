@@ -38,8 +38,18 @@ export async function GET(req, { params }) {
     await connectDB();
     const item = await QuickLink.findById(id);
 
-    if (!item || item.type !== 'Document' || !item.status || !item.documentUrl) {
+    if (!item || item.type !== 'Document' || !item.documentUrl) {
       return NextResponse.json({ success: false, message: 'Document not found' }, { status: 404 });
+    }
+
+    if (!item.status) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: 'This document is inactive. Enable status from Quick Links admin.',
+        },
+        { status: 404 }
+      );
     }
 
     const viewType = getQuickLinkDocumentViewType(item.documentUrl, item.documentName);

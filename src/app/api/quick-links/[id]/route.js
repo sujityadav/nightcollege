@@ -62,11 +62,46 @@ export async function GET(req, { params }) {
   }
 }
 
+const PARTIAL_UPDATE_FIELDS = ['status', 'sortOrder'];
+
+const isPartialListingUpdate = (payload) => {
+  const keys = Object.keys(payload || {}).filter((key) => payload[key] !== undefined);
+  return keys.length > 0 && keys.every((key) => PARTIAL_UPDATE_FIELDS.includes(key));
+};
+
 export async function PUT(req, { params }) {
   try {
     const { id } = await params;
     await connectDB();
     const payload = await req.json();
+
+    if (isPartialListingUpdate(payload)) {
+      const updateData = {};
+
+      if (payload.status !== undefined) {
+        updateData.status = Boolean(payload.status);
+      }
+
+      if (payload.sortOrder !== undefined) {
+        if (payload.sortOrder === '' || Number.isNaN(Number(payload.sortOrder))) {
+          return NextResponse.json(
+            { success: false, message: 'Sort order must be a number' },
+            { status: 400 }
+          );
+        }
+        updateData.sortOrder = Number(payload.sortOrder);
+      }
+
+      const data = await QuickLink.findByIdAndUpdate(id, updateData, {
+        new: true,
+        runValidators: true,
+      });
+
+      return data
+        ? NextResponse.json({ success: true, data })
+        : NextResponse.json({ success: false, message: 'Not found' }, { status: 404 });
+    }
+
     const validationError = await validatePayload(payload, id);
 
     if (validationError) {

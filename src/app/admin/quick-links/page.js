@@ -9,13 +9,24 @@ import { ConfirmDialog, confirmDialog } from 'primereact/confirmdialog';
 import CommonDataTable from '@/app/components/common/DataTable';
 import { usePageBreadcrumbs } from '@/app/hooks/usePageBreadcrumbs';
 
+const rowId = (rowData) => String(rowData?._id ?? '');
+
+function QuickLinkStatusSwitch({ rowData, onToggle }) {
+  return (
+    <InputSwitch
+      checked={Boolean(rowData.status)}
+      onChange={(event) => onToggle(rowData, event.value)}
+    />
+  );
+}
+
 export default function QuickLinksPage() {
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [updatingStatusId, setUpdatingStatusId] = useState(null);
   const [totalRecords, setTotalRecords] = useState(0);
   const [lazyParams, setLazyParams] = useState({ first: 0, rows: 10, page: 1, search: '' });
   const toast = useRef(null);
+  const statusUpdateInFlight = useRef(new Set());
 
   usePageBreadcrumbs({
     pageTitle: 'Quick Links',
@@ -50,14 +61,27 @@ export default function QuickLinksPage() {
     fetchData();
   }, [fetchData]);
 
-  const handleStatusToggle = async (rowData, status) => {
+  const handleStatusToggle = useCallback(async (rowData, status) => {
+    const id = rowId(rowData);
+    if (!id || statusUpdateInFlight.current.has(id)) {
+      return;
+    }
+
     const previousStatus = rowData.status;
-    setData((items) => items.map((item) => (item._id === rowData._id ? { ...item, status } : item)));
-    setUpdatingStatusId(rowData._id);
+    statusUpdateInFlight.current.add(id);
+    setData((items) => items.map((item) => (rowId(item) === id ? { ...item, status } : item)));
 
     try {
-      const response = await axios.put(`/api/quick-links/${rowData._id}`, { ...rowData, status });
+      const response = await axios.put(`/api/quick-links/${id}`, { status });
       if (!response.data.success) throw new Error();
+
+      const updated = response.data.data;
+      if (updated) {
+        setData((items) =>
+          items.map((item) => (rowId(item) === id ? { ...item, ...updated, _id: updated._id ?? item._id } : item))
+        );
+      }
+
       toast.current?.show({
         severity: 'success',
         summary: 'Status updated',
@@ -66,13 +90,13 @@ export default function QuickLinksPage() {
       });
     } catch {
       setData((items) =>
-        items.map((item) => (item._id === rowData._id ? { ...item, status: previousStatus } : item))
+        items.map((item) => (rowId(item) === id ? { ...item, status: previousStatus } : item))
       );
       toast.current?.show({ severity: 'error', summary: 'Error', detail: 'Could not update status', life: 3000 });
     } finally {
-      setUpdatingStatusId(null);
+      statusUpdateInFlight.current.delete(id);
     }
-  };
+  }, []);
 
   const deleteQuickLink = async (id) => {
     try {
@@ -104,6 +128,12 @@ export default function QuickLinksPage() {
 
   const columns = [
     { field: 'title', header: 'Title', style: { minWidth: '12rem' } },
+    {
+      header: 'Sort Order',
+      body: (rowData) => rowData.sortOrder ?? '-',
+      style: { minWidth: '5rem', width: '5rem' },
+      align: 'center',
+    },
     { field: 'type', header: 'Type', style: { minWidth: '8rem' } },
     {
       header: 'Slug',
@@ -113,11 +143,7 @@ export default function QuickLinksPage() {
     {
       header: 'Status',
       body: (rowData) => (
-        <InputSwitch
-          checked={Boolean(rowData.status)}
-          disabled={updatingStatusId === rowData._id}
-          onChange={(event) => handleStatusToggle(rowData, event.value)}
-        />
+        <QuickLinkStatusSwitch rowData={rowData} onToggle={handleStatusToggle} />
       ),
       style: { minWidth: '6rem' },
     },
@@ -170,6 +196,7 @@ export default function QuickLinksPage() {
         onSearch={(event) =>
           setLazyParams((params) => ({ ...params, search: event.target.value, first: 0, page: 1 }))
         }
+        dataTableProps={{ dataKey: '_id' }}
       />
     </div>
   );

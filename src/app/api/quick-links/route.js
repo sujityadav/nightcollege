@@ -98,7 +98,7 @@ export async function POST(req) {
       type: data.type,
       slug: data.type === 'Content' ? normalizeSlug(data.slug) : '',
       sortOrder: Number(data.sortOrder),
-      status: data.status ?? true,
+      status: data.status ?? false,
       content: data.type === 'Content' ? data.content : '',
       linkUrl: data.type === 'Link' ? data.linkUrl.trim() : '',
       documentUrl: data.type === 'Document' ? data.documentUrl : '',

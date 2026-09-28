@@ -66,18 +66,19 @@ export default function QuickLinkFormPage() {
   const [contentError, setContentError] = useState('');
   const [slugError, setSlugError] = useState('');
   const [linkError, setLinkError] = useState('');
-  const [status, setStatus] = useState(true);
+  const [status, setStatus] = useState(false);
   const [loading, setLoading] = useState(false);
 
   const toast = useRef(null);
+  const slugAutoSyncRef = useRef(true);
   const router = useRouter();
   const id = useSearchParams().get('id');
   const isEditMode = Boolean(id);
   const titleValue = watch('title');
   const slugValue = watch('slug');
 
-  const applySlugFromTitle = (title, currentSlug) => {
-    if (title?.trim() && !currentSlug?.trim()) {
+  const applySlugFromTitle = (title) => {
+    if (title?.trim() && slugAutoSyncRef.current) {
       setValue('slug', slugify(title));
     }
   };
@@ -92,9 +93,9 @@ export default function QuickLinkFormPage() {
 
   useEffect(() => {
     if (type === 'Content') {
-      applySlugFromTitle(titleValue, slugValue);
+      applySlugFromTitle(titleValue);
     }
-  }, [titleValue, slugValue, type, setValue]);
+  }, [titleValue, type, setValue]);
 
   useEffect(() => {
     if (!id) return;
@@ -115,6 +116,7 @@ export default function QuickLinkFormPage() {
         setDocumentUrl(item.documentUrl || '');
         setDocumentName(item.documentName || '');
         setStatus(item.status ?? true);
+        slugAutoSyncRef.current = !(item.slug || '').trim();
       } catch {
         toast.current?.show({
           severity: 'error',
@@ -314,7 +316,10 @@ export default function QuickLinkFormPage() {
                       setLinkError('');
                       setDocumentError('');
                       if (newType === 'Content') {
-                        applySlugFromTitle(titleValue, slugValue);
+                        if (!slugValue?.trim()) {
+                          slugAutoSyncRef.current = true;
+                        }
+                        applySlugFromTitle(titleValue);
                       }
                     }}
                     checked={type === option}
@@ -339,10 +344,14 @@ export default function QuickLinkFormPage() {
                 onChange={(e) => {
                   setSlugError('');
                   const value = e.target.value.replace(/[^a-zA-Z-]/g, '');
+                  slugAutoSyncRef.current = !value.trim();
                   slugRegister.onChange({
                     ...e,
                     target: { ...e.target, value },
                   });
+                  if (!value.trim() && titleValue?.trim()) {
+                    applySlugFromTitle(titleValue);
+                  }
                 }}
               />
               {slugError && <span className="text-red-500 text-sm">{slugError}</span>}
@@ -447,14 +456,20 @@ export default function QuickLinkFormPage() {
                   </span>
                   <div className="flex items-center gap-3 shrink-0">
                     {documentUrl && !documentFile && canViewQuickLinkDocumentOnSite(documentUrl, documentName) && id ? (
-                      <Link
-                        href={getQuickLinkDocumentViewPath(id)}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-primarycolor text-sm whitespace-nowrap"
-                      >
-                        View
-                      </Link>
+                      status ? (
+                        <Link
+                          href={getQuickLinkDocumentViewPath(id)}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-primarycolor text-sm whitespace-nowrap"
+                        >
+                          View on site
+                        </Link>
+                      ) : (
+                        <span className="text-amber-700 text-sm whitespace-nowrap" title="Turn on Active status to publish this page">
+                          Inactive on site
+                        </span>
+                      )
                     ) : null}
                     {documentUrl && !documentFile && !canViewQuickLinkDocumentOnSite(documentUrl, documentName) ? (
                       <a
