@@ -1,5 +1,5 @@
 'use client';
-import React, { useRef, useState, useEffect } from 'react';
+import React, { useRef, useState, useEffect, useMemo } from 'react';
 import { useForm } from 'react-hook-form';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { useSelector } from 'react-redux';
@@ -9,7 +9,7 @@ import { Button } from 'primereact/button';
 import { Toast } from 'primereact/toast';
 import Link from 'next/link';
 import TextEditor from '@/app/components/common/editor';
-import { usePageBreadcrumbs } from '@/app/hooks/usePageBreadcrumbs';
+import { useDepartmentHierarchyBreadcrumbs } from '@/app/hooks/useDepartmentHierarchyBreadcrumbs';
 
 import 'primereact/resources/themes/lara-light-blue/theme.css';
 import 'primereact/resources/primereact.min.css';
@@ -28,14 +28,20 @@ export default function AddSubject() {
   const isEditMode = Boolean(subjectId);
 
   const subjectsListUrl = `/admin/subjects?depatmentId=${depatmentId}`;
+  const pageTitle = isEditMode ? 'Update Subject' : 'Add Subject';
 
-  usePageBreadcrumbs({
-    pageTitle: isEditMode ? 'Update Subject' : 'Add Subject',
-    breadcrumbs: [
-      { label: 'All Departments', href: '/admin/all-departments' },
+  const breadcrumbTail = useMemo(
+    () => [
       { label: 'Subjects', href: subjectsListUrl },
-      { label: isEditMode ? 'Update Subject' : 'Add Subject', isCurrent: true },
+      { label: pageTitle, isCurrent: true },
     ],
+    [subjectsListUrl, pageTitle]
+  );
+
+  useDepartmentHierarchyBreadcrumbs({
+    departmentId: depatmentId,
+    pageTitle,
+    tail: breadcrumbTail,
   });
 
   const handleEditorChange = (value) => {

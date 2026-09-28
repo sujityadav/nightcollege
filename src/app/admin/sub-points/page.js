@@ -8,7 +8,7 @@ import { format } from 'date-fns';
 import { useSearchParams } from 'next/navigation';
 import { Toast } from 'primereact/toast';
 import { ConfirmDialog, confirmDialog } from 'primereact/confirmdialog';
-import { usePageBreadcrumbs } from '@/app/hooks/usePageBreadcrumbs';
+import { useDepartmentHierarchyBreadcrumbs } from '@/app/hooks/useDepartmentHierarchyBreadcrumbs';
 import CommonDataTable from '@/app/components/common/DataTable';
 
 export default function SubPointsList() {
@@ -19,15 +19,13 @@ export default function SubPointsList() {
   const SubdepatmentId = searchParams.get('SubdepatmentId');
   const [depatmentId, setDepatmentId] = useState(searchParams.get('depatmentId'));
 
-  const subjectsListUrl = depatmentId ? `/admin/subjects?depatmentId=${depatmentId}` : null;
+  const breadcrumbTail = useMemo(() => [{ label: 'Sub Points', isCurrent: true }], []);
 
-  usePageBreadcrumbs({
+  useDepartmentHierarchyBreadcrumbs({
+    departmentId: depatmentId,
+    subjectId: SubdepatmentId,
     pageTitle: 'Sub Points',
-    breadcrumbs: [
-      { label: 'All Departments', href: '/admin/all-departments' },
-      ...(subjectsListUrl ? [{ label: 'Subjects', href: subjectsListUrl }] : []),
-      { label: 'Sub Points', isCurrent: true },
-    ],
+    tail: breadcrumbTail,
   });
 
   useEffect(() => {

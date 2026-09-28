@@ -1,5 +1,5 @@
 'use client';
-import React, { useRef, useState, useEffect } from 'react';
+import React, { useRef, useState, useEffect, useMemo } from 'react';
 import { useForm } from 'react-hook-form';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { useSelector } from 'react-redux';
@@ -10,7 +10,7 @@ import { Toast } from 'primereact/toast';
 import { InputSwitch } from 'primereact/inputswitch';
 import Link from 'next/link';
 import TextEditor from '@/app/components/common/editor';
-import { usePageBreadcrumbs } from '@/app/hooks/usePageBreadcrumbs';
+import { useDepartmentHierarchyBreadcrumbs } from '@/app/hooks/useDepartmentHierarchyBreadcrumbs';
 
 import 'primereact/resources/themes/lara-light-blue/theme.css';
 import 'primereact/resources/primereact.min.css';
@@ -36,17 +36,22 @@ export default function AddSubPoint() {
   const [depatmentId, setDepatmentId] = useState(searchParams.get('depatmentId'));
   const isEditMode = Boolean(subPointId);
 
-  const subjectsListUrl = depatmentId ? `/admin/subjects?depatmentId=${depatmentId}` : null;
   const subPointsListUrl = buildSubPointsUrl(SubdepatmentId, depatmentId);
+  const pageTitle = isEditMode ? 'Update Sub Point' : 'Add Sub Point';
 
-  usePageBreadcrumbs({
-    pageTitle: isEditMode ? 'Update Sub Point' : 'Add Sub Point',
-    breadcrumbs: [
-      { label: 'All Departments', href: '/admin/all-departments' },
-      ...(subjectsListUrl ? [{ label: 'Subjects', href: subjectsListUrl }] : []),
+  const breadcrumbTail = useMemo(
+    () => [
       { label: 'Sub Points', href: subPointsListUrl },
-      { label: isEditMode ? 'Update Sub Point' : 'Add Sub Point', isCurrent: true },
+      { label: pageTitle, isCurrent: true },
     ],
+    [subPointsListUrl, pageTitle]
+  );
+
+  useDepartmentHierarchyBreadcrumbs({
+    departmentId: depatmentId,
+    subjectId: SubdepatmentId,
+    pageTitle,
+    tail: breadcrumbTail,
   });
 
   useEffect(() => {
