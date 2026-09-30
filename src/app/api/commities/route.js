@@ -32,7 +32,7 @@ export async function POST(req) {
 export async function GET(req) {
   try {
     await connectDB();
-    const { search, page = 1, limit = 10, sortField = "createdAt", sortOrder = -1 } =
+    const { search, page = 1, limit = 10, sortField = "CommitiesData.data.sortOrder", sortOrder = 1 } =
       Object.fromEntries(new URL(req.url).searchParams);
 
     let query = {};

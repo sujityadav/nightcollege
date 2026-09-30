@@ -1,57 +1,79 @@
 'use client';
-import React, { useEffect, useRef, useState } from 'react'
-import 'primereact/resources/themes/lara-light-blue/theme.css';
-import 'primereact/resources/primereact.min.css';
-import { InputText } from 'primereact/inputtext';
+
+import { useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
-import { IconField } from "primereact/iconfield";
-import { InputIcon } from "primereact/inputicon";
-import { Column } from "primereact/column";
-import { DataTable } from "primereact/datatable";
-import { Tag } from 'primereact/tag';
 import axios from 'axios';
 import { format } from 'date-fns';
 import { Toast } from 'primereact/toast';
 import { confirmDialog, ConfirmDialog } from 'primereact/confirmdialog';
+import CommonDataTable from '@/app/components/common/DataTable';
 
-export default function EventList() {
+const actionColumnStyle = {
+  minWidth: '4rem',
+  background: '#fbf7dc',
+  zIndex: 1,
+  boxShadow: '-4px 0 6px -1px rgba(0, 0, 0, 0.1)',
+};
+
+export default function AdministrationList() {
   const [eventsData, setEventsData] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [search, setSearch] = useState('');
+  const [tableParams, setTableParams] = useState({ first: 0, rows: 10 });
+  const [sortMeta, setSortMeta] = useState({
+    sortField: 'AdministrationData.data.sortOrder',
+    sortOrder: 1,
+  });
   const toast = useRef(null);
 
-  useEffect(() => {
-    const fetchEventList = async () => {
-      try {
-        const response = await axios.get("/api/administration");
-        if (response?.data?.success) {
-          setEventsData(response?.data?.data);
-        }
-      } catch (error) {
-        toast.current.show({
-          severity: 'error',
-          summary: 'Error',
-          detail: 'Failed to fetch administration list',
-          life: 3000,
-        });
+  const fetchEventList = async () => {
+    try {
+      setLoading(true);
+      const response = await axios.get('/api/administration');
+      if (response?.data?.success) {
+        setEventsData(response?.data?.data || []);
       }
-    };
+    } catch {
+      toast.current?.show({
+        severity: 'error',
+        summary: 'Error',
+        detail: 'Failed to fetch administration list',
+        life: 3000,
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
     fetchEventList();
   }, []);
+
+  const filteredData = useMemo(() => {
+    if (!search.trim()) return eventsData;
+    const query = search.toLowerCase();
+    return eventsData.filter((item) => {
+      const title = item?.AdministrationData?.data?.title?.toLowerCase() || '';
+      const description = item?.AdministrationData?.data?.smallDescription?.toLowerCase() || '';
+      const sortOrder = String(item?.AdministrationData?.data?.sortOrder ?? '');
+      return title.includes(query) || description.includes(query) || sortOrder.includes(query);
+    });
+  }, [eventsData, search]);
 
   const handleDelete = async (id) => {
     try {
       const response = await axios.delete(`/api/administration/${id}`);
       if (response?.data?.success) {
-        setEventsData(eventsData.filter(item => item._id !== id));
-        toast.current.show({
+        setEventsData((current) => current.filter((item) => item._id !== id));
+        toast.current?.show({
           severity: 'success',
           summary: 'Deleted',
           detail: 'Administration deleted successfully',
           life: 3000,
         });
       }
-    } catch (error) {
-      console.error('Failed to delete administration:', error);
-      toast.current.show({
+    } catch {
+      toast.current?.show({
         severity: 'error',
         summary: 'Error',
         detail: 'Failed to delete administration',
@@ -69,129 +91,122 @@ export default function EventList() {
       rejectLabel: 'Cancel',
       acceptClassName: 'p-button-danger',
       accept: () => handleDelete(id),
-      reject: () => {
-        toast.current.show({
-          severity: 'info',
-          summary: 'Cancelled',
-          detail: 'Delete cancelled',
-          life: 2000,
-        });
-      },
     });
   };
 
-  const actionTemplate = (rowData) => {
-    return (
-      <div className="flex justify-center items-center gap-4">
+  const formatDate = (value) => (value ? format(new Date(value), 'dd MMM yyyy') : '-');
+
+  const columns = [
+    {
+      header: 'Title',
+      sortable: true,
+      sortField: 'AdministrationData.data.title',
+      body: (rowData) => (
         <Link
-          href={`/admin/administration/add-administration?id=${rowData?._id}`}
-          className="leading-none"
+          href={`/admin/sub-administration?administrationId=${rowData._id}`}
+          className="text-primarycolor underline"
         >
-          <i className="pi pi-pen-to-square text-[18px] xl:text-[0.938vw]"></i>
+          {rowData.AdministrationData?.data?.title || '-'}
         </Link>
-
-        <button
-          type="button"
-          onClick={() => confirmDelete(rowData?._id)}
-          className="leading-none bg-transparent border-0 cursor-pointer text-red-500"
-        >
-          <i className="pi pi-trash text-[18px] xl:text-[0.938vw]"></i>
-        </button>
-      </div>
-    );
-  };
-
-  const formatDate = (value) => value ? format(new Date(value), 'dd MMM yyyy') : '-';
+      ),
+      style: { minWidth: '12rem' },
+    },
+    {
+      header: 'Sort Order',
+      sortable: true,
+      sortField: 'AdministrationData.data.sortOrder',
+      body: (rowData) => rowData?.AdministrationData?.data?.sortOrder ?? '-',
+      align: 'center',
+      style: { minWidth: '5rem' },
+    },
+    {
+      field: 'AdministrationData.data.smallDescription',
+      header: 'Description',
+      sortable: true,
+      sortField: 'AdministrationData.data.smallDescription',
+      style: { minWidth: '10rem' },
+    },
+    {
+      header: 'Created At',
+      sortable: true,
+      sortField: 'createdAt',
+      body: (rowData) => formatDate(rowData?.createdAt),
+      style: { minWidth: '8rem' },
+    },
+    {
+      header: 'Action',
+      body: (rowData) => (
+        <div className="flex justify-center items-center gap-4">
+          <Link
+            href={`/admin/administration/add-administration?id=${rowData?._id}`}
+            className="leading-none"
+            title="Edit"
+          >
+            <i className="pi pi-pen-to-square text-[18px]" />
+          </Link>
+          <button
+            type="button"
+            onClick={() => confirmDelete(rowData?._id)}
+            className="leading-none bg-transparent border-0 cursor-pointer text-red-500 p-0"
+            title="Delete"
+          >
+            <i className="pi pi-trash text-[18px]" />
+          </button>
+        </div>
+      ),
+      align: 'center',
+      style: actionColumnStyle,
+    },
+  ];
 
   return (
-    <div className="grid grid-cols-1">
+    <div className="min-w-0 flex-1 p-5">
       <Toast ref={toast} />
-      <ConfirmDialog /> {/* 🔥 Required for confirmation dialog */}
+      <ConfirmDialog />
 
-      <div className='p-[20px] xl:p-[25px] w-full'>
-        <div className='flex justify-between mb-5'>
-          <h2 className='text-[#19212A] text-[14px] xl:text-[22px] font-[700] m-0'>
-            Administration
-          </h2>
-
-          <Link
-            href='/admin/administration/add-administration'
-            className='text-white border bg-primarycolor border-[#af251c] px-[14px] py-[8px] leading-[100%] rounded-none p-button-raised flex gap-2 items-center'
-          >
-            <i className='pi pi-plus text-[14px]'></i> Add Administration
-          </Link>
-        </div>
-
-        <div className='bg-white border card-shadow'>
-          <div className='px-[20px] py-[14px] border-b border-[#EAEDF3]'>
-            <div className="md:flex items-center gap-2 justify-between">
-              <div className='flex items-center gap-4'>
-                <div className="text-[#101828] text-[16px] font-medium">
-                  All Administration
-                </div>
-              </div>
-
-              <div className="col custSearch">
-                <IconField iconPosition="left" className="app-search-field">
-                  <InputIcon className="pi pi-search" />
-                  <InputText placeholder="Search here.." />
-                </IconField>
-              </div>
-            </div>
-          </div>
-
-          <div className='overflow-auto'>
-            <DataTable
-              value={eventsData}
-              className="custTable tableCust"
-              scrollable
-              showGridlines
-              responsiveLayout="scroll"
-              style={{ width: "100%" }}
-              paginator
-              paginatorTemplate="CurrentPageReport RowsPerPageDropdown PrevPageLink PageLinks NextPageLink"
-              currentPageReportTemplate="Rows {first} - {last} of {totalRecords}"
-              rows={10}
-              rowsPerPageOptions={[5, 10, 25, 50]}
-            >
-              <Column
-                header="Title"
-                sortable
-                body={(rowData) => (
-                  <a
-                    href={`/admin/sub-administration?administrationId=${rowData._id}`}
-                    style={{ color: 'blue', textDecoration: 'underline' }}
-                  >
-                    {rowData.AdministrationData?.data?.title || '-'}
-                  </a>
-                )}
-              />
-
-              <Column
-                field="AdministrationData.data.smallDescription"
-                header="Description"
-              />
-
-              <Column
-                header="Created At"
-                body={(rowData) => formatDate(rowData?.createdAt)}
-              />
-
-              <Column
-                header="Action"
-                body={actionTemplate}
-                align="center"
-                style={{
-                  minWidth: "4rem",
-                  background: "#fbf7dc",
-                  zIndex: 1,
-                  boxShadow: "-4px 0 6px -1px rgba(0, 0, 0, 0.1)",
-                }}
-              />
-            </DataTable>
-          </div>
-        </div>
+      <div className="flex justify-between mb-5">
+        <h2 className="text-[#19212A] text-[22px] font-[700] m-0">Administration</h2>
+        <Link
+          href="/admin/administration/add-administration"
+          className="text-white border bg-primarycolor border-[#af251c] px-[14px] py-[8px] flex gap-2 items-center"
+        >
+          <i className="pi pi-plus text-[14px]" /> Add Administration
+        </Link>
       </div>
+
+      <CommonDataTable
+        value={filteredData}
+        columns={columns}
+        loading={loading}
+        lazy={false}
+        totalRecords={filteredData.length}
+        headerTitle="All Administration"
+        showSearch
+        searchPlaceholder="Search here.."
+        searchValue={search}
+        onSearch={(event) => {
+          setSearch(event.target.value);
+          setTableParams((params) => ({ ...params, first: 0 }));
+        }}
+        first={tableParams.first}
+        rows={tableParams.rows}
+        sortField={sortMeta.sortField}
+        sortOrder={sortMeta.sortOrder}
+        onSort={(event) => {
+          setSortMeta({
+            sortField: event.sortField,
+            sortOrder: event.sortOrder,
+          });
+          setTableParams((params) => ({ ...params, first: 0 }));
+        }}
+        onPage={(event) =>
+          setTableParams({
+            first: event.first,
+            rows: event.rows,
+          })
+        }
+        dataTableProps={{ dataKey: '_id' }}
+      />
     </div>
   );
 }

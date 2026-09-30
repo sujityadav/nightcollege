@@ -58,6 +58,7 @@ export default function AddEvents() {
       const event = res.data.data;
       reset({
         title: event[0]?.AdministrationData?.data?.title,
+        sortOrder: event[0]?.AdministrationData?.data?.sortOrder ?? '',
         smallDescription: event[0]?.AdministrationData?.data?.smallDescription,
         largeDescription: event[0]?.AdministrationData?.data?.largeDescription,
       });
@@ -71,7 +72,7 @@ export default function AddEvents() {
   };
 
   const onSubmit = async (formData) => {
-
+    formData.sortOrder = Number(formData.sortOrder);
     formData.fromDate = fromDate;
     formData.toDate = toDate;
     formData.largeDescription = editorContent;
@@ -124,6 +125,22 @@ export default function AddEvents() {
               <label>Administration Title</label>
               <InputText {...register('title', { required: true })} placeholder="Enter your title" />
               {errors.title && <span className="text-red-500 text-sm">This field is required</span>}
+            </div>
+
+            <div className='flex flex-col gap-1'>
+              <label>Sort Order <span className="text-red-500">*</span></label>
+              <InputText
+                type="number"
+                min="0"
+                {...register('sortOrder', {
+                  required: 'Sort order is required',
+                  min: { value: 0, message: 'Sort order cannot be negative' },
+                })}
+                placeholder="Enter sort order"
+              />
+              {errors.sortOrder && (
+                <span className="text-red-500 text-sm">{errors.sortOrder.message || 'This field is required'}</span>
+              )}
             </div>
 
             <div className='flex flex-col gap-1'>

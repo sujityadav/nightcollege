@@ -32,7 +32,9 @@ export async function POST(req) {
 export async function GET(req) {
   try {
     await connectDB();
-    const entries = await administration.find().sort({ createdAt: -1 }); // latest first
+    const entries = await administration
+      .find()
+      .sort({ 'AdministrationData.data.sortOrder': 1, createdAt: -1 });
 
     return NextResponse.json(
       { success: true, data: entries },
