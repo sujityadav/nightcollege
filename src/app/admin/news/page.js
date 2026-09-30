@@ -14,6 +14,7 @@ export default function NewsList() {
   const [deleteId, setDeleteId] = useState(null);
   const [visible, setVisible] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [yearFilter, setYearFilter] = useState('');
   const [totalRecords, setTotalRecords] = useState(0);
   const [lazyParams, setLazyParams] = useState({
     first: 0,
@@ -24,10 +25,10 @@ export default function NewsList() {
 
   const toast = useRef(null);
 
-  const fetchNewsList = async (query = '', page = 1, limit = 10) => {
+  const fetchNewsList = async (query = '', page = 1, limit = 10, year = '') => {
     try {
       const response = await axios.get('/api/news', {
-        params: { search: query, page, limit },
+        params: { search: query, page, limit, year: year || undefined },
       });
 
       if (response?.data?.success) {
@@ -45,8 +46,8 @@ export default function NewsList() {
   };
 
   useEffect(() => {
-    fetchNewsList(searchQuery, lazyParams.page, lazyParams.rows);
-  }, [lazyParams, searchQuery]);
+    fetchNewsList(searchQuery, lazyParams.page, lazyParams.rows, yearFilter);
+  }, [lazyParams, searchQuery, yearFilter]);
 
   useEffect(() => {
     const delayDebounce = setTimeout(() => {
@@ -59,7 +60,7 @@ export default function NewsList() {
     try {
       const response = await axios.delete(`/api/news/${id}`);
       if (response?.data?.success) {
-        fetchNewsList(searchQuery, lazyParams.page, lazyParams.rows);
+        fetchNewsList(searchQuery, lazyParams.page, lazyParams.rows, yearFilter);
         toast.current.show({
           severity: 'success',
           summary: 'Deleted',
@@ -304,6 +305,11 @@ export default function NewsList() {
           searchPlaceholder="Search here.."
           searchValue={searchQuery}
           onSearch={(e) => setSearchQuery(e.target.value)}
+          yearFilterValue={yearFilter}
+          onYearFilterChange={(value) => {
+            setYearFilter(value);
+            setLazyParams((prev) => ({ ...prev, page: 1, first: 0 }));
+          }}
           dataTableProps={{ responsiveLayout: 'scroll' }}
         />
       </div>

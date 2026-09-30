@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { connectDB } from "../../lib/mongodb";
 import  News  from "../../models/news";
+import { getFromDateYearFilter, mergeQueriesWithAnd } from "../../lib/listYearFilterOptions";
 export async function POST(req) {
   try {
     await connectDB();
@@ -40,7 +41,7 @@ export async function GET(req) {
     await connectDB();
 
     // extract search param
-     const { search, page = 1, limit = 10 } = Object.fromEntries(new URL(req.url).searchParams);
+     const { search, page = 1, limit = 10, year = "" } = Object.fromEntries(new URL(req.url).searchParams);
 
     let query = {};
     if (search) {
@@ -54,6 +55,11 @@ export async function GET(req) {
           { "Newsdata.data.location": { $regex: search, $options: "i" } },
         ],
       };
+    }
+
+    const yearFilter = getFromDateYearFilter("Newsdata.data.fromDate", year);
+    if (yearFilter) {
+      query = mergeQueriesWithAnd(query, yearFilter);
     }
 
      const skip = (parseInt(page) - 1) * parseInt(limit);

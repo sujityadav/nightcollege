@@ -1,18 +1,25 @@
 import { NextResponse } from "next/server";
 import { connectDB } from "../../lib/mongodb";
 import Announcement from "../../models/announcement";
+import { getFromDateYearFilter, mergeQueriesWithAnd } from "../../lib/listYearFilterOptions";
 
 export async function GET(req) {
   try {
     await connectDB();
     const { searchParams } = new URL(req.url);
     const search = searchParams.get("search") || "";
+    const year = searchParams.get("year") || "";
     const page = Number(searchParams.get("page") || 1);
     const limit = Number(searchParams.get("limit") || 10);
-    const query = search ? { $or: [
+    let query = search ? { $or: [
       { title: { $regex: search, $options: "i" } },
       { description: { $regex: search, $options: "i" } },
     ] } : {};
+
+    const yearFilter = getFromDateYearFilter("fromDate", year);
+    if (yearFilter) {
+      query = mergeQueriesWithAnd(query, yearFilter);
+    }
     const total = await Announcement.countDocuments(query);
     const data = await Announcement.find(query).sort({ sortNo: 1, createdAt: -1 }).skip((page - 1) * limit).limit(limit);
     return NextResponse.json({ success: true, data, total });

@@ -21,6 +21,7 @@ export default function EventList() {
 
   const [eventsData, setEventsData] = useState([]);
   const [search, setSearch] = useState('');
+  const [yearFilter, setYearFilter] = useState('');
   const [totalRecords, setTotalRecords] = useState(0);
   const [lazyParams, setLazyParams] = useState({
     first: 0,
@@ -38,6 +39,7 @@ export default function EventList() {
       const response = await axios.get('/api/events', {
         params: {
           search,
+          year: yearFilter || undefined,
           page: lazyParams.page,
           limit: lazyParams.rows,
         },
@@ -57,7 +59,7 @@ export default function EventList() {
 
   useEffect(() => {
     fetchEventList();
-  }, [lazyParams, search]);
+  }, [lazyParams, search, yearFilter]);
 
   const formatDate = (dateString) => {
     if (!dateString) return '-';
@@ -310,6 +312,11 @@ export default function EventList() {
         searchValue={search}
         onSearch={(e) => {
           setSearch(e.target.value);
+          setLazyParams((prev) => ({ ...prev, page: 1, first: 0 }));
+        }}
+        yearFilterValue={yearFilter}
+        onYearFilterChange={(value) => {
+          setYearFilter(value);
           setLazyParams((prev) => ({ ...prev, page: 1, first: 0 }));
         }}
       />

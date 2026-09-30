@@ -6,6 +6,8 @@ import { Column } from 'primereact/column';
 import { InputText } from 'primereact/inputtext';
 import { IconField } from 'primereact/iconfield';
 import { InputIcon } from 'primereact/inputicon';
+import { Dropdown } from 'primereact/dropdown';
+import { getListYearFilterOptions } from '@/app/lib/listYearFilterOptions';
 
 /**
  * Reusable admin data table with optional header, search, lazy pagination and dynamic columns.
@@ -32,6 +34,8 @@ import { InputIcon } from 'primereact/inputicon';
  * @param {string} [props.searchPlaceholder='Search here..']
  * @param {string} [props.searchValue]
  * @param {Function} [props.onSearch] - (event) => void from InputText onChange
+ * @param {string} [props.yearFilterValue=''] - Selected list year filter ('' = all years)
+ * @param {Function} [props.onYearFilterChange] - (value: string) => void; shows year dropdown left of search
  * @param {React.ReactNode} [props.headerActions] - Extra controls in header (right side)
  * @param {boolean} [props.card=true] - Wrap in white card container
  * @param {Object} [props.dataTableProps] - Extra props forwarded to PrimeReact DataTable
@@ -57,11 +61,15 @@ export default function CommonDataTable({
   searchPlaceholder = 'Search here..',
   searchValue,
   onSearch,
+  yearFilterValue = '',
+  onYearFilterChange,
   headerActions,
   card = true,
   dataTableProps = {},
 }) {
-  const showHeader = Boolean(headerTitle || showSearch || headerActions);
+  const showYearFilter = typeof onYearFilterChange === 'function';
+  const yearFilterOptions = React.useMemo(() => getListYearFilterOptions(), []);
+  const showHeader = Boolean(headerTitle || showSearch || headerActions || showYearFilter);
 
   const currentPageReportTemplate = `Rows ${first + 1} - ${
     first + (value?.length || 0)
@@ -113,6 +121,16 @@ export default function CommonDataTable({
           )}
           <div className="flex items-center gap-3 flex-wrap">
             {headerActions}
+            {showYearFilter && (
+              <Dropdown
+                value={yearFilterValue}
+                options={yearFilterOptions}
+                optionLabel="label"
+                optionValue="value"
+                onChange={(event) => onYearFilterChange(event.value)}
+                className="w-[9rem] app-year-filter"
+              />
+            )}
             {showSearch && (
               <IconField iconPosition="left" className="app-search-field">
                 <InputIcon className="pi pi-search" />

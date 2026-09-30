@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { connectDB } from "../../lib/mongodb";
 import  Events  from "../../models/events";
+import { getFromDateYearFilter, mergeQueriesWithAnd } from "../../lib/listYearFilterOptions";
 export async function POST(req) {
   try {
     await connectDB();
@@ -37,6 +38,7 @@ export async function GET(req) {
     await connectDB();
         const { searchParams } = new URL(req.url);
     const search = searchParams.get("search") || "";
+    const year = searchParams.get("year") || "";
     const page = parseInt(searchParams.get("page")) || 1;
     const limit = parseInt(searchParams.get("limit")) || 10;
 
@@ -51,6 +53,11 @@ export async function GET(req) {
           { "Eventdata.data.location": { $regex: search, $options: "i" } },
         ],
       };
+    }
+
+    const yearFilter = getFromDateYearFilter("Eventdata.data.fromDate", year);
+    if (yearFilter) {
+      query = mergeQueriesWithAnd(query, yearFilter);
     }
       const totalRecords = await Events.countDocuments(query);
     const entries = await Events.find(query)

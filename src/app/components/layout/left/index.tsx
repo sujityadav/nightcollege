@@ -107,12 +107,13 @@ export default function Left() {
         <div className="absolute left-0 right-0 bottom-0 left_menu">
           <ul className="p-4 space-y-2">
             <Link
-
-              href=''
-              className="flex items-center p-2 rounded hover:bg-gray-200 space-x-2"
+              href="/admin/settings"
+              className={`flex items-center p-2 rounded space-x-2 transition-colors
+                ${isPathActive('/admin/settings') ? 'bg-primarycolor active-slide' : 'hover:bg-primarycolor hover:text-white'}
+              `}
             >
               <i className="pi pi-cog"></i>
-              <span>Settings</span>
+              <span className={isPathActive('/admin/settings') ? 'text-[#fff] font14' : 'font14'}>Settings</span>
             </Link>
             <Link
               href='#'

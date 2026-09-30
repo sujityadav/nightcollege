@@ -13,7 +13,7 @@ export default function AnnouncementsPage() {
   const [loading, setLoading] = useState(false);
   const [updatingStatusId, setUpdatingStatusId] = useState(null);
   const [totalRecords, setTotalRecords] = useState(0);
-  const [lazyParams, setLazyParams] = useState({ first: 0, rows: 10, page: 1, search: '' });
+  const [lazyParams, setLazyParams] = useState({ first: 0, rows: 10, page: 1, search: '', year: '' });
   const toast = useRef(null);
 
   const fetchData = useCallback(async () => {
@@ -24,6 +24,7 @@ export default function AnnouncementsPage() {
           page: lazyParams.page,
           limit: lazyParams.rows,
           search: lazyParams.search,
+          year: lazyParams.year || undefined,
         },
       });
       setData(response.data.data || []);
@@ -38,7 +39,7 @@ export default function AnnouncementsPage() {
     } finally {
       setLoading(false);
     }
-  }, [lazyParams.page, lazyParams.rows, lazyParams.search]);
+  }, [lazyParams.page, lazyParams.rows, lazyParams.search, lazyParams.year]);
 
   useEffect(() => {
     fetchData();
@@ -161,6 +162,10 @@ export default function AnnouncementsPage() {
         showSearch
         searchValue={lazyParams.search}
         onSearch={(event) => setLazyParams((params) => ({ ...params, search: event.target.value, first: 0, page: 1 }))}
+        yearFilterValue={lazyParams.year}
+        onYearFilterChange={(value) =>
+          setLazyParams((params) => ({ ...params, year: value, first: 0, page: 1 }))
+        }
       />
     </div>
   );
