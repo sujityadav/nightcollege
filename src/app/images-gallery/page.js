@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Image from "next/image";
 import { Dialog } from "primereact/dialog";
-import SubBanner from "../features/events/components/sub-banner";
+import SubBanner from "../features/sub-banner";
 
 const albums = [
   {

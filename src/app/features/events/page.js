@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import SubBanner from "./components/sub-banner";
+import SubBanner from "../sub-banner";
 import Events from "./components/events/index";
 
 

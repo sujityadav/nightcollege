@@ -1,5 +1,5 @@
 'use client';
-import SubBanner from "../components/sub-banner";
+import SubBanner from "../../sub-banner";
 import PhotoGalleria from "../../../components/galleria/index";
 
 

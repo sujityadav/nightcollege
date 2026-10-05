@@ -8,6 +8,9 @@ const roboto_slab = Roboto_Slab({
   display: 'swap',
 });
 
+/**
+ * @param {{ title: string; breadcrumbData?: Array<{ label: string; url: string }> }} props
+ */
 export default function SubBanner({ title, breadcrumbData = [] }) {
   return (
     <div className="w-full bg-gradient-to-l from-[#af251c] to-[#c1554a] py50 mb-5 simbol-bg h-[80px] lg:h-[120px] xl:h-[150px] 3xl:h-[9.375vw]">
