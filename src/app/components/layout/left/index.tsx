@@ -50,6 +50,7 @@ export default function Left() {
     { label: "Infrastructure Facilities", href: "/admin/infrastructure-facilities", icon: "pi pi-database" },
     { label: "All Staff", href: "/admin/all-staff", icon: "pi pi-id-card" },
     { label: "College Publication", href: "/admin/college-publication", icon: "pi pi-book" },
+    { label: "Placement Partners", href: "/admin/placement-partners", icon: "pi pi-briefcase" },
     { label: "Alumni", href: "/admin/alumni", icon: "pi pi-id-card" },
     { label: "Student Corner", href: "/admin/student-corner", icon: "pi pi-user" },
     {
