@@ -8,6 +8,7 @@ import React, {
   useState,
 } from "react";
 import axios from "axios";
+import Link from "next/link";
 import Image from "next/image";
 import { Button } from "primereact/button";
 import { ConfirmDialog, confirmDialog } from "primereact/confirmdialog";
@@ -33,6 +34,15 @@ const SECTIONS = [
   ["shared", "Shared", "pi pi-share-alt"],
   ["trash", "Trash", "pi pi-trash"],
 ];
+
+/** PrimeReact Dropdown does not reliably select options with an empty string value. */
+const OTHER_FILES_YEAR = "__other_files__";
+
+const toYearLabel = (selection) =>
+  selection == null || selection === OTHER_FILES_YEAR || selection === "" ? "" : selection;
+
+const isOtherFilesYear = (selection) =>
+  selection == null || selection === OTHER_FILES_YEAR || selection === "";
 
 const sizeLabel = (bytes = 0) => {
   if (!bytes) return "—";
@@ -65,8 +75,10 @@ export default function FileManager() {
   const toast = useRef(null);
   const fileInput = useRef(null);
   const folderInput = useRef(null);
+  const folderUploadQueueRef = useRef([]);
+  const preferOtherFilesYear = useRef(false);
   const [years, setYears] = useState([]);
-  const [selectedYearId, setSelectedYearId] = useState("");
+  const [selectedYearId, setSelectedYearId] = useState(null);
   const [section, setSection] = useState("files");
   const [items, setItems] = useState([]);
   const [breadcrumbsByYear, setBreadcrumbsByYear] = useState({});
@@ -81,17 +93,17 @@ export default function FileManager() {
   const [dialogValue, setDialogValue] = useState("");
   const [moveTarget, setMoveTarget] = useState({ yearId: "", parentId: "" });
 
-  const selectedYear = years.find((year) => year._id === selectedYearId);
-  const breadcrumbs = selectedYearId
-    ? breadcrumbsByYear[selectedYearId] || []
-    : [];
+  const selectedYear = isOtherFilesYear(selectedYearId)
+    ? null
+    : years.find((year) => year.name === selectedYearId);
+  const breadcrumbs = isOtherFilesYear(selectedYearId)
+    ? []
+    : breadcrumbsByYear[selectedYearId] || [];
   const currentParentId = breadcrumbs.at(-1)?._id || "";
   const yearOptions = useMemo(
     () => [
-      ...years
-        .filter((year) => !year.isArchived)
-        .map((year) => ({ label: year.name, value: year._id })),
-      { label: "Other Files", value: "" },
+      ...years.map((year) => ({ label: year.name, value: year.name })),
+      { label: "Other Files", value: OTHER_FILES_YEAR },
     ],
     [years],
   );
@@ -165,13 +177,16 @@ export default function FileManager() {
     const response = await axios.get("/api/file-manager/years");
     const list = response.data.data || [];
     setYears(list);
-    setSelectedYearId(
-      (current) =>
-        current ||
-        list.find((year) => year.isCurrent)?._id ||
-        list[0]?._id ||
-        "",
-    );
+    setSelectedYearId((current) => {
+      if (preferOtherFilesYear.current && current === OTHER_FILES_YEAR) {
+        return OTHER_FILES_YEAR;
+      }
+      if (current && current !== OTHER_FILES_YEAR && list.some((year) => year.name === current)) {
+        return current;
+      }
+      const currentAcademicYear = list.find((year) => year.isCurrent);
+      return currentAcademicYear?.name ?? OTHER_FILES_YEAR;
+    });
   }, []);
 
   const loadItems = useCallback(async () => {
@@ -181,7 +196,7 @@ export default function FileManager() {
       const response = await axios.get("/api/file-manager/nodes", {
         params: {
           view: section === "files" ? "files" : section,
-          yearId: selectedYearId,
+          yearLabel: toYearLabel(selectedYearId),
           parentId: currentParentId,
           search,
           type: typeFilter,
@@ -217,14 +232,36 @@ export default function FileManager() {
   useEffect(() => {
     loadItems();
   }, [loadItems]);
-  useEffect(() => {
-    if (folderInput.current) {
-      folderInput.current.setAttribute("webkitdirectory", "");
-      folderInput.current.setAttribute("directory", "");
-    }
-  }, []);
+  const promptFolderUploadOrAddMore = (lastBatchSize) => {
+    const totalQueued = folderUploadQueueRef.current.length;
+    confirmDialog({
+      header: "Upload folders",
+      message:
+        lastBatchSize > 0
+          ? `Queued ${lastBatchSize} file(s) from the latest selection (${totalQueued} total). Add another folder, or upload everything now.`
+          : `Ready to upload ${totalQueued} file(s) from ${totalQueued ? "selected folders" : "your selection"}.`,
+      icon: "pi pi-folder",
+      acceptLabel: "Add another folder",
+      rejectLabel: "Upload now",
+      accept: () => folderInput.current?.click(),
+      reject: () => {
+        const batch = [...folderUploadQueueRef.current];
+        folderUploadQueueRef.current = [];
+        uploadFiles(batch, true);
+      },
+    });
+  };
+
+  const handleFolderInputChange = (event) => {
+    const files = Array.from(event.target.files || []);
+    event.target.value = "";
+    if (!files.length) return;
+    folderUploadQueueRef.current.push(...files);
+    promptFolderUploadOrAddMore(files.length);
+  };
 
   const chooseYear = (yearId) => {
+    preferOtherFilesYear.current = yearId === OTHER_FILES_YEAR;
     setSelectedYearId(yearId);
     setSection("files");
     setSearch("");
@@ -258,7 +295,7 @@ export default function FileManager() {
       await axios.post("/api/file-manager/nodes", {
         name: dialogValue,
         type: "folder",
-        yearId: selectedYearId || null,
+        yearLabel: toYearLabel(selectedYearId) || null,
         parentId: parentId || null,
       });
       setDialog(null);
@@ -274,37 +311,12 @@ export default function FileManager() {
     }
   };
 
-  const createYear = async () => {
-    if (!dialogValue.trim()) return;
-    try {
-      const response = await axios.post("/api/file-manager/years", {
-        name: dialogValue,
-        isCurrent: years.length === 0,
-      });
-      setDialog(null);
-      setDialogValue("");
-      await loadYears();
-      chooseYear(response.data.data._id);
-      notify(
-        "success",
-        "Year created",
-        "You can now create folders and upload files.",
-      );
-    } catch (error) {
-      notify(
-        "error",
-        "Unable to create year",
-        error.response?.data?.message || "Please try again.",
-      );
-    }
-  };
-
   const getOrCreateUploadFolder = async (name, parentId) => {
     try {
       const response = await axios.post("/api/file-manager/nodes", {
         name,
         type: "folder",
-        yearId: selectedYearId || null,
+        yearLabel: toYearLabel(selectedYearId) || null,
         parentId: parentId || null,
       });
       return response.data.data._id;
@@ -312,7 +324,7 @@ export default function FileManager() {
       const response = await axios.get("/api/file-manager/nodes", {
         params: {
           view: "files",
-          yearId: selectedYearId,
+          yearLabel: toYearLabel(selectedYearId),
           parentId: parentId || "",
         },
       });
@@ -327,7 +339,7 @@ export default function FileManager() {
   const uploadFiles = async (fileList, preserveFolders = false) => {
     const files = Array.from(fileList || []);
     if (!files.length) return;
-    if (!selectedYearId && section === "files")
+    if (isOtherFilesYear(selectedYearId) && section === "files")
       notify(
         "info",
         "Uploading to Other Files",
@@ -362,7 +374,7 @@ export default function FileManager() {
         const nodeResponse = await axios.post("/api/file-manager/nodes", {
           name: file.name,
           type: "file",
-          yearId: selectedYearId || null,
+          yearLabel: toYearLabel(selectedYearId) || null,
           parentId: uploadParentId,
           size: file.size,
           mimeType: file.type,
@@ -441,53 +453,6 @@ export default function FileManager() {
           ),
     });
 
-  const updateYear = async (year, action, name) => {
-    try {
-      await axios.patch(`/api/file-manager/years/${year._id}`, {
-        action,
-        name,
-      });
-      setDialog(null);
-      setDialogValue("");
-      await loadYears();
-      notify(
-        "success",
-        "Year updated",
-        action === "archive" ? "The year has been archived." : "Changes saved.",
-      );
-    } catch (error) {
-      notify(
-        "error",
-        "Unable to update year",
-        error.response?.data?.message || "Please try again.",
-      );
-    }
-  };
-  const deleteYear = (year) =>
-    confirmDialog({
-      header: "Delete year",
-      message: `Delete “${year.name}” and all of its files and folders? This cannot be undone.`,
-      icon: "pi pi-exclamation-triangle",
-      acceptLabel: "Delete year",
-      rejectLabel: "Cancel",
-      acceptClassName: "p-button-danger",
-      accept: () =>
-        axios
-          .delete(`/api/file-manager/years/${year._id}`)
-          .then(async () => {
-            if (selectedYearId === year._id) setSelectedYearId("");
-            await loadYears();
-            notify(
-              "success",
-              "Year deleted",
-              "Its stored content was deleted.",
-            );
-          })
-          .catch(() =>
-            notify("error", "Unable to delete year", "Please try again."),
-          ),
-    });
-
   const contextAction = (action, item) => {
     setMenuItem(null);
     if (action === "open") return openItem(item);
@@ -556,7 +521,9 @@ export default function FileManager() {
         type="file"
         multiple
         className="hidden"
-        onChange={(event) => uploadFiles(event.target.files, true)}
+        webkitdirectory=""
+        directory=""
+        onChange={handleFolderInputChange}
       />
       <div className="mx-auto">
         <main className="min-w-0 rounded-xl border bg-white shadow-sm">
@@ -601,8 +568,10 @@ export default function FileManager() {
               </div>
               <div className="flex flex-wrap items-center gap-2">
                 <Dropdown
-                  value={selectedYearId}
+                  value={selectedYearId ?? OTHER_FILES_YEAR}
                   options={yearOptions}
+                  optionLabel="label"
+                  optionValue="value"
                   onChange={(event) => chooseYear(event.value)}
                   placeholder="Select year"
                   className="w-[180px]"
@@ -629,10 +598,13 @@ export default function FileManager() {
                 />
                 <Button
                   type="button"
-                  label="Upload Folder"
+                  label="Upload Folders"
                   icon="pi pi-upload"
                   className="border border-[#6C768B] bg-white px-[14px] py-[8px] text-[#19212A] rounded-none label:font-medium"
-                  onClick={() => folderInput.current?.click()}
+                  onClick={() => {
+                    folderUploadQueueRef.current = [];
+                    folderInput.current?.click();
+                  }}
                   disabled={!isBrowse}
                 />
               </div>
@@ -703,89 +675,36 @@ export default function FileManager() {
           <div className="p-4 lg:p-6">
             {section === "years" ? (
               <div>
-                <div className="mb-4 flex justify-end">
-                  <Button
-                    label="Create Year"
-                    icon="pi pi-plus"
-                    onClick={() => {
-                      setDialogValue("");
-                      setDialog({ type: "year" });
-                    }}
-                  />
+                <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+                  <p className="m-0 text-sm text-slate-600">
+                    Academic years come from Settings → Masters → Years. Files are grouped by year
+                    label so content stays linked if a year is removed and re-added with the same
+                    range.
+                  </p>
+                  <Link
+                    href="/admin/settings/masters/years"
+                    className="text-primarycolor text-sm font-medium whitespace-nowrap"
+                  >
+                    Manage years
+                  </Link>
                 </div>
                 <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
                   {years.map((year) => (
-                    <div
-                      key={year._id}
-                      className={`rounded-xl border p-4 ${year.isArchived ? "bg-slate-50 opacity-70" : "bg-white"}`}
-                    >
+                    <div key={year._id} className="rounded-xl border bg-white p-4">
                       <div className="flex items-start gap-3">
                         <i className="pi pi-calendar mt-1 text-2xl text-primarycolor" />
                         <div className="min-w-0 flex-1">
-                          <div className="font-semibold text-slate-800">
-                            {year.name}
-                          </div>
+                          <div className="font-semibold text-slate-800">{year.name}</div>
                           <div className="mt-1 text-xs text-slate-500">
-                            {year.isArchived
-                              ? "Archived"
-                              : year.isCurrent
-                                ? "Current year"
-                                : "Active year"}
+                            {year.isCurrent ? "Current academic year" : "Active"}
                           </div>
                         </div>
-                        <button
-                          data-file-menu
-                          onClick={() =>
-                            setMenuItem(
-                              menuItem?._id === year._id
-                                ? null
-                                : { ...year, isYear: true },
-                            )
-                          }
-                          className="rounded p-1 text-slate-500 hover:bg-slate-100"
-                        >
-                          <i className="pi pi-ellipsis-v" />
-                        </button>
                       </div>
-                      {menuItem?._id === year._id && menuItem.isYear && (
-                        <div
-                          data-file-menu
-                          className="mt-3 flex flex-wrap gap-2 border-t pt-3 text-xs"
-                        >
-                          <button
-                            onClick={() => {
-                              setDialogValue(year.name);
-                              setDialog({ type: "renameYear", item: year });
-                            }}
-                            className="text-primarycolor"
-                          >
-                            Rename
-                          </button>
-                          <button
-                            onClick={() => updateYear(year, "setCurrent")}
-                            className="text-primarycolor"
-                          >
-                            Set current
-                          </button>
-                          <button
-                            onClick={() =>
-                              updateYear(
-                                year,
-                                year.isArchived ? "restore" : "archive",
-                              )
-                            }
-                            className="text-primarycolor"
-                          >
-                            {year.isArchived ? "Restore" : "Archive"}
-                          </button>
-                          <button
-                            onClick={() => deleteYear(year)}
-                            className="text-red-500"
-                          >
-                            Delete
-                          </button>
-                        </div>
-                      )}
+                      <Button
+                        label="Open files"
+                        className="mt-4 w-full rounded-none border border-[#af251c] bg-white text-primarycolor"
+                        onClick={() => chooseYear(year.name)}
+                      />
                     </div>
                   ))}
                 </div>
@@ -890,8 +809,7 @@ export default function FileManager() {
                       : "Save"
                 }
                 onClick={() => {
-                  if (dialog?.type === "year") createYear();
-                  else if (dialog?.type === "folder") createFolder();
+                  if (dialog?.type === "folder") createFolder();
                   else if (dialog?.type === "subfolder")
                     createFolder(dialog.item._id);
                   else if (dialog?.type === "rename") {
@@ -901,16 +819,11 @@ export default function FileManager() {
                       return;
                     }
                     patchItem(dialog.item, "rename", { name: dialogValue });
-                  } else if (dialog?.type === "renameYear")
-                    updateYear(dialog.item, "rename", dialogValue);
-                  else if (dialog?.type === "move" || dialog?.type === "copy") {
-                    const targetYear = years.find(
-                      (year) => year._id === moveTarget.yearId,
-                    );
+                  } else if (dialog?.type === "move" || dialog?.type === "copy") {
                     patchItem(dialog.item, dialog.type, {
                       parentId: moveTarget.parentId || null,
-                      yearId: moveTarget.yearId || null,
-                      year: targetYear?.name || "",
+                      yearId: null,
+                      year: toYearLabel(moveTarget.yearId),
                     });
                   }
                 }}
@@ -920,11 +833,9 @@ export default function FileManager() {
           )
         }
       >
-        {(dialog?.type === "year" ||
-          dialog?.type === "folder" ||
+        {(dialog?.type === "folder" ||
           dialog?.type === "subfolder" ||
-          dialog?.type === "rename" ||
-          dialog?.type === "renameYear") && (
+          dialog?.type === "rename") && (
           <div>
             <InputText
               autoFocus
@@ -936,9 +847,7 @@ export default function FileManager() {
                     : event.target.value;
                 setDialogValue(value);
               }}
-              placeholder={
-                dialog?.type === "year" ? "e.g. 2026-27" : "Enter name"
-              }
+              placeholder="Enter name"
               className="w-full"
             />
             {dialog?.type === "rename" && (
@@ -960,6 +869,8 @@ export default function FileManager() {
               <Dropdown
                 value={moveTarget.yearId}
                 options={yearOptions}
+                optionLabel="label"
+                optionValue="value"
                 onChange={(event) =>
                   setMoveTarget({ yearId: event.value, parentId: "" })
                 }

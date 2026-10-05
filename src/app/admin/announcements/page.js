@@ -7,13 +7,22 @@ import { InputSwitch } from 'primereact/inputswitch';
 import { Toast } from 'primereact/toast';
 import { ConfirmDialog, confirmDialog } from 'primereact/confirmdialog';
 import CommonDataTable from '@/app/components/common/DataTable';
+import { getDefaultListYearFilterValue } from '@/app/lib/listYearFilterOptions';
 
 export default function AnnouncementsPage() {
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(false);
   const [updatingStatusId, setUpdatingStatusId] = useState(null);
   const [totalRecords, setTotalRecords] = useState(0);
-  const [lazyParams, setLazyParams] = useState({ first: 0, rows: 10, page: 1, search: '', year: '' });
+  const [lazyParams, setLazyParams] = useState({
+    first: 0,
+    rows: 10,
+    page: 1,
+    search: '',
+    year: getDefaultListYearFilterValue(),
+    sortField: 'sortNo',
+    sortOrder: 1,
+  });
   const toast = useRef(null);
 
   const fetchData = useCallback(async () => {
@@ -25,6 +34,8 @@ export default function AnnouncementsPage() {
           limit: lazyParams.rows,
           search: lazyParams.search,
           year: lazyParams.year || undefined,
+          sortField: lazyParams.sortField,
+          sortOrder: lazyParams.sortOrder,
         },
       });
       setData(response.data.data || []);
@@ -39,7 +50,14 @@ export default function AnnouncementsPage() {
     } finally {
       setLoading(false);
     }
-  }, [lazyParams.page, lazyParams.rows, lazyParams.search, lazyParams.year]);
+  }, [
+    lazyParams.page,
+    lazyParams.rows,
+    lazyParams.search,
+    lazyParams.year,
+    lazyParams.sortField,
+    lazyParams.sortOrder,
+  ]);
 
   useEffect(() => {
     fetchData();
@@ -98,15 +116,18 @@ export default function AnnouncementsPage() {
       : '-';
 
   const columns = [
+    { field: 'title', header: 'Title', sortable: true, style: { minWidth: '10rem' } },
     {
-      header: 'Sr.No.',
-      body: (_rowData, options) => lazyParams.first + options.rowIndex + 1,
-      style: { minWidth: '3rem' },
+      field: 'sortNo',
+      header: 'Sort Number',
+      sortable: true,
+      style: { minWidth: '7rem' },
+      align: 'center',
     },
-    { field: 'sortNo', header: 'Sort Number', style: { minWidth: '7rem' } },
-    { field: 'title', header: 'Title', style: { minWidth: '10rem' } },
     {
+      field: 'description',
       header: 'Description',
+      sortable: true,
       body: (rowData) => <span>{rowData.description?.replace(/<[^>]*>/g, '').slice(0, 120) || '-'}</span>,
       style: { minWidth: '14rem' },
     },
@@ -157,7 +178,18 @@ export default function AnnouncementsPage() {
         totalRecords={totalRecords}
         first={lazyParams.first}
         rows={lazyParams.rows}
+        sortField={lazyParams.sortField}
+        sortOrder={lazyParams.sortOrder}
         onPage={(event) => setLazyParams((params) => ({ ...params, first: event.first, rows: event.rows, page: event.page + 1 }))}
+        onSort={(event) =>
+          setLazyParams((params) => ({
+            ...params,
+            sortField: event.sortField,
+            sortOrder: event.sortOrder,
+            first: 0,
+            page: 1,
+          }))
+        }
         headerTitle="All Announcements"
         showSearch
         searchValue={lazyParams.search}

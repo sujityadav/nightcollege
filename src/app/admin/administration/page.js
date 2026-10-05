@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import axios from 'axios';
 import { format } from 'date-fns';
@@ -17,21 +17,34 @@ const actionColumnStyle = {
 
 export default function AdministrationList() {
   const [eventsData, setEventsData] = useState([]);
+  const [totalRecords, setTotalRecords] = useState(0);
   const [loading, setLoading] = useState(false);
-  const [search, setSearch] = useState('');
-  const [tableParams, setTableParams] = useState({ first: 0, rows: 10 });
-  const [sortMeta, setSortMeta] = useState({
+  const [lazyParams, setLazyParams] = useState({
+    first: 0,
+    rows: 10,
+    page: 1,
+    search: '',
     sortField: 'AdministrationData.data.sortOrder',
     sortOrder: 1,
   });
   const toast = useRef(null);
 
-  const fetchEventList = async () => {
+  const fetchEventList = useCallback(async () => {
     try {
       setLoading(true);
-      const response = await axios.get('/api/administration');
+      const response = await axios.get('/api/administration', {
+        params: {
+          page: lazyParams.page,
+          limit: lazyParams.rows,
+          sortField: lazyParams.sortField,
+          sortOrder: lazyParams.sortOrder,
+          search: lazyParams.search,
+        },
+      });
+
       if (response?.data?.success) {
-        setEventsData(response?.data?.data || []);
+        setEventsData(response.data.data);
+        setTotalRecords(response.data.totalRecords);
       }
     } catch {
       toast.current?.show({
@@ -43,28 +56,17 @@ export default function AdministrationList() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [lazyParams]);
 
   useEffect(() => {
     fetchEventList();
-  }, []);
-
-  const filteredData = useMemo(() => {
-    if (!search.trim()) return eventsData;
-    const query = search.toLowerCase();
-    return eventsData.filter((item) => {
-      const title = item?.AdministrationData?.data?.title?.toLowerCase() || '';
-      const description = item?.AdministrationData?.data?.smallDescription?.toLowerCase() || '';
-      const sortOrder = String(item?.AdministrationData?.data?.sortOrder ?? '');
-      return title.includes(query) || description.includes(query) || sortOrder.includes(query);
-    });
-  }, [eventsData, search]);
+  }, [fetchEventList]);
 
   const handleDelete = async (id) => {
     try {
       const response = await axios.delete(`/api/administration/${id}`);
       if (response?.data?.success) {
-        setEventsData((current) => current.filter((item) => item._id !== id));
+        fetchEventList();
         toast.current?.show({
           severity: 'success',
           summary: 'Deleted',
@@ -101,14 +103,7 @@ export default function AdministrationList() {
       header: 'Title',
       sortable: true,
       sortField: 'AdministrationData.data.title',
-      body: (rowData) => (
-        <Link
-          href={`/admin/sub-administration?administrationId=${rowData._id}`}
-          className="text-primarycolor underline"
-        >
-          {rowData.AdministrationData?.data?.title || '-'}
-        </Link>
-      ),
+      body: (rowData) => rowData?.AdministrationData?.data?.title || '-',
       style: { minWidth: '12rem' },
     },
     {
@@ -175,35 +170,43 @@ export default function AdministrationList() {
       </div>
 
       <CommonDataTable
-        value={filteredData}
+        value={eventsData}
         columns={columns}
         loading={loading}
-        lazy={false}
-        totalRecords={filteredData.length}
+        lazy
+        totalRecords={totalRecords}
+        first={lazyParams.first}
+        rows={lazyParams.rows}
+        sortField={lazyParams.sortField}
+        sortOrder={lazyParams.sortOrder}
+        onPage={(event) =>
+          setLazyParams((params) => ({
+            ...params,
+            first: event.first,
+            rows: event.rows,
+            page: event.page + 1,
+          }))
+        }
+        onSort={(event) =>
+          setLazyParams((params) => ({
+            ...params,
+            sortField: event.sortField,
+            sortOrder: event.sortOrder,
+            first: 0,
+            page: 1,
+          }))
+        }
         headerTitle="All Administration"
         showSearch
         searchPlaceholder="Search here.."
-        searchValue={search}
-        onSearch={(event) => {
-          setSearch(event.target.value);
-          setTableParams((params) => ({ ...params, first: 0 }));
-        }}
-        first={tableParams.first}
-        rows={tableParams.rows}
-        sortField={sortMeta.sortField}
-        sortOrder={sortMeta.sortOrder}
-        onSort={(event) => {
-          setSortMeta({
-            sortField: event.sortField,
-            sortOrder: event.sortOrder,
-          });
-          setTableParams((params) => ({ ...params, first: 0 }));
-        }}
-        onPage={(event) =>
-          setTableParams({
-            first: event.first,
-            rows: event.rows,
-          })
+        searchValue={lazyParams.search}
+        onSearch={(event) =>
+          setLazyParams((params) => ({
+            ...params,
+            search: event.target.value,
+            first: 0,
+            page: 1,
+          }))
         }
         dataTableProps={{ dataKey: '_id' }}
       />

@@ -4,6 +4,11 @@ export function getListYearFilterEndYear(date = new Date()) {
   return date.getFullYear() + 2;
 }
 
+/** Default year filter selection for admin list pages (calendar year). */
+export function getDefaultListYearFilterValue(date = new Date()) {
+  return String(date.getFullYear());
+}
+
 /** @returns {{ label: string, value: string }[]} */
 export function getListYearFilterOptions(date = new Date()) {
   const end = getListYearFilterEndYear(date);

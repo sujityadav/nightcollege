@@ -28,6 +28,7 @@ export default function AddMasterYearPage() {
   const [toYear, setToYear] = useState(null);
   const [status, setStatus] = useState(true);
   const [loading, setLoading] = useState(false);
+  const [existingYears, setExistingYears] = useState([]);
   const toast = useRef(null);
   const router = useRouter();
   const id = useSearchParams().get('id');
@@ -42,6 +43,18 @@ export default function AddMasterYearPage() {
       { label: isEditMode ? 'Update Year' : 'Add Year', isCurrent: true },
     ],
   });
+
+  useEffect(() => {
+    const loadExistingYears = async () => {
+      try {
+        const res = await axios.get('/api/master-years', { params: { page: 1, limit: 500 } });
+        setExistingYears(res.data.data || []);
+      } catch {
+        setExistingYears([]);
+      }
+    };
+    loadExistingYears();
+  }, []);
 
   useEffect(() => {
     if (!id) return;
@@ -79,11 +92,24 @@ export default function AddMasterYearPage() {
       return;
     }
 
-    if (from > to) {
+    if (from >= to) {
       toast.current?.show({
         severity: 'warn',
         summary: 'Validation',
-        detail: 'From year cannot be greater than to year',
+        detail: 'From year must be less than to year',
+        life: 3000,
+      });
+      return;
+    }
+
+    const isDuplicate = existingYears.some(
+      (year) => year.fromYear === from && year.toYear === to && year._id !== id
+    );
+    if (isDuplicate) {
+      toast.current?.show({
+        severity: 'warn',
+        summary: 'Validation',
+        detail: 'This year range already exists',
         life: 3000,
       });
       return;

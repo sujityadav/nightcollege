@@ -31,6 +31,12 @@ export async function GET(req) {
     const search = searchParams.get('search') || '';
     const page = Number(searchParams.get('page') || 1);
     const limit = Number(searchParams.get('limit') || 10);
+    const sortField = searchParams.get('sortField');
+    const sortOrder = searchParams.get('sortOrder');
+    const sortDir = Number(sortOrder) === -1 ? -1 : 1;
+
+    const allowedSortFields = ['title', 'description', 'sortOrder', 'year'];
+    const sortKey = allowedSortFields.includes(sortField) ? sortField : null;
 
     const query = search
       ? {
@@ -43,11 +49,46 @@ export async function GET(req) {
       : {};
 
     const total = await StudentCorner.countDocuments(query);
-    const data = await StudentCorner.find(query)
-      .populate('masterYearId')
-      .sort({ sortOrder: 1, createdAt: -1 })
-      .skip((page - 1) * limit)
-      .limit(limit);
+    const skip = (page - 1) * limit;
+
+    let data;
+    if (sortKey === 'year') {
+      const masterYearCollection = MasterYear.collection.name;
+      data = await StudentCorner.aggregate([
+        { $match: query },
+        {
+          $lookup: {
+            from: masterYearCollection,
+            localField: 'masterYearId',
+            foreignField: '_id',
+            as: 'masterYearDoc',
+          },
+        },
+        { $unwind: { path: '$masterYearDoc', preserveNullAndEmptyArrays: true } },
+        {
+          $sort: {
+            'masterYearDoc.fromYear': sortDir,
+            'masterYearDoc.toYear': sortDir,
+            sortOrder: 1,
+          },
+        },
+        { $skip: skip },
+        { $limit: limit },
+        {
+          $addFields: {
+            masterYearId: '$masterYearDoc',
+          },
+        },
+        { $project: { masterYearDoc: 0 } },
+      ]);
+    } else {
+      const sort = sortKey ? { [sortKey]: sortDir } : { sortOrder: 1, createdAt: -1 };
+      data = await StudentCorner.find(query)
+        .populate('masterYearId')
+        .sort(sort)
+        .skip(skip)
+        .limit(limit);
+    }
 
     return NextResponse.json({ success: true, data, total });
   } catch (error) {

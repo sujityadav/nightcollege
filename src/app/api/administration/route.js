@@ -32,12 +32,29 @@ export async function POST(req) {
 export async function GET(req) {
   try {
     await connectDB();
-    const entries = await administration
-      .find()
-      .sort({ 'AdministrationData.data.sortOrder': 1, createdAt: -1 });
+    const { search, page = 1, limit = 10, sortField = "AdministrationData.data.sortOrder", sortOrder = 1 } =
+      Object.fromEntries(new URL(req.url).searchParams);
+
+    let query = {};
+    if (search) {
+      query = {
+        $or: [
+          { "AdministrationData.data.title": { $regex: search, $options: "i" } },
+          { "AdministrationData.data.smallDescription": { $regex: search, $options: "i" } },
+        ],
+      };
+    }
+
+    const skip = (parseInt(page) - 1) * parseInt(limit);
+    const totalRecords = await administration.countDocuments(query);
+    const data = await administration
+      .find(query)
+      .sort({ [sortField]: parseInt(sortOrder) })
+      .skip(skip)
+      .limit(parseInt(limit));
 
     return NextResponse.json(
-      { success: true, data: entries },
+      { success: true, data, totalRecords },
       { status: 200 }
     );
   } catch (error) {

@@ -7,6 +7,7 @@ import { InputText } from 'primereact/inputtext';
 import { IconField } from 'primereact/iconfield';
 import { InputIcon } from 'primereact/inputicon';
 import { Dropdown } from 'primereact/dropdown';
+import { ProgressSpinner } from 'primereact/progressspinner';
 import { getListYearFilterOptions } from '@/app/lib/listYearFilterOptions';
 
 /**
@@ -76,7 +77,16 @@ export default function CommonDataTable({
   } of ${totalRecords}`;
 
   const table = (
-    <div className="min-w-0 overflow-x-auto">
+    <div className="relative min-w-0 overflow-x-auto">
+      {loading ? (
+        <div
+          className="absolute inset-0 z-[2] flex items-center justify-center bg-white/75"
+          aria-busy="true"
+          aria-live="polite"
+        >
+          <ProgressSpinner style={{ width: '48px', height: '48px' }} strokeWidth="4" />
+        </div>
+      ) : null}
       <PrimeDataTable
         value={value}
         className={tableClassName}

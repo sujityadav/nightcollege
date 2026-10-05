@@ -41,6 +41,19 @@ export async function GET(req) {
     const year = searchParams.get("year") || "";
     const page = parseInt(searchParams.get("page")) || 1;
     const limit = parseInt(searchParams.get("limit")) || 10;
+    const sortField = searchParams.get("sortField");
+    const sortOrder = searchParams.get("sortOrder");
+    const sortDir = Number(sortOrder) === -1 ? -1 : 1;
+
+    const allowedSortFields = [
+      "Eventdata.data.title",
+      "Eventdata.data.smallDescription",
+      "Eventdata.data.location",
+      "Eventdata.data.fromDate",
+      "Eventdata.data.toDate",
+      "createdAt",
+    ];
+    const sortKey = allowedSortFields.includes(sortField) ? sortField : "createdAt";
 
     let query = {};
     if (search) {
@@ -61,7 +74,7 @@ export async function GET(req) {
     }
       const totalRecords = await Events.countDocuments(query);
     const entries = await Events.find(query)
-      .sort({ createdAt: -1 })
+      .sort({ [sortKey]: sortDir })
       .skip((page - 1) * limit)
       .limit(limit);
 

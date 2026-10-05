@@ -1,5 +1,5 @@
 import FileManagerNode from '@/app/models/fileManagerNode';
-import FileManagerYear from '@/app/models/fileManagerYear';
+import { buildNodeYearScopeQuery } from '@/app/lib/fileManagerYearScope';
 
 export function getUniqueFileName(baseName, existingNames = []) {
   const trimmed = String(baseName || '').trim();
@@ -23,10 +23,11 @@ export function getUniqueFileName(baseName, existingNames = []) {
   return candidate;
 }
 
-export async function resolveUniqueFileName(name, { parentId = null, yearId = null } = {}) {
+export async function resolveUniqueFileName(name, { parentId = null, year = null } = {}) {
+  const yearScope = await buildNodeYearScopeQuery(year);
   const existing = await FileManagerNode.find({
     parentId: parentId || null,
-    yearId: yearId || null,
+    ...yearScope,
     isTrashed: false,
     type: 'file',
   }).select('name');
@@ -47,24 +48,22 @@ export async function resolveFileManagerNodeByPath(pathParam) {
   const folderSegments = segments.slice(0, -1);
   const yearPart = folderSegments[0];
 
-  let yearId = null;
+  let yearLabel = null;
   let parentId = null;
   let remainingFolders = folderSegments.slice(1);
 
-  if (yearPart.toLowerCase() === 'other') {
-    yearId = null;
-  } else {
-    const yearRecord = await FileManagerYear.findOne({ name: yearPart });
-    if (!yearRecord) return null;
-    yearId = String(yearRecord._id);
+  if (yearPart.toLowerCase() !== 'other') {
+    yearLabel = yearPart;
   }
+
+  const yearScope = await buildNodeYearScopeQuery(yearLabel);
 
   for (const folderName of remainingFolders) {
     const folder = await FileManagerNode.findOne({
       name: folderName,
       type: 'folder',
       parentId: parentId || null,
-      yearId: yearId || null,
+      ...yearScope,
       isTrashed: false,
     });
 
@@ -76,7 +75,7 @@ export async function resolveFileManagerNodeByPath(pathParam) {
     name: fileName,
     type: 'file',
     parentId: parentId || null,
-    yearId: yearId || null,
+    ...yearScope,
     isTrashed: false,
   });
 }

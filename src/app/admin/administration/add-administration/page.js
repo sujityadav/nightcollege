@@ -122,7 +122,7 @@ export default function AddEvents() {
           <div className='px-[250px] space-y-3'>
 
             <div className='flex flex-col gap-1'>
-              <label>Administration Title</label>
+              <label>Administration Title <span className="text-red-500">*</span></label>
               <InputText {...register('title', { required: true })} placeholder="Enter your title" />
               {errors.title && <span className="text-red-500 text-sm">This field is required</span>}
             </div>
@@ -144,13 +144,13 @@ export default function AddEvents() {
             </div>
 
             <div className='flex flex-col gap-1'>
-              <label>Small Description</label>
+              <label>Small Description <span className="text-red-500">*</span></label>
               <InputText {...register('smallDescription', { required: true })} placeholder="Enter short description" />
               {errors.smallDescription && <span className="text-red-500 text-sm">This field is required</span>}
             </div>
 
             <div className='flex flex-col gap-1'>
-              <label>Large Description</label>
+              <label>Large Description <span className="text-red-500">*</span></label>
               <TextEditor value={editorContent} setEditorContent={setEditorContent} onChange={handleEditorChange} />
               <input type="hidden" {...register('largeDescription', { required: true })} />
               {errors.largeDescription && <span className="text-red-500 text-sm">This field is required</span>}

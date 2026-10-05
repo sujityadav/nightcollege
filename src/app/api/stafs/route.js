@@ -47,7 +47,8 @@ export async function GET(req) {
       filter = {
         $or: [
           { "StaffData.data.name": { $regex: search, $options: "i" } },
-          { "StaffData.data.designation": { $regex: search, $options: "i" } }
+          { "StaffData.data.designation": { $regex: search, $options: "i" } },
+          { "StaffData.data.staffType": { $regex: search, $options: "i" } },
         ]
       };
     }

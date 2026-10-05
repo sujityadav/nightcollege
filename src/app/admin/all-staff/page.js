@@ -14,6 +14,7 @@ import axios from 'axios';
 import { format } from 'date-fns';
 import { useRouter } from 'next/navigation';
 import { Toast } from 'primereact/toast';
+import { ConfirmDialog, confirmDialog } from 'primereact/confirmdialog';
 
 export default function EventList() {
   const router = useRouter();
@@ -82,12 +83,30 @@ export default function EventList() {
     }
   };
 
+  const confirmDelete = (rowData) => {
+    const name = rowData?.StaffData?.data?.name || 'this staff member';
+    confirmDialog({
+      header: 'Delete Staff',
+      message: `Are you sure you want to delete "${name}"?`,
+      icon: 'pi pi-exclamation-triangle',
+      acceptLabel: 'Yes, Delete',
+      rejectLabel: 'Cancel',
+      acceptClassName: 'p-button-danger',
+      accept: () => handleDelete(rowData._id),
+    });
+  };
+
   const actionTemplate = (rowData) => (
     <div className="flex justify-center items-center gap-4 ">
       <Link href={`/admin/all-staff/add-staff?id=${rowData._id}`} className="leading-none" >
         <i className="pi pi-pen-to-square text-[18px]"></i>
       </Link>
-      <button onClick={() => handleDelete(rowData._id)} className="leading-none">
+      <button
+        type="button"
+        onClick={() => confirmDelete(rowData)}
+        className="leading-none bg-transparent border-0 cursor-pointer text-red-500 p-0"
+        title="Delete"
+      >
         <i className="pi pi-trash text-[18px]"></i>
       </button>
     </div>
@@ -95,9 +114,24 @@ export default function EventList() {
 
   const formatDate = (value) => value ? format(new Date(value), 'dd MMM yyyy') : '-';
 
+  const photoTemplate = (rowData) => {
+    const photoUrl = rowData?.StaffData?.data?.photo;
+    if (!photoUrl) {
+      return <span className="text-gray-400 text-sm">No Photo</span>;
+    }
+    return (
+      <img
+        src={photoUrl}
+        alt={rowData?.StaffData?.data?.name || 'Staff photo'}
+        className="h-14 w-14 rounded-full object-cover"
+      />
+    );
+  };
+
   return (
     <div className="grid grid-cols-1">
       <Toast ref={toast} />
+      <ConfirmDialog />
       <div className='p-5 w-full'>
         <div className='flex justify-between mb-5'>
           <h2 className='text-[#19212A] text-[22px] font-bold'>All Staff</h2>
@@ -145,8 +179,15 @@ export default function EventList() {
               onPage={(e) => setLazyParams((prev) => ({ ...prev, ...e }))}
               onSort={(e) => setLazyParams((prev) => ({ ...prev, ...e }))}
             >
+              <Column header="Photo" body={photoTemplate} style={{ minWidth: '5rem' }} />
               <Column field="StaffData.data.name" header="Name" sortable />
               <Column field="StaffData.data.designation" header="Designation" sortable />
+              <Column
+                field="StaffData.data.staffType"
+                header="Type"
+                sortable
+                body={(rowData) => rowData?.StaffData?.data?.staffType || '-'}
+              />
               <Column header="Created At" body={(rowData) => formatDate(rowData?.createdAt)} sortable />
               <Column
                 header="Action"

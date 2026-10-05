@@ -1,23 +1,11 @@
 import { NextResponse } from 'next/server';
 import { connectDB } from '../../../lib/mongodb';
 import MasterYear from '../../../models/masterYear';
-
-const parseYear = (value) => {
-  if (value === undefined || value === null || value === '') return null;
-  const num = Number(value);
-  if (!Number.isInteger(num) || num < 1900 || num > 2100) return null;
-  return num;
-};
-
-const validateYears = (fromYear, toYear) => {
-  if (fromYear === null || toYear === null) {
-    return 'From year and to year are required';
-  }
-  if (fromYear > toYear) {
-    return 'From year cannot be greater than to year';
-  }
-  return null;
-};
+import {
+  findDuplicateMasterYear,
+  parseMasterYear,
+  validateMasterYearRange,
+} from '../../../lib/masterYearValidation';
 
 export async function GET(req, { params }) {
   try {
@@ -49,12 +37,20 @@ export async function PUT(req, { params }) {
         : NextResponse.json({ success: false, message: 'Not found' }, { status: 404 });
     }
 
-    const fromYear = parseYear(body.fromYear);
-    const toYear = parseYear(body.toYear);
-    const validationError = validateYears(fromYear, toYear);
+    const fromYear = parseMasterYear(body.fromYear);
+    const toYear = parseMasterYear(body.toYear);
+    const validationError = validateMasterYearRange(fromYear, toYear);
 
     if (validationError) {
       return NextResponse.json({ success: false, message: validationError }, { status: 400 });
+    }
+
+    const duplicate = await findDuplicateMasterYear(MasterYear, fromYear, toYear, id);
+    if (duplicate) {
+      return NextResponse.json(
+        { success: false, message: 'This year range already exists' },
+        { status: 400 }
+      );
     }
 
     const data = await MasterYear.findByIdAndUpdate(

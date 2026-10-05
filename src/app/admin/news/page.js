@@ -8,13 +8,15 @@ import { ConfirmDialog } from 'primereact/confirmdialog';
 import { InputSwitch } from 'primereact/inputswitch';
 import CommonDataTable from '@/app/components/common/DataTable';
 import { getFirstPhotoUrl } from '@/app/components/common/MediaUpload';
+import { getDefaultListYearFilterValue } from '@/app/lib/listYearFilterOptions';
 
 export default function NewsList() {
   const [newsData, setNewsData] = useState([]);
   const [deleteId, setDeleteId] = useState(null);
   const [visible, setVisible] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
-  const [yearFilter, setYearFilter] = useState('');
+  const [yearFilter, setYearFilter] = useState(() => getDefaultListYearFilterValue());
+  const [loading, setLoading] = useState(false);
   const [totalRecords, setTotalRecords] = useState(0);
   const [lazyParams, setLazyParams] = useState({
     first: 0,
@@ -26,6 +28,7 @@ export default function NewsList() {
   const toast = useRef(null);
 
   const fetchNewsList = async (query = '', page = 1, limit = 10, year = '') => {
+    setLoading(true);
     try {
       const response = await axios.get('/api/news', {
         params: { search: query, page, limit, year: year || undefined },
@@ -42,6 +45,8 @@ export default function NewsList() {
         detail: 'Failed to fetch news',
         life: 3000,
       });
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -281,6 +286,7 @@ export default function NewsList() {
         <CommonDataTable
           value={newsData}
           columns={columns}
+          loading={loading}
           totalRecords={totalRecords}
           first={lazyParams.first}
           rows={lazyParams.rows}

@@ -20,6 +20,7 @@ const FileManagerNodeSchema = new mongoose.Schema(
 );
 
 FileManagerNodeSchema.index({ yearId: 1, parentId: 1, isTrashed: 1 });
+FileManagerNodeSchema.index({ year: 1, parentId: 1, isTrashed: 1 });
 
 export default mongoose.models.FileManagerNode ||
   mongoose.model("FileManagerNode", FileManagerNodeSchema);

@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
 import { connectDB } from "@/app/lib/mongodb";
 import FileManagerNode from "@/app/models/fileManagerNode";
-import FileManagerYear from "@/app/models/fileManagerYear";
 import { resolveUniqueFileName } from "@/app/lib/fileManagerResolve";
+import { buildNodeYearScopeQuery } from "@/app/lib/fileManagerYearScope";
 
 const sortMap = { name: "name", date: "updatedAt", size: "size" };
 
@@ -11,7 +11,10 @@ export async function GET(req) {
     await connectDB();
     const { searchParams } = new URL(req.url);
     const view = searchParams.get("view") || "files";
-    const yearId = searchParams.get("yearId") || "";
+    const yearLabel =
+      searchParams.get("yearLabel") ||
+      searchParams.get("yearId") ||
+      "";
     const parentId = searchParams.get("parentId");
     const search = searchParams.get("search") || "";
     const type = searchParams.get("type") || "";
@@ -26,7 +29,8 @@ export async function GET(req) {
     if (view === "recent") {
       // Recent intentionally spans years; no additional folder constraint.
     } else if (view === "files") {
-      query.yearId = yearId || null;
+      const yearScope = await buildNodeYearScopeQuery(yearLabel);
+      Object.assign(query, yearScope);
       query.parentId = parentId || null;
     }
     if (type === "folders") query.type = "folder";
@@ -60,6 +64,7 @@ export async function POST(req) {
       type,
       parentId = null,
       yearId = null,
+      yearLabel = null,
       size = 0,
       mimeType = "",
       url = "",
@@ -69,20 +74,12 @@ export async function POST(req) {
         { success: false, message: "A name and valid type are required" },
         { status: 400 },
       );
-    let year = "";
-    if (yearId) {
-      const yearRecord = await FileManagerYear.findById(yearId);
-      if (!yearRecord)
-        return NextResponse.json(
-          { success: false, message: "Selected year was not found" },
-          { status: 400 },
-        );
-      year = yearRecord.name;
-    }
+    const year = String(yearLabel || yearId || "").trim();
+    const yearScope = await buildNodeYearScopeQuery(year);
     const duplicate = await FileManagerNode.findOne({
       name: name.trim(),
       parentId: parentId || null,
-      yearId: yearId || null,
+      ...yearScope,
       isTrashed: false,
     });
     if (duplicate && type === "folder")
@@ -96,7 +93,7 @@ export async function POST(req) {
 
     let finalName = name.trim();
     if (type === "file") {
-      finalName = await resolveUniqueFileName(finalName, { parentId, yearId });
+      finalName = await resolveUniqueFileName(finalName, { parentId, year });
     }
 
     const parentPath = parentId
@@ -108,7 +105,7 @@ export async function POST(req) {
       name: finalName,
       type,
       parentId: parentId || null,
-      yearId: yearId || null,
+      yearId: null,
       year,
       path: `${parentPath}/${finalName}`,
       size: Number(size) || 0,

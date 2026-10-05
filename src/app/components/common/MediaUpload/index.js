@@ -3,7 +3,7 @@
 import React, { useRef } from 'react';
 import Image from 'next/image';
 import axios from 'axios';
-import { confirmDialog } from 'primereact/confirmdialog';
+import { ConfirmDialog, confirmDialog } from 'primereact/confirmdialog';
 
 export const DEFAULT_MAX_MEDIA_SIZE_MB = 15;
 
@@ -16,9 +16,11 @@ export function normalizeMediaTypeLabel(value) {
   return null;
 }
 
-export function detectMediaType(fileOrUrl) {
+export function detectMediaType(fileOrUrl, { allowAllFiles = false } = {}) {
   if (fileOrUrl instanceof File) {
-    return fileOrUrl.type.startsWith('video/') ? 'Video' : 'Photo';
+    if (fileOrUrl.type.startsWith('video/')) return 'Video';
+    if (fileOrUrl.type.startsWith('image/')) return 'Photo';
+    return allowAllFiles ? 'File' : 'Photo';
   }
 
   if (typeof fileOrUrl === 'string' && fileOrUrl) {
@@ -28,9 +30,28 @@ export function detectMediaType(fileOrUrl) {
     ) {
       return 'Video';
     }
+    if (
+      fileOrUrl.includes('/image/upload/') ||
+      /\.(jpe?g|png|gif|webp|bmp|svg)(\?|$)/i.test(fileOrUrl)
+    ) {
+      return 'Photo';
+    }
+    if (allowAllFiles) return 'File';
   }
 
   return 'Photo';
+}
+
+export function isImageMediaType(type, url = '') {
+  if (type === 'File' || isVideoMedia(type)) return false;
+  if (type === 'Photo') return true;
+  if (typeof url === 'string' && url) {
+    return (
+      url.includes('/image/upload/') ||
+      /\.(jpe?g|png|gif|webp|bmp|svg)(\?|$)/i.test(url)
+    );
+  }
+  return false;
 }
 
 export function isVideoMedia(type) {
@@ -94,6 +115,54 @@ export async function uploadMediaItems(items = []) {
   return urls;
 }
 
+/** Upload multiple items with url, fileName, and mediaType metadata. */
+export async function uploadMediaAttachments(items = [], { allowAllFiles = false } = {}) {
+  const attachments = [];
+
+  for (const item of items) {
+    if (item?.file instanceof File) {
+      const url = await uploadMediaFile(item.file);
+      attachments.push({
+        url,
+        fileName: item.file.name,
+        mediaType:
+          item.mediaType || detectMediaType(item.file, { allowAllFiles }),
+      });
+    } else if (item?.previewUrl && !item.previewUrl.startsWith('blob:')) {
+      attachments.push({
+        url: item.previewUrl,
+        fileName: item.fileName || '',
+        mediaType:
+          item.mediaType || detectMediaType(item.previewUrl, { allowAllFiles }),
+      });
+    }
+  }
+
+  return attachments;
+}
+
+/** First image URL from attachment list (for admin list thumbnails). */
+export function getFirstImageFromAttachments(attachments) {
+  if (!Array.isArray(attachments)) return '';
+  for (const entry of attachments) {
+    const url = typeof entry === 'string' ? entry : entry?.url;
+    if (!url) continue;
+    const mediaType =
+      typeof entry === 'object' && entry?.mediaType
+        ? entry.mediaType
+        : detectMediaType(url, { allowAllFiles: true });
+    if (isImageMediaType(mediaType, url)) return url;
+  }
+  return '';
+}
+
+export function hasAttachments(attachments) {
+  return Array.isArray(attachments) && attachments.some((entry) => {
+    const url = typeof entry === 'string' ? entry : entry?.url;
+    return Boolean(url);
+  });
+}
+
 const createItemId = () =>
   typeof crypto !== 'undefined' && crypto.randomUUID
     ? crypto.randomUUID()
@@ -107,6 +176,7 @@ const labelClassName =
  *
  * @param {Object} props
  * @param {boolean} [props.allowVideo=false] - true = photo+video (rebranding), false = photo only (news/events)
+ * @param {boolean} [props.allowAllFiles=false] - true = any file type (documents, etc.)
  * @param {boolean} [props.multiple=false] - true = allow multiple photos (events)
  * @param {boolean} [props.required=false]
  * @param {number} [props.maxSizeMB=15]
@@ -126,6 +196,7 @@ const labelClassName =
  */
 export default function MediaUpload({
   allowVideo = false,
+  allowAllFiles = false,
   multiple = false,
   required = false,
   maxSizeMB = DEFAULT_MAX_MEDIA_SIZE_MB,
@@ -133,6 +204,8 @@ export default function MediaUpload({
   previewUrl = '',
   items = [],
   mediaType = 'Photo',
+  file = null,
+  fileName = '',
   error = '',
   onChange,
   onItemsChange,
@@ -147,16 +220,24 @@ export default function MediaUpload({
   const resolvedLabel =
     label ||
     (multiple
-      ? 'Photo Upload (Multiple)'
-      : allowVideo
-        ? 'Photo/Video Upload'
-        : 'Photo Upload');
-  const accept = allowVideo ? 'image/*,video/*' : 'image/*';
+      ? allowAllFiles
+        ? 'File Upload (Multiple)'
+        : 'Photo Upload (Multiple)'
+      : allowAllFiles
+        ? 'File Upload'
+        : allowVideo
+          ? 'Photo/Video Upload'
+          : 'Photo Upload');
+  const accept = allowAllFiles ? '*/*' : allowVideo ? 'image/*,video/*' : 'image/*';
   const hint = multiple
-    ? `Images · Max. File Size: ${maxSizeMB}MB each`
-    : allowVideo
-      ? `Image or Video · Max. File Size: ${maxSizeMB}MB`
-      : `Image · Max. File Size: ${maxSizeMB}MB`;
+    ? allowAllFiles
+      ? `Any file type · Max. File Size: ${maxSizeMB}MB each`
+      : `Images · Max. File Size: ${maxSizeMB}MB each`
+    : allowAllFiles
+      ? `Any file type · Max. File Size: ${maxSizeMB}MB`
+      : allowVideo
+        ? `Image or Video · Max. File Size: ${maxSizeMB}MB`
+        : `Image · Max. File Size: ${maxSizeMB}MB`;
   const isVideo = isVideoMedia(mediaType);
 
   const emitError = (message) => {
@@ -167,7 +248,9 @@ export default function MediaUpload({
     const isImage = file.type.startsWith('image/');
     const isVideoFile = file.type.startsWith('video/');
 
-    if (allowVideo) {
+    if (allowAllFiles) {
+      // Any file type; size check only.
+    } else if (allowVideo) {
       if (!isImage && !isVideoFile) {
         emitError('Please choose an image or video file.');
         return null;
@@ -182,10 +265,14 @@ export default function MediaUpload({
       return null;
     }
 
+    let resolvedType = 'Photo';
+    if (isVideoFile) resolvedType = 'Video';
+    else if (!isImage) resolvedType = allowAllFiles ? 'File' : 'Photo';
+
     return {
       file,
       previewUrl: URL.createObjectURL(file),
-      mediaType: isVideoFile ? 'Video' : 'Photo',
+      mediaType: resolvedType,
     };
   };
 
@@ -267,13 +354,17 @@ export default function MediaUpload({
       return;
     }
 
-    const kind = isVideo ? 'video' : 'photo';
+    const isFile = mediaType === 'File';
+    const kind = isVideo ? 'video' : isFile ? 'file' : 'photo';
+    const requiredHint = allowAllFiles
+      ? 'A file'
+      : allowVideo
+        ? 'A photo or video'
+        : 'A photo';
     confirmDialog({
-      header: isVideo ? 'Remove Video' : 'Remove Photo',
+      header: isVideo ? 'Remove Video' : isFile ? 'Remove File' : 'Remove Photo',
       message: required
-        ? `Are you sure you want to remove this ${kind}? ${
-            allowVideo ? 'A photo or video' : 'A photo'
-          } is required to save.`
+        ? `Are you sure you want to remove this ${kind}? ${requiredHint} is required to save.`
         : `Are you sure you want to remove this ${kind}?`,
       icon: 'pi pi-exclamation-triangle',
       acceptLabel: 'Remove',
@@ -283,7 +374,7 @@ export default function MediaUpload({
     });
   };
 
-  const renderPreview = (url, type, alt = 'Uploaded media') => {
+  const renderPreview = (url, type, alt = 'Uploaded media', displayName = '') => {
     if (isVideoMedia(type)) {
       return (
         <video
@@ -291,6 +382,15 @@ export default function MediaUpload({
           controls
           className="inline mb-3 max-h-[180px] w-auto rounded"
         />
+      );
+    }
+
+    if (!isImageMediaType(type, url)) {
+      return (
+        <div className="inline-flex mb-3 items-center gap-2 rounded border border-[#EAEDF3] bg-[#F9FAFB] px-3 py-2">
+          <i className="pi pi-file text-[22px] text-primarycolor" />
+          <span className="text-sm text-[#494E5F] break-all">{displayName || alt}</span>
+        </div>
       );
     }
 
@@ -304,7 +404,9 @@ export default function MediaUpload({
   };
 
   return (
-    <div className={className}>
+    <>
+      <ConfirmDialog />
+      <div className={className}>
       <div className="flex flex-col gap-1">
         <label className={labelClassName}>
           {resolvedLabel}
@@ -377,7 +479,12 @@ export default function MediaUpload({
       {!multiple && previewUrl ? (
         <div className="p-2 border flex gap-5 items-center mt-3">
           <div>
-            {renderPreview(previewUrl, mediaType)}
+            {renderPreview(
+              previewUrl,
+              mediaType,
+              'Uploaded media',
+              file?.name || fileName
+            )}
             {showTypeBadge ? (
               <div className="text-sm text-[#494E5F]">
                 Type:{' '}
@@ -394,11 +501,16 @@ export default function MediaUpload({
               className="w-auto flex gap-2 items-center bg-[#A0AEC0] text-[#19212A] text-[14px] xl:text-[14px] 3xl:text-[0.729vw] font-[500] p-[10px] xl:p-[10px] 3xl:p-[0.521vw] leading-none"
             >
               <i className="pi pi-times-circle"></i>{' '}
-              {isVideo ? 'Remove Video' : 'Remove Photo'}
+              {isVideo
+                ? 'Remove Video'
+                : mediaType === 'File'
+                  ? 'Remove File'
+                  : 'Remove Photo'}
             </button>
           </div>
         </div>
       ) : null}
     </div>
+    </>
   );
 }

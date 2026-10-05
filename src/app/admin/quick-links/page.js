@@ -24,7 +24,14 @@ export default function QuickLinksPage() {
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(false);
   const [totalRecords, setTotalRecords] = useState(0);
-  const [lazyParams, setLazyParams] = useState({ first: 0, rows: 10, page: 1, search: '' });
+  const [lazyParams, setLazyParams] = useState({
+    first: 0,
+    rows: 10,
+    page: 1,
+    search: '',
+    sortField: null,
+    sortOrder: null,
+  });
   const toast = useRef(null);
   const statusUpdateInFlight = useRef(new Set());
 
@@ -41,6 +48,8 @@ export default function QuickLinksPage() {
           page: lazyParams.page,
           limit: lazyParams.rows,
           search: lazyParams.search,
+          sortField: lazyParams.sortField,
+          sortOrder: lazyParams.sortOrder,
         },
       });
       setData(response.data.data || []);
@@ -55,7 +64,7 @@ export default function QuickLinksPage() {
     } finally {
       setLoading(false);
     }
-  }, [lazyParams.page, lazyParams.rows, lazyParams.search]);
+  }, [lazyParams.page, lazyParams.rows, lazyParams.search, lazyParams.sortField, lazyParams.sortOrder]);
 
   useEffect(() => {
     fetchData();
@@ -127,18 +136,35 @@ export default function QuickLinksPage() {
   };
 
   const columns = [
-    { field: 'title', header: 'Title', style: { minWidth: '12rem' } },
     {
+      field: 'title',
+      header: 'Title',
+      sortable: true,
+      style: { minWidth: '7rem', maxWidth: '9rem' },
+      bodyClassName: 'truncate max-w-[9rem]',
+    },
+    {
+      field: 'sortOrder',
       header: 'Sort Order',
+      sortable: true,
       body: (rowData) => rowData.sortOrder ?? '-',
       style: { minWidth: '5rem', width: '5rem' },
       align: 'center',
     },
-    { field: 'type', header: 'Type', style: { minWidth: '8rem' } },
     {
+      field: 'type',
+      header: 'Type',
+      sortable: true,
+      style: { minWidth: '5rem', maxWidth: '6rem' },
+      bodyClassName: 'truncate max-w-[6rem]',
+    },
+    {
+      field: 'slug',
       header: 'Slug',
+      sortable: true,
       body: (rowData) => rowData.slug || '-',
-      style: { minWidth: '10rem' },
+      style: { minWidth: '7rem', maxWidth: '9rem' },
+      bodyClassName: 'truncate max-w-[9rem]',
     },
     {
       header: 'Status',
@@ -186,8 +212,19 @@ export default function QuickLinksPage() {
         totalRecords={totalRecords}
         first={lazyParams.first}
         rows={lazyParams.rows}
+        sortField={lazyParams.sortField}
+        sortOrder={lazyParams.sortOrder}
         onPage={(event) =>
           setLazyParams((params) => ({ ...params, first: event.first, rows: event.rows, page: event.page + 1 }))
+        }
+        onSort={(event) =>
+          setLazyParams((params) => ({
+            ...params,
+            sortField: event.sortField,
+            sortOrder: event.sortOrder,
+            first: 0,
+            page: 1,
+          }))
         }
         headerTitle="All Quick Links"
         showSearch

@@ -47,7 +47,7 @@ export default function Left() {
       ],
     },
     { label: "Administration", href: "/admin/administration", icon: "pi pi-briefcase" },
-    { label: "Infrastructure Facilities ", href: "/admin/infrastructure-facilities ", icon: "pi pi-database" },
+    { label: "Infrastructure Facilities", href: "/admin/infrastructure-facilities", icon: "pi pi-database" },
     { label: "All Staff", href: "/admin/all-staff", icon: "pi pi-id-card" },
     { label: "College Publication", href: "/admin/college-publication", icon: "pi pi-book" },
     { label: "Alumni", href: "/admin/alumni", icon: "pi pi-id-card" },

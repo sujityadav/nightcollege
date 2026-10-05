@@ -1,4 +1,5 @@
 'use client';
+
 import React, { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import axios from 'axios';
@@ -8,19 +9,24 @@ import { ConfirmDialog } from 'primereact/confirmdialog';
 import { InputSwitch } from 'primereact/inputswitch';
 import { usePageBreadcrumbs } from '@/app/hooks/usePageBreadcrumbs';
 import CommonDataTable from '@/app/components/common/DataTable';
-import { getFirstPhotoUrl } from '@/app/components/common/MediaUpload';
+import {
+  getFirstImageFromAttachments,
+  hasAttachments,
+} from '@/app/components/common/MediaUpload';
 import { getDefaultListYearFilterValue } from '@/app/lib/listYearFilterOptions';
 
-export default function EventList() {
+const DATA_KEY = 'InfrastructureFacilitiesData';
+
+export default function InfrastructureFacilitiesList() {
   usePageBreadcrumbs({
-    pageTitle: 'Events Management',
+    pageTitle: 'Infrastructure Facilities',
     pathLabels: {
       '/admin': 'Dashboard',
-      '/admin/events': 'Events',
+      '/admin/infrastructure-facilities': 'Infrastructure Facilities',
     },
   });
 
-  const [eventsData, setEventsData] = useState([]);
+  const [rows, setRows] = useState([]);
   const [search, setSearch] = useState('');
   const [yearFilter, setYearFilter] = useState(() => getDefaultListYearFilterValue());
   const [loading, setLoading] = useState(false);
@@ -33,15 +39,14 @@ export default function EventList() {
     sortOrder: -1,
   });
   const toast = useRef(null);
-
   const [deleteDialogVisible, setDeleteDialogVisible] = useState(false);
   const [deleteId, setDeleteId] = useState(null);
   const [updatingStatusId, setUpdatingStatusId] = useState(null);
 
-  const fetchEventList = async () => {
+  const fetchList = async () => {
     setLoading(true);
     try {
-      const response = await axios.get('/api/events', {
+      const response = await axios.get('/api/infrastructure-facilities', {
         params: {
           search,
           year: yearFilter || undefined,
@@ -52,14 +57,14 @@ export default function EventList() {
         },
       });
       if (response?.data?.success) {
-        setEventsData(response.data.data);
+        setRows(response.data.data);
         setTotalRecords(response.data.totalRecords);
       }
-    } catch (error) {
+    } catch {
       toast.current?.show({
         severity: 'error',
         summary: 'Error',
-        detail: 'Failed to fetch events',
+        detail: 'Failed to fetch infrastructure facilities',
       });
     } finally {
       setLoading(false);
@@ -67,7 +72,7 @@ export default function EventList() {
   };
 
   useEffect(() => {
-    fetchEventList();
+    fetchList();
   }, [lazyParams, search, yearFilter]);
 
   const formatDate = (dateString) => {
@@ -79,67 +84,65 @@ export default function EventList() {
     }
   };
 
-  const formatCategories = (value) => {
-    if (!value) return '-';
-    if (Array.isArray(value)) return value.filter(Boolean).join(', ') || '-';
-    return String(value);
-  };
+  const fileTemplate = (rowData) => {
+    const attachments = rowData?.[DATA_KEY]?.data?.attachments;
+    const imageUrl = getFirstImageFromAttachments(attachments);
 
-  const imageTemplate = (rowData) => {
-    const imageUrl = getFirstPhotoUrl(rowData?.Eventdata?.data);
-
-    if (!imageUrl) {
-      return <span className="text-gray-400 text-sm">No Image</span>;
+    if (imageUrl) {
+      return (
+        <img
+          src={imageUrl}
+          alt={rowData?.[DATA_KEY]?.data?.title || 'Infrastructure'}
+          className="h-14 w-24 rounded object-cover"
+        />
+      );
     }
 
-    return (
-      <img
-        src={imageUrl}
-        alt={rowData?.Eventdata?.data?.title || 'Event'}
-        className="h-14 w-24 rounded object-cover"
-      />
-    );
+    if (hasAttachments(attachments)) {
+      return (
+        <div
+          className="flex h-14 w-24 items-center justify-center rounded border border-[#EAEDF3] bg-[#F9FAFB] text-primarycolor"
+          title="File attached"
+        >
+          <i className="pi pi-file text-[22px]" />
+        </div>
+      );
+    }
+
+    return <span className="text-gray-400 text-sm">No File</span>;
   };
 
   const handleDelete = async (id) => {
     try {
-      await axios.delete(`/api/events/${id}`);
+      await axios.delete(`/api/infrastructure-facilities/${id}`);
       toast.current?.show({
         severity: 'success',
         summary: 'Success',
-        detail: 'Event deleted successfully',
+        detail: 'Record deleted successfully',
       });
-      fetchEventList();
-    } catch (error) {
+      fetchList();
+    } catch {
       toast.current?.show({
         severity: 'error',
         summary: 'Error',
-        detail: 'Failed to delete event',
+        detail: 'Failed to delete record',
       });
     }
     setDeleteDialogVisible(false);
   };
 
-  const confirmDelete = (id) => {
-    setDeleteId(id);
-    setDeleteDialogVisible(true);
-  };
-
   const handleStatusToggle = async (rowData, checked) => {
     const newStatus = checked ? 1 : 0;
-    const previousStatus = Number(rowData?.Eventdata?.data?.status ?? 0);
+    const previousStatus = Number(rowData?.[DATA_KEY]?.data?.status ?? 0);
 
-    setEventsData((prev) =>
+    setRows((prev) =>
       prev.map((item) =>
         item._id === rowData._id
           ? {
               ...item,
-              Eventdata: {
-                ...item.Eventdata,
-                data: {
-                  ...item.Eventdata?.data,
-                  status: newStatus,
-                },
+              [DATA_KEY]: {
+                ...item[DATA_KEY],
+                data: { ...item[DATA_KEY]?.data, status: newStatus },
               },
             }
           : item
@@ -148,113 +151,62 @@ export default function EventList() {
     setUpdatingStatusId(rowData._id);
 
     try {
-      const response = await axios.put(`/api/events/${rowData._id}`, {
-        data: {
-          ...rowData.Eventdata?.data,
-          status: newStatus,
-        },
+      const response = await axios.put(`/api/infrastructure-facilities/${rowData._id}`, {
+        data: { ...rowData[DATA_KEY]?.data, status: newStatus },
       });
-
-      if (!response?.data?.success) {
-        throw new Error(response?.data?.message || 'Failed to update status');
-      }
-
+      if (!response?.data?.success) throw new Error();
       toast.current?.show({
         severity: 'success',
         summary: 'Status updated',
-        detail: `Event marked as ${newStatus === 1 ? 'active' : 'inactive'}`,
+        detail: `Marked as ${newStatus === 1 ? 'active' : 'inactive'}`,
         life: 2500,
       });
-    } catch (error) {
-      setEventsData((prev) =>
+    } catch {
+      setRows((prev) =>
         prev.map((item) =>
           item._id === rowData._id
             ? {
                 ...item,
-                Eventdata: {
-                  ...item.Eventdata,
-                  data: {
-                    ...item.Eventdata?.data,
-                    status: previousStatus,
-                  },
+                [DATA_KEY]: {
+                  ...item[DATA_KEY],
+                  data: { ...item[DATA_KEY]?.data, status: previousStatus },
                 },
               }
             : item
         )
       );
-      toast.current?.show({
-        severity: 'error',
-        summary: 'Error',
-        detail: 'Failed to update status',
-        life: 3000,
-      });
+      toast.current?.show({ severity: 'error', summary: 'Error', detail: 'Failed to update status', life: 3000 });
     } finally {
       setUpdatingStatusId(null);
     }
   };
 
-  // Match rebranding action icons (edit + delete)
-  const actionTemplate = (rowData) => (
-    <div className="flex justify-center items-center gap-4">
-      <Link
-        href={`/admin/events/add-events?id=${rowData._id}`}
-        className="leading-none"
-        title="Edit"
-      >
-        <i className="pi pi-pen-to-square text-[18px]" />
-      </Link>
-      <button
-        type="button"
-        onClick={() => confirmDelete(rowData._id)}
-        className="leading-none bg-transparent border-0 cursor-pointer text-red-500 p-0"
-        title="Delete"
-      >
-        <i className="pi pi-trash text-[18px]" />
-      </button>
-    </div>
-  );
-
   const columns = [
+    { header: 'File', body: fileTemplate, style: { minWidth: '7rem' } },
     {
-      header: 'Image',
-      body: imageTemplate,
-      style: { minWidth: '7rem' },
-    },
-    {
-      field: 'Eventdata.data.title',
+      field: 'InfrastructureFacilitiesData.data.title',
       header: 'Title',
       sortable: true,
       style: { minWidth: '10rem' },
     },
     {
-      field: 'Eventdata.data.smallDescription',
+      field: 'InfrastructureFacilitiesData.data.smallDescription',
       header: 'Description',
       sortable: true,
       style: { minWidth: '12rem' },
     },
     {
-      header: 'Category',
-      body: (rowData) => formatCategories(rowData?.Eventdata?.data?.category),
-      style: { minWidth: '10rem' },
-    },
-    {
-      field: 'Eventdata.data.location',
-      header: 'Location',
-      sortable: true,
-      style: { minWidth: '8rem' },
-    },
-    {
       header: 'From',
       sortable: true,
-      sortField: 'Eventdata.data.fromDate',
-      body: (rowData) => formatDate(rowData?.Eventdata?.data?.fromDate),
+      sortField: 'InfrastructureFacilitiesData.data.fromDate',
+      body: (rowData) => formatDate(rowData?.[DATA_KEY]?.data?.fromDate),
       style: { minWidth: '8rem' },
     },
     {
       header: 'To',
       sortable: true,
-      sortField: 'Eventdata.data.toDate',
-      body: (rowData) => formatDate(rowData?.Eventdata?.data?.toDate),
+      sortField: 'InfrastructureFacilitiesData.data.toDate',
+      body: (rowData) => formatDate(rowData?.[DATA_KEY]?.data?.toDate),
       style: { minWidth: '8rem' },
     },
     {
@@ -268,7 +220,7 @@ export default function EventList() {
       header: 'Status',
       body: (rowData) => (
         <InputSwitch
-          checked={Number(rowData?.Eventdata?.data?.status) === 1}
+          checked={Number(rowData?.[DATA_KEY]?.data?.status) === 1}
           disabled={updatingStatusId === rowData._id}
           onChange={(event) => handleStatusToggle(rowData, event.value)}
         />
@@ -278,7 +230,28 @@ export default function EventList() {
     },
     {
       header: 'Action',
-      body: actionTemplate,
+      body: (rowData) => (
+        <div className="flex justify-center items-center gap-4">
+          <Link
+            href={`/admin/infrastructure-facilities/add?id=${rowData._id}`}
+            className="leading-none"
+            title="Edit"
+          >
+            <i className="pi pi-pen-to-square text-[18px]" />
+          </Link>
+          <button
+            type="button"
+            onClick={() => {
+              setDeleteId(rowData._id);
+              setDeleteDialogVisible(true);
+            }}
+            className="leading-none bg-transparent border-0 cursor-pointer text-red-500 p-0"
+            title="Delete"
+          >
+            <i className="pi pi-trash text-[18px]" />
+          </button>
+        </div>
+      ),
       align: 'center',
       style: { minWidth: '6rem', background: '#fbf7dc' },
     },
@@ -290,7 +263,7 @@ export default function EventList() {
       <ConfirmDialog
         visible={deleteDialogVisible}
         onHide={() => setDeleteDialogVisible(false)}
-        message="Are you sure you want to delete this event?"
+        message="Are you sure you want to delete this record?"
         header="Confirmation"
         icon="pi pi-exclamation-triangle"
         accept={() => handleDelete(deleteId)}
@@ -300,17 +273,17 @@ export default function EventList() {
       />
 
       <div className="flex justify-between items-center mb-5">
-        <h2 className="text-[#19212A] text-[22px] font-[700]">Events</h2>
+        <h2 className="text-[#19212A] text-[22px] font-[700]">Infrastructure Facilities</h2>
         <Link
-          href="/admin/events/add-events"
+          href="/admin/infrastructure-facilities/add"
           className="text-white bg-primarycolor px-4 py-2 flex gap-2 items-center"
         >
-          <i className="pi pi-plus text-[14px]" /> Add Event
+          <i className="pi pi-plus text-[14px]" /> Add
         </Link>
       </div>
 
       <CommonDataTable
-        value={eventsData}
+        value={rows}
         columns={columns}
         loading={loading}
         totalRecords={totalRecords}
@@ -335,8 +308,8 @@ export default function EventList() {
             page: 1,
           }));
         }}
-        emptyMessage="No events found."
-        headerTitle="All Events"
+        emptyMessage="No records found."
+        headerTitle="All Infrastructure Facilities"
         showSearch
         searchPlaceholder="Search here.."
         searchValue={search}

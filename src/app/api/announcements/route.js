@@ -11,6 +11,13 @@ export async function GET(req) {
     const year = searchParams.get("year") || "";
     const page = Number(searchParams.get("page") || 1);
     const limit = Number(searchParams.get("limit") || 10);
+    const sortField = searchParams.get("sortField");
+    const sortOrder = searchParams.get("sortOrder");
+    const sortDir = Number(sortOrder) === -1 ? -1 : 1;
+
+    const allowedSortFields = ["title", "sortNo", "description"];
+    const sortKey = allowedSortFields.includes(sortField) ? sortField : "sortNo";
+
     let query = search ? { $or: [
       { title: { $regex: search, $options: "i" } },
       { description: { $regex: search, $options: "i" } },
@@ -21,7 +28,10 @@ export async function GET(req) {
       query = mergeQueriesWithAnd(query, yearFilter);
     }
     const total = await Announcement.countDocuments(query);
-    const data = await Announcement.find(query).sort({ sortNo: 1, createdAt: -1 }).skip((page - 1) * limit).limit(limit);
+    const data = await Announcement.find(query)
+      .sort({ [sortKey]: sortDir })
+      .skip((page - 1) * limit)
+      .limit(limit);
     return NextResponse.json({ success: true, data, total });
   } catch (error) {
     return NextResponse.json({ success: false, message: error.message }, { status: 500 });

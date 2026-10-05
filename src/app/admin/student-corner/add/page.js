@@ -13,6 +13,7 @@ import { Toast } from 'primereact/toast';
 import TextEditor from '@/app/components/common/editor';
 import MediaUpload, {
   DEFAULT_MAX_MEDIA_SIZE_MB,
+  detectMediaType,
   uploadMediaFile,
 } from '@/app/components/common/MediaUpload';
 import { usePageBreadcrumbs } from '@/app/hooks/usePageBreadcrumbs';
@@ -33,6 +34,7 @@ export default function StudentCornerFormPage() {
   const [previewUrl, setPreviewUrl] = useState('');
   const [fileName, setFileName] = useState('');
   const [mediaError, setMediaError] = useState('');
+  const [mediaType, setMediaType] = useState('Photo');
   const [status, setStatus] = useState(true);
   const [loading, setLoading] = useState(false);
   const toast = useRef(null);
@@ -88,6 +90,7 @@ export default function StudentCornerFormPage() {
         setMasterYearId(item.masterYearId?._id || item.masterYearId || '');
         setPreviewUrl(item.fileUrl || '');
         setFileName(item.fileName || '');
+        setMediaType(detectMediaType(item.fileUrl || '', { allowAllFiles: true }));
         setMediaFile(null);
         setStatus(item.status ?? true);
       } catch {
@@ -105,10 +108,11 @@ export default function StudentCornerFormPage() {
     loadItem();
   }, [id, reset, setValue]);
 
-  const handleMediaChange = ({ file, previewUrl: nextPreview }) => {
+  const handleMediaChange = ({ file, previewUrl: nextPreview, mediaType: nextType }) => {
     setMediaFile(file);
     setPreviewUrl(nextPreview);
     if (file?.name) setFileName(file.name);
+    if (nextType) setMediaType(nextType);
     setMediaError('');
   };
 
@@ -116,6 +120,7 @@ export default function StudentCornerFormPage() {
     setMediaFile(null);
     setPreviewUrl('');
     setFileName('');
+    setMediaType('Photo');
     setMediaError('');
   };
 
@@ -242,10 +247,12 @@ export default function StudentCornerFormPage() {
           <MediaUpload
             required
             label="File Upload"
-            allowVideo={false}
+            allowAllFiles
             maxSizeMB={DEFAULT_MAX_MEDIA_SIZE_MB}
             previewUrl={previewUrl}
-            mediaType="Photo"
+            mediaType={mediaType}
+            file={mediaFile}
+            fileName={fileName}
             error={mediaError}
             onChange={handleMediaChange}
             onClear={handleMediaClear}

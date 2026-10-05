@@ -57,6 +57,12 @@ export async function GET(req) {
     const search = searchParams.get('search') || '';
     const page = Number(searchParams.get('page') || 1);
     const limit = Number(searchParams.get('limit') || 10);
+    const sortField = searchParams.get('sortField');
+    const sortOrder = searchParams.get('sortOrder');
+    const sortDir = Number(sortOrder) === -1 ? -1 : 1;
+
+    const allowedSortFields = ['title', 'sortOrder', 'type', 'slug'];
+    const sortKey = allowedSortFields.includes(sortField) ? sortField : null;
 
     const query = search
       ? {
@@ -69,8 +75,9 @@ export async function GET(req) {
       : {};
 
     const total = await QuickLink.countDocuments(query);
+    const sort = sortKey ? { [sortKey]: sortDir } : { sortOrder: 1, createdAt: -1 };
     const data = await QuickLink.find(query)
-      .sort({ sortOrder: 1, createdAt: -1 })
+      .sort(sort)
       .skip((page - 1) * limit)
       .limit(limit);
 

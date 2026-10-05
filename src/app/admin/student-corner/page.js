@@ -31,16 +31,23 @@ export default function StudentCornerPage() {
   const [loading, setLoading] = useState(false);
   const [updatingStatusId, setUpdatingStatusId] = useState(null);
   const [totalRecords, setTotalRecords] = useState(0);
-  const [lazyParams, setLazyParams] = useState({ first: 0, rows: 10, page: 1, search: '' });
+  const [lazyParams, setLazyParams] = useState({
+    first: 0,
+    rows: 10,
+    page: 1,
+    search: '',
+    sortField: 'sortOrder',
+    sortOrder: 1,
+  });
   const [filePreview, setFilePreview] = useState(null);
   const toast = useRef(null);
 
-  const openFilePreview = (rowData) => {
-    if (!rowData?.fileUrl) return;
+  const openImagePreview = (rowData) => {
+    const fileUrl = rowData?.fileUrl;
+    if (!fileUrl || !isPreviewableImageUrl(fileUrl)) return;
     setFilePreview({
-      url: rowData.fileUrl,
-      title: rowData.title || rowData.fileName || 'File preview',
-      isImage: isPreviewableImageUrl(rowData.fileUrl),
+      url: fileUrl,
+      title: rowData.title || rowData.fileName || 'Image preview',
     });
   };
 
@@ -55,9 +62,9 @@ export default function StudentCornerPage() {
       return (
         <button
           type="button"
-          onClick={() => openFilePreview(rowData)}
+          onClick={() => openImagePreview(rowData)}
           className="block cursor-pointer border-0 bg-transparent p-0"
-          title="Preview file"
+          title="Preview image"
         >
           <img
             src={fileUrl}
@@ -69,14 +76,13 @@ export default function StudentCornerPage() {
     }
 
     return (
-      <button
-        type="button"
-        onClick={() => openFilePreview(rowData)}
-        className="flex h-14 w-24 cursor-pointer items-center justify-center rounded border border-[#EAEDF3] bg-[#F9FAFB] text-primarycolor"
-        title="Preview file"
+      <div
+        className="flex h-14 w-24 items-center justify-center rounded border border-[#EAEDF3] bg-[#F9FAFB] text-primarycolor"
+        title="File attached"
+        aria-hidden
       >
         <i className="pi pi-file text-[22px]" />
-      </button>
+      </div>
     );
   };
 
@@ -93,6 +99,8 @@ export default function StudentCornerPage() {
           page: lazyParams.page,
           limit: lazyParams.rows,
           search: lazyParams.search,
+          sortField: lazyParams.sortField,
+          sortOrder: lazyParams.sortOrder,
         },
       });
       setData(response.data.data || []);
@@ -107,7 +115,7 @@ export default function StudentCornerPage() {
     } finally {
       setLoading(false);
     }
-  }, [lazyParams.page, lazyParams.rows, lazyParams.search]);
+  }, [lazyParams.page, lazyParams.rows, lazyParams.search, lazyParams.sortField, lazyParams.sortOrder]);
 
   useEffect(() => {
     fetchData();
@@ -171,9 +179,11 @@ export default function StudentCornerPage() {
       body: filePreviewTemplate,
       style: { minWidth: '7rem' },
     },
-    { field: 'title', header: 'Title', style: { minWidth: '12rem' } },
+    { field: 'title', header: 'Title', sortable: true, style: { minWidth: '12rem' } },
     {
+      field: 'description',
       header: 'Description',
+      sortable: true,
       body: (rowData) => (
         <span>{rowData.description?.replace(/<[^>]*>/g, '').slice(0, 120) || '-'}</span>
       ),
@@ -181,12 +191,15 @@ export default function StudentCornerPage() {
     },
     {
       header: 'Year',
+      sortable: true,
+      sortField: 'year',
       body: (rowData) => formatMasterYearLabel(rowData.masterYearId),
       style: { minWidth: '8rem' },
     },
     {
       header: 'Sort Order',
       field: 'sortOrder',
+      sortable: true,
       style: { minWidth: '6rem' },
       align: 'center',
     },
@@ -236,19 +249,11 @@ export default function StudentCornerPage() {
         className="max-w-[90vw]"
         style={{ width: '42rem' }}
       >
-        {filePreview?.isImage ? (
-          <img
-            src={filePreview.url}
-            alt={filePreview.title}
-            className="mx-auto max-h-[70vh] max-w-full object-contain"
-          />
-        ) : (
-          <iframe
-            src={filePreview?.url}
-            title={filePreview?.title || 'File preview'}
-            className="h-[70vh] w-full border-0"
-          />
-        )}
+        <img
+          src={filePreview?.url}
+          alt={filePreview?.title || 'Image preview'}
+          className="mx-auto max-h-[70vh] max-w-full object-contain"
+        />
       </Dialog>
       <div className="flex justify-between mb-5">
         <h2 className="text-[#19212A] text-[22px] font-[700]">Student Corner</h2>
@@ -263,8 +268,19 @@ export default function StudentCornerPage() {
         totalRecords={totalRecords}
         first={lazyParams.first}
         rows={lazyParams.rows}
+        sortField={lazyParams.sortField}
+        sortOrder={lazyParams.sortOrder}
         onPage={(event) =>
           setLazyParams((params) => ({ ...params, first: event.first, rows: event.rows, page: event.page + 1 }))
+        }
+        onSort={(event) =>
+          setLazyParams((params) => ({
+            ...params,
+            sortField: event.sortField,
+            sortOrder: event.sortOrder,
+            first: 0,
+            page: 1,
+          }))
         }
         headerTitle="All Student Corner Items"
         showSearch
