@@ -40,7 +40,7 @@ export default function CampusTour() {
 
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-5 3xl:grid-cols-5 items-start mt-5">
           {tourImages.map((item) => (
-            <div key={item.id} className="group">
+            <Link key={item.id} href="/images-gallery" className="group" aria-label="View images gallery">
               <div className="img-block relative overflow-hidden aspect-[4/3] w-full">
                 <Image
                   src={item.image}
@@ -49,12 +49,12 @@ export default function CampusTour() {
                   className="object-cover transition-transform duration-300 group-hover:scale-105"
                 />
               </div>
-            </div>
+            </Link>
           ))}
         </div>
 
                    <div className="mt-4 flex justify-center">
-                      <Link href="" className="my-button shadow-2xl px20 py10 bg-primarycolor rounded-sm cursor-pointer relative overflow-hidden">
+                      <Link href="/images-gallery" className="my-button shadow-2xl px20 py10 bg-primarycolor rounded-sm cursor-pointer relative overflow-hidden">
               <span className="text-center text-white font15 font-[500] my-auto">View More</span>
             </Link>
                     </div>
