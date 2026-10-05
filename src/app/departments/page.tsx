@@ -14,7 +14,11 @@ export default function Departments() {
   ];
   return (
     <>
-      <SubBanner title="Department of Marathi" breadcrumbData={breadcrumbData} />
+      <SubBanner
+        title="Department of Marathi"
+        subtitle="Language  |  Literature  |  Culture  |  Social Awareness"
+        breadcrumbData={breadcrumbData}
+      />
       <main className="mb-5">
         <div className="px300 grid grid-cols-1 gap-6 lg:grid-cols-[280px_minmax(0,1fr)] xl:grid-cols-[310px_minmax(0,1fr)] lg:gap-8">
           <DepartmentSidebar activeTab={activeTab} onTabChange={setActiveTab} />
