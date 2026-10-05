@@ -14,14 +14,14 @@ export default function Footer() {
         {/* Top Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 border-b border-white/30 pb-10">
           {/* Logo & Contact */}
-          <div className='flex gap-3'>
-            <div>
-            <Image src="/images/whitelogo.png" alt="University Logo" width={200} height={200} />
+          <div className='flex flex-col gap-5 sm:flex-row sm:gap-3'>
+            <div className="shrink-0">
+            <Image src="/images/whitelogo.png" alt="University Logo" width={200} height={200} className="h-auto w-[150px] sm:w-[200px]" />
 
             </div>
-           <div>
+           <div className="min-w-0">
               
-            <h1 className="text-2xl font-bold uppercase">Night College of Arts & Commerce, Ichalkaranji</h1>
+            <h1 className="text-xl font-bold uppercase sm:text-2xl">Night College of Arts & Commerce, Ichalkaranji</h1>
             <div className="mt-4 text-sm leading-6">
               <p><i className="pi pi-map-marker mr-2" />18/324 Industrial Estate Ichalkaranji </p>
               <p><i className="pi pi-phone mr-2" />0230(2437666)</p>

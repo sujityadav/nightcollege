@@ -68,7 +68,7 @@ export default function DepartmentEvents() {
         </div>
 
         {/* Grid layout */}
-        <div className="grid lg:gap:2 xl:gap-3 3xl:gap-6 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 xl:gap-5 3xl:gap-6">
           {events.map((event) => (
             <div key={event.id} className="group cursor-pointer border">
               {/* Image Block */}
@@ -78,7 +78,7 @@ export default function DepartmentEvents() {
                   width={400}
                   height={280}
                   alt="event"
-                  className="w-full 3xl:w-full transition-transform duration-300 group-hover:scale-105"
+                  className="h-auto w-full transition-transform duration-300 group-hover:scale-105"
                 />
                  <div className="absolute top-[10px] right-3 bg-primarycolor rounded-md p-1 text-center text-white font14 px-3">
                       <div className="flex gap-1">

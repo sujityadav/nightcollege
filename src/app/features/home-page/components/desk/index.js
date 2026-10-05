@@ -25,19 +25,19 @@ export default function Desk() {
             </h1>
           </div>
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-          <div className='flex flex-1 gap-5'>
-            <div className='w-full'>
+        <div className="grid grid-cols-1 gap-8 lg:grid-cols-2 lg:gap-6">
+          <div className='flex flex-col gap-5 sm:flex-row'>
+            <div className='shrink-0'>
                <Image
                               src="/images/profileid.jpg"
                               width={205}
                               height={200}
                               alt="aboutus"
-                              className='rounded-md border-2  shadow-lg'
+                              className='h-auto w-full max-w-[205px] rounded-md border-2 shadow-lg sm:w-[205px]'
                             />
               
             </div>
-            <div>
+            <div className="min-w-0">
               <h4 className='font-[500] font20 text-[#1B212F] leading-[140%]'>I/C Principal Dr.Virupaksh R.Khanaj</h4>
                <div className='font-[700] text-primarycolor leading-none'>Our Principal</div>
               <p className='font-[400] font15 mt-3 leading-[120%] text-[#5a5a5a]'>I feel great pleasure to introduce Deshbhakt Babasaheb Bhahusaheb Khanjire Shikshan Sansth Night College of Arts & Commerce, Ichalkaranji as Co-educational renowned college in Maharashtra which was established in 1983. In today life academic excellence is most important.</p>
@@ -46,18 +46,18 @@ export default function Desk() {
             </div>
           </div>
 
-           <div className='flex flex-1 gap-5'>
-            <div className='w-full'>
+           <div className='flex flex-col gap-5 sm:flex-row'>
+            <div className='shrink-0'>
                <Image
                               src="/images/profileid.jpg"
                               width={205}
                               height={200}
                               alt="aboutus"
-                              className='rounded-md border-2   shadow-lg'
+                              className='h-auto w-full max-w-[205px] rounded-md border-2 shadow-lg sm:w-[205px]'
                             />
               
             </div>
-            <div>
+            <div className="min-w-0">
               <h4 className='font-[500] font20 text-[#1B212F] leading-[140%]'>I/C Principal Dr.Virupaksh R.Khanaj</h4>
               <div className='font-[700] text-primarycolor leading-none'>Our Chairperson</div>
               <p className='font-[400] font15 mt-3 leading-[120%] text-[#5a5a5a]'>I feel great pleasure to introduce Deshbhakt Babasaheb Bhahusaheb Khanjire Shikshan Sansth Night College of Arts & Commerce, Ichalkaranji as Co-educational renowned college in Maharashtra which was established in 1983. In today life academic excellence is most important.</p>

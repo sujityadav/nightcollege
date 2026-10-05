@@ -187,7 +187,8 @@
   transform: scale(1.3);
 }
 
-@media screen and (max-width: 970px) {
+/* The complete navigation does not fit reliably on tablet-sized desktops. */
+@media screen and (max-width: 1199px) {
   .mega-box .content 
   {
     width: 100%;

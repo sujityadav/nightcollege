@@ -29,10 +29,10 @@ export default function QuickLinks() {
             </h1>
           </div>
         </div>
-        <div className='overflow-x-auto overflow-auto h-[280px] px-5 text-[#5a5a5a] style-2'>
-          <div className="flex  gap-[40px] font15 quicklink">
+        <div className='px-2 text-[#5a5a5a] sm:px-5'>
+          <div className="grid grid-cols-1 gap-6 font15 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 xl:gap-10 quicklink">
          
-              <ul className="list-disc space-y-3 w-[250px]">
+              <ul className="list-disc space-y-3 break-words sm:pl-5">
                 <li><Link href=''>College at a Glance </Link></li>
                 <li><Link href=''>Goals & Mission </Link></li>
                 <li><Link href=''>Admission </Link></li>
@@ -41,7 +41,7 @@ export default function QuickLinks() {
                 <li><Link href=''>Library </Link></li>
                 <li><Link href=''>Cultural Activities </Link></li>
               </ul>
-               <ul className="list-disc space-y-3 w-[250px]">
+               <ul className="list-disc space-y-3 break-words sm:pl-5">
                 <li><Link href=''>Anti Ragging Committee</Link></li>
                 <li><Link href=''>Anti- Sexual Harassment Cell </Link></li>
                 <li><Link href=''>RTI </Link></li>
@@ -50,7 +50,7 @@ export default function QuickLinks() {
                 <li><Link href=''>Photo Gallery </Link></li>
                
               </ul>
-               <ul className="list-disc space-y-3 w-[250px]">
+               <ul className="list-disc space-y-3 break-words sm:pl-5">
                 <li><Link href=''>College at a Glance </Link></li>
                 <li><Link href=''>Goals & Mission </Link></li>
                 <li><Link href=''>Admission </Link></li>
@@ -59,7 +59,7 @@ export default function QuickLinks() {
                 <li><Link href=''>Library </Link></li>
                 <li><Link href=''>Cultural Activities </Link></li>
               </ul>
-               <ul className="list-disc space-y-3 w-[250px]">
+               <ul className="list-disc space-y-3 break-words sm:pl-5">
                 <li><Link href=''>College at a Glance </Link></li>
                 <li><Link href=''>Goals & Mission </Link></li>
                 <li><Link href=''>Admission </Link></li>
@@ -68,7 +68,7 @@ export default function QuickLinks() {
                 <li><Link href=''>Library </Link></li>
                 <li><Link href=''>Cultural Activities </Link></li>
               </ul>
-               <ul className="list-disc space-y-3 w-[250px]">
+               <ul className="list-disc space-y-3 break-words sm:pl-5">
                 <li><Link href=''>College at a Glance </Link></li>
                 <li><Link href=''>Goals & Mission </Link></li>
                 <li><Link href=''>Admission </Link></li>

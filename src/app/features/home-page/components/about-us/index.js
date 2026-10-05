@@ -43,7 +43,7 @@ export default function AboutUs() {
   return (
     <div className="w-full bg-[#f8f8f8] py50 about_us_bg">
       <div className="px300">
-        <div className="grid grid-cols-1 md:grid-cols-2">
+        <div className="grid grid-cols-1 gap-8 md:grid-cols-2 md:gap-10">
           <div className={roboto_slab.className}>
             <h2 className="font-[600] font26 text-primarycolor leading-[140%]">
               A Leading and Night College <br />
@@ -57,12 +57,12 @@ export default function AboutUs() {
                 width={500}
                 height={600}
                 alt="aboutus"
-                className='rounded-md border  shadow-lg'
+                className='h-auto w-full max-w-[500px] rounded-md border shadow-lg'
               />
             </div>
           </div>
 
-          <div>
+          <div className="md:pt-1">
             <p className="font-[400] font15 text-[#4d4d4d]">
               The Institute has come into existence as an essential need of the
               neighborhood society, specially working community in 1983.
@@ -78,7 +78,7 @@ export default function AboutUs() {
               the Re-assessment & accreditation by NAAC in Aug.2016.
             </p>
 
-            <div className="mt-10 divide-y divide-gray-200 w-full xl:w-[400px] 3xl:w-[26.042vw]">
+            <div className="mt-7 w-full divide-y divide-gray-200 sm:mt-10 xl:w-[400px] 3xl:w-[26.042vw]">
               {items.map((item, index) => (
                 <div key={item.id} className="flex gap-3 items-center py-3">
                   <div>

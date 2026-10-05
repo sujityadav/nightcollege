@@ -129,7 +129,7 @@ export default function Events() {
         <div className="">
           <Slider {...settings}>
             {events.map((event) => (
-              <div key={event.id} className="px20">
+              <div key={event.id} className="px-2 sm:px-3 lg:px-4">
                 <div className="group cursor-pointer">
                   {/* Image Block */}
                   <div className="img-block relative overflow-hidden">
@@ -138,7 +138,7 @@ export default function Events() {
                       width={400}
                       height={280}
                       alt="event"
-                      className="w-full 3xl:w-full transition-transform duration-300 group-hover:scale-105"
+                      className="h-auto w-full transition-transform duration-300 group-hover:scale-105"
                     />
                     <div className="absolute bottom-[10px] left-4 bg-primarycolor p-2 text-center text-white rounded-sm">
                       <div className="flex flex-col">

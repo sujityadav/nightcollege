@@ -43,15 +43,15 @@ export default function WebsitebannerComponent() {
       <Slider {...settings} className='p-0 m-0'>
         {slides.map((slide, index) => (
           <div key={index}  className='p-0 m-0'>
-            <div className="relative h-[300px] lg:h-[450px] xl:h-[500px] 3xl:h-[28.646vw] w-full overflow-hidden">
+            <div className="relative h-[240px] sm:h-[300px] lg:h-[450px] xl:h-[500px] 3xl:h-[28.646vw] w-full overflow-hidden">
               <img
                 src={slide.image}
                 alt={slide.title}
                 className="w-full h-full object-cover"
               />
-              <div className="absolute bottom-0 left-0 w-full bg-gradient-to-t from-black to-transparent text-white px-6 py-4 z-[9999]">
-                <h3 className="text-xl font-bold">{slide.title}</h3>
-                <p className="text-sm">{slide.description}</p>
+              <div className="absolute bottom-0 left-0 z-[2] w-full bg-gradient-to-t from-black to-transparent px-4 py-4 text-white sm:px-6">
+                <h3 className="text-lg font-bold sm:text-xl">{slide.title}</h3>
+                <p className="text-xs sm:text-sm">{slide.description}</p>
               </div>
             </div>
           </div>
