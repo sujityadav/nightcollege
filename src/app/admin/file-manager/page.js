@@ -77,8 +77,10 @@ export default function FileManager() {
   const folderInput = useRef(null);
   const folderUploadQueueRef = useRef([]);
   const preferOtherFilesYear = useRef(false);
+  const selectedYearRef = useRef(null);
   const [years, setYears] = useState([]);
   const [selectedYearId, setSelectedYearId] = useState(null);
+  const [yearSelectionReady, setYearSelectionReady] = useState(false);
   const [section, setSection] = useState("files");
   const [items, setItems] = useState([]);
   const [breadcrumbsByYear, setBreadcrumbsByYear] = useState({});
@@ -174,23 +176,40 @@ export default function FileManager() {
   }, [menuItem]);
 
   const loadYears = useCallback(async () => {
-    const response = await axios.get("/api/file-manager/years");
-    const list = response.data.data || [];
-    setYears(list);
-    setSelectedYearId((current) => {
+    try {
+      const response = await axios.get("/api/file-manager/years");
+      const list = response.data.data || [];
+      const current = selectedYearRef.current;
+
+      let nextSelection = OTHER_FILES_YEAR;
       if (preferOtherFilesYear.current && current === OTHER_FILES_YEAR) {
-        return OTHER_FILES_YEAR;
+        nextSelection = OTHER_FILES_YEAR;
+      } else if (
+        current &&
+        current !== OTHER_FILES_YEAR &&
+        list.some((year) => year.name === current)
+      ) {
+        nextSelection = current;
+      } else {
+        const currentAcademicYear = list.find((year) => year.isCurrent);
+        nextSelection = currentAcademicYear?.name ?? OTHER_FILES_YEAR;
       }
-      if (current && current !== OTHER_FILES_YEAR && list.some((year) => year.name === current)) {
-        return current;
-      }
-      const currentAcademicYear = list.find((year) => year.isCurrent);
-      return currentAcademicYear?.name ?? OTHER_FILES_YEAR;
-    });
+
+      setYears(list);
+      setSelectedYearId(nextSelection);
+      selectedYearRef.current = nextSelection;
+    } catch {
+      setSelectedYearId(OTHER_FILES_YEAR);
+      selectedYearRef.current = OTHER_FILES_YEAR;
+      throw new Error("Unable to load years");
+    } finally {
+      setYearSelectionReady(true);
+    }
   }, []);
 
   const loadItems = useCallback(async () => {
     if (section === "years") return setItems([]);
+    if (!yearSelectionReady) return;
     setLoading(true);
     try {
       const response = await axios.get("/api/file-manager/nodes", {
@@ -222,7 +241,12 @@ export default function FileManager() {
     typeFilter,
     sortBy,
     sortOrder,
+    yearSelectionReady,
   ]);
+
+  useEffect(() => {
+    selectedYearRef.current = selectedYearId;
+  }, [selectedYearId]);
 
   useEffect(() => {
     loadYears().catch(() =>
@@ -262,6 +286,7 @@ export default function FileManager() {
 
   const chooseYear = (yearId) => {
     preferOtherFilesYear.current = yearId === OTHER_FILES_YEAR;
+    selectedYearRef.current = yearId;
     setSelectedYearId(yearId);
     setSection("files");
     setSearch("");
@@ -568,12 +593,13 @@ export default function FileManager() {
               </div>
               <div className="flex flex-wrap items-center gap-2">
                 <Dropdown
-                  value={selectedYearId ?? OTHER_FILES_YEAR}
+                  value={yearSelectionReady ? selectedYearId : null}
                   options={yearOptions}
                   optionLabel="label"
                   optionValue="value"
                   onChange={(event) => chooseYear(event.value)}
-                  placeholder="Select year"
+                  placeholder="Loading years…"
+                  disabled={!yearSelectionReady}
                   className="w-[180px]"
                 />
                 <Button
@@ -586,7 +612,7 @@ export default function FileManager() {
                     setDialogValue("");
                     setDialog({ type: "folder" });
                   }}
-                  disabled={!isBrowse}
+                  disabled={!isBrowse || !yearSelectionReady}
                 />
                 <Button
                   type="button"
@@ -594,7 +620,7 @@ export default function FileManager() {
                   icon="pi pi-upload"
                   className="border border-[#af251c] bg-primarycolor px-[14px] py-[8px] text-white rounded-none p-button-raised label:font-medium"
                   onClick={() => fileInput.current?.click()}
-                  disabled={!isBrowse}
+                  disabled={!isBrowse || !yearSelectionReady}
                 />
                 <Button
                   type="button"
@@ -605,7 +631,7 @@ export default function FileManager() {
                     folderUploadQueueRef.current = [];
                     folderInput.current?.click();
                   }}
-                  disabled={!isBrowse}
+                  disabled={!isBrowse || !yearSelectionReady}
                 />
               </div>
             </div>
@@ -709,9 +735,10 @@ export default function FileManager() {
                   ))}
                 </div>
               </div>
-            ) : loading ? (
+            ) : !yearSelectionReady || loading ? (
               <div className="flex h-60 items-center justify-center text-slate-400">
-                <i className="pi pi-spin pi-spinner mr-2" /> Loading files…
+                <i className="pi pi-spin pi-spinner mr-2" />
+                {!yearSelectionReady ? "Loading years…" : "Loading files…"}
               </div>
             ) : items.length === 0 ? (
               <div className="flex h-60 flex-col items-center justify-center text-center text-slate-500">
