@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import axios from 'axios';
-import SubBanner from '@/app/features/events/components/sub-banner';
+import SubBanner from '@/app/features/sub-banner';
 import 'suneditor/dist/css/suneditor.min.css';
 
 export default function QuickLinkContentPage() {

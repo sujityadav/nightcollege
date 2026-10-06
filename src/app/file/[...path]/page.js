@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import axios from 'axios';
-import SubBanner from '@/app/features/events/components/sub-banner';
+import SubBanner from '@/app/features/sub-banner';
 import { buildFileManagerViewApiPath } from '@/app/utils/fileManagerDocument';
 
 export default function FilePreviewPage() {
@@ -47,6 +47,7 @@ export default function FilePreviewPage() {
         <div className="px300 py-10 text-center text-[#6C768B]">Loading file...</div>
       </>
     );
+    
   }
 
   if (error || !fileData) {
