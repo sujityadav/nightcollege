@@ -9,10 +9,20 @@ import { ConfirmDialog, confirmDialog } from 'primereact/confirmdialog';
 import CommonDataTable from '@/app/components/common/DataTable';
 import { getDefaultListYearFilterValue } from '@/app/lib/listYearFilterOptions';
 
+const rowId = (rowData) => String(rowData?._id ?? '');
+
+function AnnouncementStatusSwitch({ rowData, onToggle }) {
+  return (
+    <InputSwitch
+      checked={rowData.status !== false}
+      onChange={(event) => onToggle(rowData, event.value)}
+    />
+  );
+}
+
 export default function AnnouncementsPage() {
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [updatingStatusId, setUpdatingStatusId] = useState(null);
   const [totalRecords, setTotalRecords] = useState(0);
   const [lazyParams, setLazyParams] = useState({
     first: 0,
@@ -24,6 +34,7 @@ export default function AnnouncementsPage() {
     sortOrder: 1,
   });
   const toast = useRef(null);
+  const statusUpdateInFlight = useRef(new Set());
 
   const fetchData = useCallback(async () => {
     setLoading(true);
@@ -63,14 +74,29 @@ export default function AnnouncementsPage() {
     fetchData();
   }, [fetchData]);
 
-  const handleStatusToggle = async (rowData, status) => {
+  const handleStatusToggle = useCallback(async (rowData, status) => {
+    const id = rowId(rowData);
+    if (!id || statusUpdateInFlight.current.has(id)) {
+      return;
+    }
+
     const previousStatus = rowData.status;
-    setData((items) => items.map((item) => (item._id === rowData._id ? { ...item, status } : item)));
-    setUpdatingStatusId(rowData._id);
+    statusUpdateInFlight.current.add(id);
+    setData((items) => items.map((item) => (rowId(item) === id ? { ...item, status } : item)));
 
     try {
-      const response = await axios.put(`/api/announcements/${rowData._id}`, { status });
+      const response = await axios.put(`/api/announcements/${id}`, { status });
       if (!response.data.success) throw new Error();
+
+      const updated = response.data.data;
+      if (updated) {
+        setData((items) =>
+          items.map((item) =>
+            rowId(item) === id ? { ...item, ...updated, _id: updated._id ?? item._id } : item
+          )
+        );
+      }
+
       toast.current?.show({
         severity: 'success',
         summary: 'Status updated',
@@ -79,13 +105,13 @@ export default function AnnouncementsPage() {
       });
     } catch {
       setData((items) =>
-        items.map((item) => (item._id === rowData._id ? { ...item, status: previousStatus } : item))
+        items.map((item) => (rowId(item) === id ? { ...item, status: previousStatus } : item))
       );
       toast.current?.show({ severity: 'error', summary: 'Error', detail: 'Could not update status', life: 3000 });
     } finally {
-      setUpdatingStatusId(null);
+      statusUpdateInFlight.current.delete(id);
     }
-  };
+  }, []);
 
   const deleteAnnouncement = async (id) => {
     try {
@@ -134,11 +160,7 @@ export default function AnnouncementsPage() {
     {
       header: 'Status',
       body: (rowData) => (
-        <InputSwitch
-          checked={Boolean(rowData.status)}
-          disabled={updatingStatusId === rowData._id}
-          onChange={(event) => handleStatusToggle(rowData, event.value)}
-        />
+        <AnnouncementStatusSwitch rowData={rowData} onToggle={handleStatusToggle} />
       ),
       style: { minWidth: '6rem' },
     },
@@ -198,6 +220,7 @@ export default function AnnouncementsPage() {
         onYearFilterChange={(value) =>
           setLazyParams((params) => ({ ...params, year: value, first: 0, page: 1 }))
         }
+        dataTableProps={{ dataKey: '_id' }}
       />
     </div>
   );

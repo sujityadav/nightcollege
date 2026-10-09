@@ -193,6 +193,8 @@ const labelClassName =
  * @param {boolean} [props.showTypeBadge=false]
  * @param {boolean} [props.confirmRemove=true]
  * @param {string} [props.className]
+ * @param {string} [props.accept] - Override native file input accept attribute
+ * @param {string} [props.hintText] - Override size/type hint under the dropzone
  */
 export default function MediaUpload({
   allowVideo = false,
@@ -201,6 +203,8 @@ export default function MediaUpload({
   required = false,
   maxSizeMB = DEFAULT_MAX_MEDIA_SIZE_MB,
   label,
+  accept: acceptOverride,
+  hintText,
   previewUrl = '',
   items = [],
   mediaType = 'Photo',
@@ -228,8 +232,12 @@ export default function MediaUpload({
         : allowVideo
           ? 'Photo/Video Upload'
           : 'Photo Upload');
-  const accept = allowAllFiles ? '*/*' : allowVideo ? 'image/*,video/*' : 'image/*';
-  const hint = multiple
+  const accept =
+    acceptOverride ??
+    (allowAllFiles ? '*/*' : allowVideo ? 'image/*,video/*' : 'image/*');
+  const hint =
+    hintText ??
+    (multiple
     ? allowAllFiles
       ? `Any file type · Max. File Size: ${maxSizeMB}MB each`
       : `Images · Max. File Size: ${maxSizeMB}MB each`
@@ -237,7 +245,7 @@ export default function MediaUpload({
       ? `Any file type · Max. File Size: ${maxSizeMB}MB`
       : allowVideo
         ? `Image or Video · Max. File Size: ${maxSizeMB}MB`
-        : `Image · Max. File Size: ${maxSizeMB}MB`;
+        : `Image · Max. File Size: ${maxSizeMB}MB`);
   const isVideo = isVideoMedia(mediaType);
 
   const emitError = (message) => {

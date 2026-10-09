@@ -25,6 +25,24 @@ const STAFF_TYPE_OPTIONS = [
   { label: 'Non Teaching', value: 'Non Teaching' },
 ];
 
+const RESUME_ACCEPT =
+  '.pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document';
+
+const isAllowedResumeFile = (file) => {
+  if (!(file instanceof File)) return false;
+  const name = file.name.toLowerCase();
+  const type = (file.type || '').toLowerCase();
+  if (type === 'application/pdf' || name.endsWith('.pdf')) return true;
+  if (type === 'application/msword' || name.endsWith('.doc')) return true;
+  if (
+    type === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' ||
+    name.endsWith('.docx')
+  ) {
+    return true;
+  }
+  return false;
+};
+
 const fieldLabelClass = 'text-[#212325] text-[14px] font-[500]';
 
 export default function AddStaff() {
@@ -36,6 +54,11 @@ export default function AddStaff() {
   const [mediaFile, setMediaFile] = useState(null);
   const [mediaPreview, setMediaPreview] = useState('');
   const [mediaError, setMediaError] = useState('');
+  const [resumeFile, setResumeFile] = useState(null);
+  const [resumePreview, setResumePreview] = useState('');
+  const [resumeFileName, setResumeFileName] = useState('');
+  const [resumeMediaType, setResumeMediaType] = useState('File');
+  const [resumeError, setResumeError] = useState('');
   const [isUpdateMode, setIsUpdateMode] = useState(false);
   const [loading, setLoading] = useState(false);
 
@@ -78,6 +101,11 @@ export default function AddStaff() {
       setMediaPreview(staff?.photo || '');
       setMediaFile(null);
       setMediaError('');
+      setResumePreview(staff?.resume || '');
+      setResumeFile(null);
+      setResumeFileName(staff?.resumeFileName || '');
+      setResumeMediaType('File');
+      setResumeError('');
       setStaffTypeError('');
     } catch (err) {
       console.error('Failed to fetch staff:', err);
@@ -103,6 +131,31 @@ export default function AddStaff() {
     toast.current?.show({ severity: 'warn', summary: 'Upload', detail: message, life: 3000 });
   };
 
+  const handleResumeChange = ({ file, previewUrl, mediaType }) => {
+    if (file && !isAllowedResumeFile(file)) {
+      handleResumeError('Please upload a PDF or Word document.');
+      return;
+    }
+    setResumeFile(file);
+    setResumePreview(previewUrl);
+    setResumeMediaType(mediaType || 'File');
+    if (file?.name) setResumeFileName(file.name);
+    setResumeError('');
+  };
+
+  const handleResumeClear = () => {
+    setResumeFile(null);
+    setResumePreview('');
+    setResumeFileName('');
+    setResumeMediaType('File');
+    setResumeError('');
+  };
+
+  const handleResumeError = (message) => {
+    setResumeError(message);
+    toast.current?.show({ severity: 'warn', summary: 'Resume', detail: message, life: 3000 });
+  };
+
   const onSubmit = async (formData) => {
     if (!staffType) {
       setStaffTypeError('Type is required');
@@ -124,6 +177,11 @@ export default function AddStaff() {
         return;
       }
 
+      let resumeUrl = '';
+      if (resumePreview || resumeFile) {
+        resumeUrl = await uploadMediaFile(resumeFile, resumePreview);
+      }
+
       const payload = {
         data: {
           ...formData,
@@ -131,6 +189,8 @@ export default function AddStaff() {
           joiningDate,
           staffType,
           photo: photoUrl,
+          resume: resumeUrl,
+          resumeFileName: resumeUrl ? resumeFile?.name || resumeFileName : '',
         },
         ...(staffId && { _id: staffId }),
       };
@@ -257,6 +317,22 @@ export default function AddStaff() {
               onChange={handleMediaChange}
               onClear={handleMediaClear}
               onError={handleMediaError}
+            />
+
+            <MediaUpload
+              label="Resume"
+              allowAllFiles
+              accept={RESUME_ACCEPT}
+              hintText={`PDF or Word · Max. File Size: ${DEFAULT_MAX_MEDIA_SIZE_MB}MB`}
+              maxSizeMB={DEFAULT_MAX_MEDIA_SIZE_MB}
+              previewUrl={resumePreview}
+              file={resumeFile}
+              fileName={resumeFileName}
+              mediaType={resumeMediaType}
+              error={resumeError}
+              onChange={handleResumeChange}
+              onClear={handleResumeClear}
+              onError={handleResumeError}
             />
 
             <div className="mt-6 flex justify-center gap-6">

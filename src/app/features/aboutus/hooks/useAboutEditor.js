@@ -5,10 +5,16 @@ import { saveAboutTable, getAboutTable } from '../actions/saveAboutTable';
 import { jsonToTableHtml } from "../../../utils/jsonToTableHtml";
 import  storeImage  from '../../../utils/imagStoreService';
 import imageGetService from '@/app/utils/imageGetService';
+import { uploadMediaFile } from '@/app/components/common/MediaUpload';
+
 export const useAboutEditor = (type) => {
   const [editorContent, setEditorContent] = useState('');
   const [imageArray, setImageArray] = useState([]);
   const [title, setTitle] = useState('');
+  const [designation, setDesignation] = useState('');
+  const [photoFile, setPhotoFile] = useState(null);
+  const [photoPreview, setPhotoPreview] = useState('');
+  const [photoError, setPhotoError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [isDataLoaded, setIsDataLoaded] = useState(false);
   const [existingId, setExistingId] = useState(null); // For edit mode
@@ -30,6 +36,13 @@ export const useAboutEditor = (type) => {
       setTitle(entry.Aboutusdata.title || '');
       setEditorContent(tableHtml || entry.Aboutusdata.content || '');
       setExistingId(entry._id || result.data._id || null);
+
+      if (type === 'about') {
+        setDesignation(entry.Aboutusdata.designation || '');
+        setPhotoPreview(entry.Aboutusdata.photo || '');
+        setPhotoFile(null);
+        setPhotoError('');
+      }
 
       try {
         const response = await imageGetService(entry._id);
@@ -56,19 +69,27 @@ export const useAboutEditor = (type) => {
       setIsDataLoaded(true);
     }
   };
-  const handleSave = async (type) => {
+  const handleSave = async (saveType) => {
     const tableData = extractTableData(editorContent);
    
     setIsLoading(true);
     try {
+      const payload = {
+        data: tableData,
+        content: editorContent,
+        title: title,
+        type: saveType,
+        _id: existingId,
+      };
+
+      if (saveType === 'about') {
+        const photoUrl = await uploadMediaFile(photoFile, photoPreview);
+        payload.designation = designation.trim();
+        payload.photo = photoUrl || '';
+      }
+
     const response =  await saveAboutTable(
-        {
-          data: tableData,
-          content: editorContent,
-          title: title,
-          type:type,
-          _id: existingId, // if present, update instead of create
-        },
+        payload,
         user?.token
       );
       if(response?.data?.entry?._id){
@@ -101,6 +122,23 @@ export const useAboutEditor = (type) => {
     fetchInitialData();
   }, []);
 
+  const handlePhotoChange = ({ file, previewUrl }) => {
+    setPhotoFile(file);
+    setPhotoPreview(previewUrl);
+    setPhotoError('');
+  };
+
+  const handlePhotoClear = () => {
+    setPhotoFile(null);
+    setPhotoPreview('');
+    setPhotoError('');
+  };
+
+  const handlePhotoError = (message) => {
+    setPhotoError(message);
+    toast.current?.show({ severity: 'warn', summary: 'Photo', detail: message, life: 3000 });
+  };
+
   return {
     editorContent,
     handleEditorChange,
@@ -112,6 +150,14 @@ export const useAboutEditor = (type) => {
     setImageArray,
     imageArray,
     setTitle,
-    title
+    title,
+    designation,
+    setDesignation,
+    photoFile,
+    photoPreview,
+    photoError,
+    handlePhotoChange,
+    handlePhotoClear,
+    handlePhotoError,
   };
 };

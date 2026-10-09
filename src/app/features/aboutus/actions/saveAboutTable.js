@@ -1,12 +1,17 @@
 import axios from 'axios';
 
-export const saveAboutTable = async ({ data, content,title,type, _id }, token) => {
+export const saveAboutTable = async (
+  { data, content, title, type, _id, designation, photo },
+  token
+) => {
   const payload = {
     data,
     content,
     type,
     title,
-    ...(!!_id && { _id }), // send ID if updating
+    ...(designation !== undefined && { designation }),
+    ...(photo !== undefined && { photo }),
+    ...(!!_id && { _id }),
   };
 
   return axios.post('/api/about-us', payload, {

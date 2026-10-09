@@ -7,7 +7,7 @@ import { InputText } from 'primereact/inputtext';
 import { IconField } from 'primereact/iconfield';
 import { InputIcon } from 'primereact/inputicon';
 import { Dropdown } from 'primereact/dropdown';
-import { ProgressSpinner } from 'primereact/progressspinner';
+import { Skeleton } from 'primereact/skeleton';
 import { getListYearFilterOptions } from '@/app/lib/listYearFilterOptions';
 
 /**
@@ -76,23 +76,64 @@ export default function CommonDataTable({
     first + (value?.length || 0)
   } of ${totalRecords}`;
 
+  const skeletonRowCount = Math.max(1, rows);
+
+  const skeletonTable = (
+    <div
+      className={`${tableClassName} min-w-0 overflow-x-auto`}
+      aria-busy="true"
+      aria-live="polite"
+    >
+      <table className="w-full border-collapse">
+        <thead>
+          <tr>
+            {columns.map((col, index) => (
+              <th
+                key={col.key || col.field || col.header || index}
+                className="border border-[#EAEDF3] bg-[#F9FAFB] px-3 py-3 text-left text-sm font-medium text-[#101828]"
+                style={col.style}
+              >
+                {typeof col.header === 'string' ? col.header : ''}
+              </th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {Array.from({ length: skeletonRowCount }).map((_, rowIndex) => (
+            <tr key={`skeleton-row-${rowIndex}`}>
+              {columns.map((col, colIndex) => (
+                <td
+                  key={`skeleton-cell-${rowIndex}-${colIndex}`}
+                  className="border border-[#EAEDF3] px-3 py-3"
+                  style={col.style}
+                >
+                  <Skeleton width="100%" height="1rem" borderRadius="4px" />
+                </td>
+              ))}
+            </tr>
+          ))}
+        </tbody>
+      </table>
+      {paginator ? (
+        <div className="flex flex-wrap items-center justify-end gap-3 border-t border-[#EAEDF3] px-3 py-3">
+          <Skeleton width="10rem" height="2rem" borderRadius="4px" />
+          <Skeleton width="6rem" height="2rem" borderRadius="4px" />
+        </div>
+      ) : null}
+    </div>
+  );
+
   const table = (
     <div className="relative min-w-0 overflow-x-auto">
       {loading ? (
-        <div
-          className="absolute inset-0 z-[2] flex items-center justify-center bg-white/75"
-          aria-busy="true"
-          aria-live="polite"
-        >
-          <ProgressSpinner style={{ width: '48px', height: '48px' }} strokeWidth="4" />
-        </div>
-      ) : null}
+        skeletonTable
+      ) : (
       <PrimeDataTable
         value={value}
         className={tableClassName}
         scrollable
         showGridlines
-        loading={loading}
+        loading={false}
         paginator={paginator}
         totalRecords={totalRecords}
         lazy={lazy}
@@ -113,6 +154,7 @@ export default function CommonDataTable({
           return <Column key={key || col.field || col.header || index} {...columnProps} />;
         })}
       </PrimeDataTable>
+      )}
     </div>
   );
 
