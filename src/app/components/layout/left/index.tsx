@@ -59,6 +59,12 @@ export default function Left() {
       icon: "pi pi-link",
       activePaths: ["/admin/quick-links"],
     },
+    {
+      label: "Gallery",
+      href: "/admin/gallery",
+      icon: "pi pi-images",
+      activePaths: ["/admin/gallery"],
+    },
     // { label: "Logout", href: "#", icon: "pi pi-sign-out" },
   ];
 

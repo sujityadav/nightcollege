@@ -28,6 +28,8 @@ export default function Rebranding() {
   const user = useSelector((state) => state.auth.user);
   const toast = useRef(null);
 
+  const rowId = (row) => String(row?._id ?? '');
+
   const SideBarNavItems = [
     { label: 'Rebranding', href: '/admin/rebranding' },
     { label: 'Contact Information', href: '/admin/rebranding/contact-info' },
@@ -60,31 +62,38 @@ export default function Rebranding() {
     fetchData();
   }, [lazyParams]);
 
-  const handleStatusToggle = async (rowData, checked) => {
-    const newStatus = checked ? 1 : 0;
-    const previousStatus = Number(rowData?.RebrandingData?.data?.status ?? 0);
-
+  const updateRowStatus = (id, status) => {
     setData((prev) =>
       prev.map((item) =>
-        item._id === rowData._id
+        rowId(item) === id
           ? {
               ...item,
               RebrandingData: {
                 ...item.RebrandingData,
                 data: {
                   ...item.RebrandingData?.data,
-                  status: newStatus,
+                  status,
                 },
               },
             }
           : item
       )
     );
-    setUpdatingStatusId(rowData._id);
+  };
+
+  const handleStatusToggle = async (rowData, checked) => {
+    const id = rowId(rowData);
+    if (!id || updatingStatusId === id) return;
+
+    const newStatus = checked ? 1 : 0;
+    const previousStatus = Number(rowData?.RebrandingData?.data?.status ?? 0);
+
+    updateRowStatus(id, newStatus);
+    setUpdatingStatusId(id);
 
     try {
       const response = await axios.put(
-        `/api/rebranding/${rowData._id}`,
+        `/api/rebranding/${id}`,
         { status: newStatus },
         {
           headers: {
@@ -97,6 +106,13 @@ export default function Rebranding() {
         throw new Error(response?.data?.message || "Failed to update status");
       }
 
+      const updated = response.data?.data;
+      if (updated) {
+        setData((prev) =>
+          prev.map((item) => (rowId(item) === id ? { ...item, ...updated } : item))
+        );
+      }
+
       toast.current?.show({
         severity: "success",
         summary: "Status updated",
@@ -105,22 +121,7 @@ export default function Rebranding() {
       });
     } catch (err) {
       console.error("Failed to update status:", err);
-      setData((prev) =>
-        prev.map((item) =>
-          item._id === rowData._id
-            ? {
-                ...item,
-                RebrandingData: {
-                  ...item.RebrandingData,
-                  data: {
-                    ...item.RebrandingData?.data,
-                    status: previousStatus,
-                  },
-                },
-              }
-            : item
-        )
-      );
+      updateRowStatus(id, previousStatus);
       toast.current?.show({
         severity: "error",
         summary: "Error",
@@ -252,12 +253,14 @@ export default function Rebranding() {
   const serialNumberTemplate = (_rowData, options) => lazyParams.first + options.rowIndex + 1;
 
   const StatusTemplate = (rowData) => {
+    const id = rowId(rowData);
     const isActive = Number(rowData?.RebrandingData?.data?.status) === 1;
     return (
       <InputSwitch
+        key={`${id}-${isActive ? 1 : 0}`}
         checked={isActive}
-        disabled={updatingStatusId === rowData._id}
-        onChange={(e) => handleStatusToggle(rowData, e.value)}
+        disabled={updatingStatusId === id}
+        onChange={(e) => handleStatusToggle(rowData, e.value ?? e.checked)}
       />
     );
   };
@@ -384,6 +387,7 @@ export default function Rebranding() {
           headerTitle="All Banners"
           showSearch
           onSearch={handleSearch}
+          dataTableProps={{ dataKey: '_id' }}
         />
       </div>
     </div>

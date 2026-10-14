@@ -37,7 +37,7 @@ export const useAboutEditor = (type) => {
       setEditorContent(tableHtml || entry.Aboutusdata.content || '');
       setExistingId(entry._id || result.data._id || null);
 
-      if (type === 'about') {
+      if (type === 'desk') {
         setDesignation(entry.Aboutusdata.designation || '');
         setPhotoPreview(entry.Aboutusdata.photo || '');
         setPhotoFile(null);
@@ -82,7 +82,7 @@ export const useAboutEditor = (type) => {
         _id: existingId,
       };
 
-      if (saveType === 'about') {
+      if (saveType === 'desk') {
         const photoUrl = await uploadMediaFile(photoFile, photoPreview);
         payload.designation = designation.trim();
         payload.photo = photoUrl || '';
