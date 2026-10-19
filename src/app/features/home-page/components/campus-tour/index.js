@@ -1,9 +1,11 @@
 'use client';
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Roboto_Slab } from 'next/font/google';
 import Image from 'next/image';
 import Link from 'next/link';
+import axios from 'axios';
+import { pickRandomGalleryThumbnails } from '@/app/utils/pickRandomGalleryThumbnails';
 
 const roboto_slab = Roboto_Slab({
   weight: ['100', '200', '300', '400', '500', '600', '700', '800', '900'],
@@ -12,19 +14,31 @@ const roboto_slab = Roboto_Slab({
 });
 
 export default function CampusTour() {
-  // ✅ Define your image data array
-  const tourImages = [
-    { id: 1, image: '/images/g1.png' },
-    { id: 2, image: '/images/g2.jpg' },
-    { id: 3, image: '/images/g3.png' },
-    { id: 4, image: '/images/evn-img-1.jpg' },
-    { id: 5, image: '/images/summary_bg.jpg' },
-    { id: 6, image: '/images/login_img.jpg' },
-    { id: 7, image: '/images/g1.png' },
-    { id: 8, image: '/images/g2.jpg' },
-    { id: 9, image: '/images/g3.png' },
-    { id: 10, image: '/images/evn-img-1.jpg' },
-  ];
+  const [tourImages, setTourImages] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const load = async () => {
+      setLoading(true);
+      try {
+        const response = await axios.get('/api/gallery/public');
+        if (cancelled) return;
+        const albums = response.data?.success ? response.data.data || [] : [];
+        setTourImages(pickRandomGalleryThumbnails(albums));
+      } catch {
+        if (!cancelled) setTourImages([]);
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    };
+
+    load();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   return (
     <div className="w-full py50 bg-[#f8f8f8]">
@@ -37,27 +51,48 @@ export default function CampusTour() {
           </div>
         </div>
 
-
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-5 3xl:grid-cols-5 items-start mt-5">
-          {tourImages.map((item) => (
-            <Link key={item.id} href="/images-gallery" className="group" aria-label="View images gallery">
-              <div className="img-block relative overflow-hidden aspect-[4/3] w-full">
-                <Image
-                  src={item.image}
-                  alt="campus image"
-                  fill
-                  className="object-cover transition-transform duration-300 group-hover:scale-105"
-                />
-              </div>
-            </Link>
-          ))}
+          {loading ? (
+            Array.from({ length: 10 }).map((_, index) => (
+              <div
+                key={`campus-tour-skeleton-${index}`}
+                className="img-block relative aspect-[4/3] w-full animate-pulse bg-[#e5e7eb]"
+              />
+            ))
+          ) : tourImages.length === 0 ? (
+            <p className="col-span-full px300 text-center text-[#6C768B]">
+              Gallery images will appear here soon.
+            </p>
+          ) : (
+            tourImages.map((item) => (
+              <Link
+                key={item.key}
+                href="/images-gallery"
+                className="group"
+                aria-label="View images gallery"
+              >
+                <div className="img-block relative overflow-hidden aspect-[4/3] w-full">
+                  <Image
+                    src={item.url}
+                    alt={item.alt}
+                    fill
+                    sizes="(max-width: 768px) 50vw, 20vw"
+                    className="object-cover transition-transform duration-300 group-hover:scale-105"
+                  />
+                </div>
+              </Link>
+            ))
+          )}
         </div>
 
-                   <div className="mt-4 flex justify-center">
-                      <Link href="/images-gallery" className="my-button shadow-2xl px20 py10 bg-primarycolor rounded-sm cursor-pointer relative overflow-hidden">
-              <span className="text-center text-white font15 font-[500] my-auto">View More</span>
-            </Link>
-                    </div>
+        <div className="mt-4 flex justify-center">
+          <Link
+            href="/images-gallery"
+            className="my-button shadow-2xl px20 py10 bg-primarycolor rounded-sm cursor-pointer relative overflow-hidden"
+          >
+            <span className="text-center text-white font15 font-[500] my-auto">View More</span>
+          </Link>
+        </div>
       </div>
     </div>
   );

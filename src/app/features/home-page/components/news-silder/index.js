@@ -1,37 +1,39 @@
 'use client';
 
 import React, { useEffect, useMemo, useState } from 'react';
+import Link from 'next/link';
 import axios from 'axios';
 
 const MARQUEE_SEPARATOR = '   |   ';
 
 export default function NewsSilder() {
   const [isPaused, setIsPaused] = useState(false);
-  const [titles, setTitles] = useState([]);
+  const [announcements, setAnnouncements] = useState([]);
 
   useEffect(() => {
     const loadAnnouncements = async () => {
       try {
         const response = await axios.get('/api/announcements/public');
-        setTitles(response.data?.data || []);
+        setAnnouncements(response.data?.data || []);
       } catch {
-        setTitles([]);
+        setAnnouncements([]);
       }
     };
     loadAnnouncements();
   }, []);
 
-  const marqueeLine = useMemo(() => {
+  const marqueeItems = useMemo(() => {
     const seen = new Set();
-    const parts = [];
-    for (const item of titles) {
+    const items = [];
+    for (const item of announcements) {
+      const id = item?._id;
       const title = (item?.title || '').trim();
-      if (!title || seen.has(title)) continue;
-      seen.add(title);
-      parts.push(title);
+      if (!id || !title || seen.has(id)) continue;
+      seen.add(id);
+      items.push({ _id: id, title });
     }
-    return parts.join(MARQUEE_SEPARATOR);
-  }, [titles]);
+    return items;
+  }, [announcements]);
 
   return (
     <div className="w-full">
@@ -44,7 +46,7 @@ export default function NewsSilder() {
           </div>
         </div>
 
-        {marqueeLine ? (
+        {marqueeItems.length ? (
           <div
             onMouseEnter={() => setIsPaused(true)}
             onMouseLeave={() => setIsPaused(false)}
@@ -53,7 +55,20 @@ export default function NewsSilder() {
             <div
               className={`inline-block font-bold text-white animate-marquee ${isPaused ? 'pause' : ''}`}
             >
-              {marqueeLine}
+              {marqueeItems.map((item, index) => (
+                <span key={item._id}>
+                  <Link
+                    href={`/announcement/${item._id}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-white hover:underline"
+                    onClick={(event) => event.stopPropagation()}
+                  >
+                    {item.title}
+                  </Link>
+                  {index < marqueeItems.length - 1 ? MARQUEE_SEPARATOR : null}
+                </span>
+              ))}
             </div>
           </div>
         ) : null}

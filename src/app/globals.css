@@ -839,3 +839,60 @@ color:#3C4146;
 {
   font-weight: 500;
 }
+
+.aqar-section-autocomplete .p-autocomplete {
+  width: 100%;
+}
+
+.aqar-section-autocomplete .p-autocomplete-input {
+  width: 100%;
+}
+
+.aqar-section-autocomplete .p-autocomplete-loader {
+  display: none !important;
+}
+
+.aqar-section-autocomplete .p-autocomplete-dropdown {
+  display: none !important;
+}
+
+.title-prime-icon-dropdown.p-dropdown {
+  background: transparent;
+  width: 4.5rem;
+  min-width: 4.5rem;
+  max-width: 4.5rem;
+  flex-shrink: 0;
+}
+
+.title-prime-icon-dropdown .p-dropdown-label,
+.title-prime-icon-dropdown-label {
+  display: flex !important;
+  align-items: center;
+  justify-content: center;
+  flex: 1 1 auto;
+  min-width: 0;
+  padding: 0.65rem 0.15rem !important;
+  overflow: visible;
+}
+
+.title-prime-icon-dropdown .p-dropdown-label .pi {
+  font-size: 1.125rem;
+  line-height: 1;
+  color: #374151;
+}
+
+.title-prime-icon-dropdown .p-dropdown-trigger,
+.title-prime-icon-dropdown-trigger {
+  width: 1.35rem;
+  flex: 0 0 1.35rem;
+  padding: 0;
+}
+
+.title-prime-icon-dropdown .p-dropdown-trigger .p-icon {
+  width: 0.65rem;
+  height: 0.65rem;
+}
+
+.title-prime-icon-panel {
+  min-width: 14rem;
+}

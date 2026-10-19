@@ -37,8 +37,10 @@ export const useAboutEditor = (type) => {
       setEditorContent(tableHtml || entry.Aboutusdata.content || '');
       setExistingId(entry._id || result.data._id || null);
 
-      if (type === 'desk') {
-        setDesignation(entry.Aboutusdata.designation || '');
+      if (type === 'desk' || type === 'about') {
+        if (type === 'desk') {
+          setDesignation(entry.Aboutusdata.designation || '');
+        }
         setPhotoPreview(entry.Aboutusdata.photo || '');
         setPhotoFile(null);
         setPhotoError('');
@@ -71,7 +73,20 @@ export const useAboutEditor = (type) => {
   };
   const handleSave = async (saveType) => {
     const tableData = extractTableData(editorContent);
-   
+
+    if (saveType === 'about') {
+      if (!photoPreview && !photoFile) {
+        setPhotoError('Photo is required');
+        toast.current?.show({
+          severity: 'warn',
+          summary: 'Photo',
+          detail: 'Please upload a photo',
+          life: 3000,
+        });
+        return;
+      }
+    }
+
     setIsLoading(true);
     try {
       const payload = {
@@ -82,10 +97,17 @@ export const useAboutEditor = (type) => {
         _id: existingId,
       };
 
-      if (saveType === 'desk') {
+      if (saveType === 'desk' || saveType === 'about') {
         const photoUrl = await uploadMediaFile(photoFile, photoPreview);
-        payload.designation = designation.trim();
+        if (saveType === 'about' && !photoUrl) {
+          setPhotoError('Photo is required');
+          throw new Error('Please upload a photo');
+        }
         payload.photo = photoUrl || '';
+      }
+
+      if (saveType === 'desk') {
+        payload.designation = designation.trim();
       }
 
     const response =  await saveAboutTable(

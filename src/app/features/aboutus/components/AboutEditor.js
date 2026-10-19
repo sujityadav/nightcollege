@@ -5,6 +5,7 @@ import { Button } from 'primereact/button';
 import { Toast } from 'primereact/toast';
 import Link from 'next/link';
 import TextEditor from '@/app/components/common/editor/index';
+import MediaUpload, { DEFAULT_MAX_MEDIA_SIZE_MB } from '@/app/components/common/MediaUpload';
 import { useAboutEditor } from '../hooks/useAboutEditor';
 
 const AboutEditor = () => {
@@ -20,6 +21,12 @@ const AboutEditor = () => {
     imageArray,
     setTitle,
     title,
+    photoFile,
+    photoPreview,
+    photoError,
+    handlePhotoChange,
+    handlePhotoClear,
+    handlePhotoError,
   } = useAboutEditor("about");
 
 
@@ -32,6 +39,20 @@ const AboutEditor = () => {
             <label className='text-[#212325] text-[14px] font-[500]'>Title</label>
             <InputText value={title} onChange={(e)=>setTitle(e.target.value)} type='text' placeholder='Enter your title' className='rounded-none' />
           </div>
+
+          <MediaUpload
+            label="Photo"
+            required
+            allowVideo={false}
+            maxSizeMB={DEFAULT_MAX_MEDIA_SIZE_MB}
+            previewUrl={photoPreview}
+            file={photoFile}
+            mediaType="Photo"
+            error={photoError}
+            onChange={handlePhotoChange}
+            onClear={handlePhotoClear}
+            onError={handlePhotoError}
+          />
 
           <div className='flex flex-col gap-1'>
             <label className='text-[#212325] text-[14px] font-[500]'>Description</label>

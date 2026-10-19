@@ -28,6 +28,7 @@ export async function GET() {
     const data = entries
       .filter((item) => isWithinDateRange(item.fromDate, item.toDate, now))
       .map((item) => ({
+        _id: String(item._id),
         title: item.title || '',
         sortNo: item.sortNo,
       }));

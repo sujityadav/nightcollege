@@ -6,6 +6,7 @@ import { useSelector } from 'react-redux';
 import axios from 'axios';
 import { InputText } from 'primereact/inputtext';
 import { Button } from 'primereact/button';
+import TitleWithPrimeIconInput from '@/app/components/common/TitleWithPrimeIconInput';
 import { Toast } from 'primereact/toast';
 import { InputSwitch } from 'primereact/inputswitch';
 import Link from 'next/link';
@@ -22,7 +23,10 @@ const buildSubPointsUrl = (SubdepatmentId, depatmentId) => {
 };
 
 export default function AddSubPoint() {
-  const { register, handleSubmit, setValue, formState: { errors }, reset } = useForm();
+  const { register, handleSubmit, setValue, watch, formState: { errors }, reset } = useForm({
+    defaultValues: { icon: '' },
+  });
+  const selectedIcon = watch('icon');
   const [editorContent, setEditorContent] = useState('');
   const [loading, setLoading] = useState(false);
   const [hasActivities, setHasActivities] = useState(false);
@@ -93,6 +97,7 @@ export default function AddSubPoint() {
         const item = res.data.data?.[0];
         reset({
           title: item?.SubDepartmentsData?.data?.title,
+          icon: item?.SubDepartmentsData?.data?.icon || '',
           smallDescription: item?.SubDepartmentsData?.data?.smallDescription,
           largeDescription: item?.SubDepartmentsData?.data?.largeDescription,
           sortOrder: item?.SubDepartmentsData?.data?.sortOrder ?? 0,
@@ -160,8 +165,15 @@ export default function AddSubPoint() {
         <form onSubmit={handleSubmit(onSubmit)} className="bg-white card-shadow p-[25px]">
           <div className="px-4 sm:px-6 md:px-10 lg:px-20 xl:px-[250px] space-y-3">
             <div className="flex flex-col gap-1">
-              <label>Sub Point Title</label>
-              <InputText {...register('title', { required: true })} placeholder="Enter your title" />
+              <label htmlFor="sub-point-title">Sub Point Title</label>
+              <TitleWithPrimeIconInput
+                titleId="sub-point-title"
+                titleRegister={register('title', { required: true })}
+                iconValue={selectedIcon}
+                onIconChange={(value) => setValue('icon', value, { shouldDirty: true })}
+                placeholder="Enter your title"
+              />
+              <input type="hidden" {...register('icon')} />
               {errors.title && <span className="text-red-500 text-sm">This field is required</span>}
             </div>
 
