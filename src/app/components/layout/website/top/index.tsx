@@ -1,13 +1,45 @@
 'use client';
 
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
+import axios from "axios";
 import 'primereact/resources/themes/lara-light-blue/theme.css';
 import 'primereact/resources/primereact.min.css';
 import 'primeicons/primeicons.css';
 import CollegeBanner from "../college-banner";
 
+type MegaLink = { label: string; href: string };
+type MegaSection = { title: string; links: MegaLink[] };
+
 export default function WebsiteTop() {
-  const navigation = [
+  const [departmentMegaSections, setDepartmentMegaSections] = useState<MegaSection[]>([]);
+
+  useEffect(() => {
+    const loadDepartmentsMenu = async () => {
+      try {
+        const response = await axios.get("/api/departments/navigation");
+        if (!response.data?.success) return;
+
+        const sections: MegaSection[] = (response.data.data || []).map(
+          (department: { id: string; title: string; subjects: { id: string; title: string }[] }) => ({
+            title: department.title,
+            links: (department.subjects || []).map((subject) => ({
+              label: subject.title,
+              href: `/departments?departmentId=${department.id}&subjectId=${subject.id}`,
+            })),
+          })
+        );
+
+        setDepartmentMegaSections(sections);
+      } catch (error) {
+        console.error("Failed to load departments navigation:", error);
+      }
+    };
+
+    loadDepartmentsMenu();
+  }, []);
+
+  const navigation = useMemo(() => [
     { label: "Home", href: "/" },
     {
       label: "About",
@@ -56,45 +88,8 @@ export default function WebsiteTop() {
     {
       label: "Departments",
       type: "mega",
-      sections: [
-        {
-          title: "Arts Department",
-          links: [
-            { label: "Marathi", href: "/teaching-staff" },
-            { label: "Hindi", href: "/teaching-staff" },
-            { label: "English", href: "/anti-ragging-cell " },
-            { label: "History", href: "/anti-ragging-cell " },
-            { label: "Geography", href: "/anti-ragging-cell " },
-            { label: "Sociology", href: "/anti-ragging-cell " },
-            { label: "Economics", href: "/anti-ragging-cell " },
-            { label: "Political Science", href: "/anti-ragging-cell " },
-            { label: "English", href: "/anti-ragging-cell " },
-            
-          ],
-        },
-        {
-          title: "Commerce  Department",
-          links: [
-           { label: "Marathi", href: "/teaching-staff" },
-            { label: "Hindi", href: "/teaching-staff" },
-            { label: "English", href: "/anti-ragging-cell " },
-            { label: "History", href: "/anti-ragging-cell " },
-            { label: "Geography", href: "/anti-ragging-cell " },
-            { label: "Sociology", href: "/anti-ragging-cell " },
-            { label: "Economics", href: "/anti-ragging-cell " },
-            { label: "Political Science", href: "/anti-ragging-cell " },
-            { label: "English", href: "/anti-ragging-cell " },
-          ],
-        },
-        {
-          title: "Science Department",
-          links: [
-           { label: "Geography", href: "/anti-ragging-cell " },
-            { label: "Sociology", href: "/anti-ragging-cell " },
-           
-          ],
-        },
-      ],
+      megaVariant: "departments",
+      sections: departmentMegaSections,
     },
     {
       label: "Courses",
@@ -198,7 +193,7 @@ export default function WebsiteTop() {
     },
   
     { label: "Contact Us", href: "/contact-us" },
-  ];
+  ], [departmentMegaSections]);
 
   return (
     <>
@@ -245,17 +240,21 @@ export default function WebsiteTop() {
                       </span>
                       <input type="checkbox" id={`showMega-${idx}`} />
                       <label htmlFor={`showMega-${idx}`} className="mobile-item">{nav.label}</label>
-                      <div className="mega-box">
-                        <div className="content">
+                      <div className={`mega-box${nav.megaVariant === "departments" ? " mega-box--departments" : ""}`}>
+                        <div className={`content${nav.megaVariant === "departments" ? " mega-box-content--scroll" : ""}`}>
                           {nav?.sections && nav?.sections.map((section, i) => (
-                            <div className="row" key={i}>
+                            <div className="row" key={section.title || i}>
                               <header>{section.title}</header>
-                              <ul className="mega-links mt-2">
-                                {section.links.map((link, j) => (
-                                  <li key={j}>
-                                    <Link href={link.href}>{link.label}</Link>
-                                  </li>
-                                ))}
+                              <ul className="mega-links mt-2 mega-links--scroll">
+                                {section.links?.length ? (
+                                  section.links.map((link, j) => (
+                                    <li key={`${link.label}-${j}`}>
+                                      <Link href={link.href}>{link.label}</Link>
+                                    </li>
+                                  ))
+                                ) : (
+                                  <li className="mega-links-empty">No subjects listed</li>
+                                )}
                               </ul>
                             </div>
                           ))}

@@ -79,7 +79,7 @@ const PhotoGalleria = ({ images }) => {
     </div>
   );
 
-  const galleriaClassName = classNames('custom-galleria xl:max-w-[750px] 3xl:max-w-[44.271vw] ', { fullscreen: isFullScreen });
+  const galleriaClassName = classNames('custom-galleria w-full max-w-full', { fullscreen: isFullScreen });
 
   return (
     <Galleria ref={galleria}

@@ -1,65 +1,100 @@
 'use client';
-import SubBanner from "../../sub-banner";
-import PhotoGalleria from "../../../components/galleria/index";
 
+import { useEffect, useState } from 'react';
+import { useParams } from 'next/navigation';
+import Link from 'next/link';
+import axios from 'axios';
+import SubBanner from '../../sub-banner';
+import EventDetailContent from '@/app/components/events/EventDetailContent';
 
-const EventDetail = () => {
+export default function EventDetailPage() {
+  const params = useParams();
+  const eventId = params?.id;
+  const [event, setEvent] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+
+  useEffect(() => {
+    if (!eventId) return;
+
+    const fetchEvent = async () => {
+      try {
+        setLoading(true);
+        setError('');
+        const response = await axios.get(`/api/events/public/${eventId}`);
+        if (!response.data?.success) {
+          throw new Error(response.data?.message || 'Event not found');
+        }
+        setEvent(response.data.data);
+      } catch (err) {
+        const message = axios.isAxiosError(err)
+          ? err.response?.data?.message || err.message
+          : 'Event not found';
+        setError(message);
+        setEvent(null);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchEvent();
+  }, [eventId]);
+
+  if (loading) {
+    return (
+      <>
+        <SubBanner
+          title="Event"
+          breadcrumbData={[
+            { label: 'Home', url: '/' },
+            { label: 'All Events', url: '/events/all-events' },
+          ]}
+        />
+        <div className="px300 py-10">
+          <div className="animate-pulse space-y-4">
+            <div className="h-8 w-2/3 rounded bg-[#e8edf5]" />
+            <div className="h-64 rounded bg-[#e8edf5]" />
+            <div className="h-24 rounded bg-[#e8edf5]" />
+          </div>
+        </div>
+      </>
+    );
+  }
+
+  if (error || !event) {
+    return (
+      <>
+        <SubBanner
+          title="Event"
+          breadcrumbData={[
+            { label: 'Home', url: '/' },
+            { label: 'All Events', url: '/events/all-events' },
+          ]}
+        />
+        <div className="px300 py-10 text-center">
+          <p className="mb-4 text-[#6C768B]">{error || 'Event not found'}</p>
+          <Link href="/events/all-events" className="text-primarycolor underline">
+            Back to All Events
+          </Link>
+        </div>
+      </>
+    );
+  }
+
   const breadcrumbData = [
-    { label: "Home", url: "/" },
-    { label: "All Events", url: "/all-events" },
-    { label: "Digital Education Market Briefing: Minnesota 2023", url: "/event-detail" }
-  ];
-
-   const imageData = [
-    { itemImageSrc: '/images/evn-img-1.jpg', thumbnailImageSrc: '/images/evn-img-1-thumb.jpg', alt: 'Event Image 1', title: 'Event Photo 1' },
-    { itemImageSrc: '/images/g1.png', thumbnailImageSrc: '/images/g1.png', alt: 'Event Image 2', title: 'Event Photo 2' },
-    { itemImageSrc: '/images/g2.jpg', thumbnailImageSrc: '/images/g2.jpg', alt: 'Event Image 3', title: 'Event Photo 3' },
-    { itemImageSrc: '/images/g3.png', thumbnailImageSrc: '/images/g3.png', alt: 'Event Image 4', title: 'Event Photo 4' }
+    { label: 'Home', url: '/' },
+    { label: 'All Events', url: '/events/all-events' },
+    { label: event.title, url: '' },
   ];
 
   return (
     <>
-      <SubBanner
-        title="Digital Education Market Briefing: Minnesota 2023"
-        breadcrumbData={breadcrumbData}
-      />
-      <div className="w-full py20">
+      <SubBanner title={event.title} breadcrumbData={breadcrumbData} />
+      <div className="w-full">
         <div className="px300">
-          <div className="py20">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5 3xl:grid-cols-3 gap-6">
-              <div className="object-cover xl:col-span-3 3xl:col-span-2">
-                <div className="card galleria-demo">
-                 <PhotoGalleria images={imageData}  height="600px"   />
-
-      
-                </div>
-              </div>
-              <div className="space-y-5 col-span-1">
-                <div className="flex gap-3 ">
-                  <div className="bg-primarycolor rounded-md p-1 text-center text-white font14 px-3"><h3>Education</h3></div>
-                  <div className="bg-primarycolor rounded-md p-1 text-center text-white font14 px-3"><h3>History</h3></div>
-                  <div className="bg-primarycolor rounded-md p-1 text-center text-white font14 px-3"><h3>Sports</h3></div>
-                </div>
-                <div className="flex gap-3 items-center">
-                  <i className="pi pi-map-marker text-primarycolor"></i> <p>NewYork Sydney City</p>
-                </div>
-                <div className="flex gap-3 items-center">
-                  <i className="pi pi-calendar text-primarycolor"></i> <p>25 Aug, 2025</p>
-                </div>
-
-                <div>
-                  <p>Lawyer boluptatum deleniti atque corrupti sdolores et quas molestias cepturi sint eca itate non similique sunt in culpa modi tempora incidunt obtain</p>
-                </div>
-              </div>
-            </div>
-            <p className="py20">
-              Lawyer boluptatum deleniti atque corrupti sdolores et quas molestias cepturi sint eca itate non similique sunt in culpa modi tempora incidunt obtain pain of itself...
-            </p>
-          </div>
+          <EventDetailContent event={event} />
         </div>
       </div>
     </>
   );
-};
-
-export default EventDetail;
+}

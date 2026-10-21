@@ -20,16 +20,24 @@ export const departmentMenuItems = [
   { id: 'videos', label: 'Blog / Videos', icon: 'pi pi-youtube' },
 ];
 
+export type DepartmentNavItem = {
+  id: string;
+  label: string;
+  icon: string;
+};
+
 type DepartmentSidebarProps = {
   activeTab: string;
   onTabChange: (tabId: string) => void;
   departmentName?: string;
+  items?: DepartmentNavItem[];
 };
 
 export default function DepartmentSidebar({
   activeTab,
   onTabChange,
   departmentName = 'Department of Marathi',
+  items = departmentMenuItems,
 }: DepartmentSidebarProps) {
   return (
     <aside className="overflow-hidden rounded-lg bg-white shadow-[0_4px_18px_rgba(20,58,119,0.12)]">
@@ -38,7 +46,7 @@ export default function DepartmentSidebar({
         <h2 className="font-serif text-base font-bold">{departmentName}</h2>
       </div>
       <nav aria-label={`${departmentName} sections`} className="p-1.5">
-        {departmentMenuItems.map((item) => {
+        {items.map((item) => {
           const isActive = item.id === activeTab;
           return (
             <button
