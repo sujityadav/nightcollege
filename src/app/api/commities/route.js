@@ -1,12 +1,14 @@
 import { NextResponse } from "next/server";
 import { connectDB } from "../../lib/mongodb";
-import  Commities  from "../../models/commities";
+import Commities from "../../models/commities";
+import { validateCommitteeFormData } from "../../lib/committeeData";
+import { findCommitteeDuplicateYear } from "../../lib/committeeYearDuplicate";
+
 export async function POST(req) {
   try {
     await connectDB();
 
     const body = await req.json();
-
 
     if (!body?.data) {
       return NextResponse.json(
@@ -14,6 +16,23 @@ export async function POST(req) {
         { status: 400 }
       );
     }
+
+    const validationError = validateCommitteeFormData(body.data);
+    if (validationError) {
+      return NextResponse.json({ success: false, message: validationError }, { status: 400 });
+    }
+
+    const duplicate = await findCommitteeDuplicateYear(body.data.masterYearId);
+    if (duplicate) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: 'A committee already exists for the selected year. Choose a different year.',
+        },
+        { status: 409 }
+      );
+    }
+
     const created = await Commities.create({
       CommitiesData: body,
     });

@@ -1,62 +1,20 @@
 'use client';
 
-import React, { useRef } from 'react';
+import React, { useEffect, useId, useRef } from 'react';
 import Image from 'next/image';
 import axios from 'axios';
 import { ConfirmDialog, confirmDialog } from 'primereact/confirmdialog';
 
+import {
+  detectMediaType,
+  isImageMediaType,
+  isVideoMedia,
+  normalizeMediaTypeLabel,
+} from '@/app/lib/mediaTypes';
+
 export const DEFAULT_MAX_MEDIA_SIZE_MB = 15;
 
-/** Normalize any stored/detected type to 'Photo' | 'Video' */
-export function normalizeMediaTypeLabel(value) {
-  if (!value) return null;
-  const v = String(value).toLowerCase();
-  if (v === 'video') return 'Video';
-  if (v === 'photo' || v === 'image') return 'Photo';
-  return null;
-}
-
-export function detectMediaType(fileOrUrl, { allowAllFiles = false } = {}) {
-  if (fileOrUrl instanceof File) {
-    if (fileOrUrl.type.startsWith('video/')) return 'Video';
-    if (fileOrUrl.type.startsWith('image/')) return 'Photo';
-    return allowAllFiles ? 'File' : 'Photo';
-  }
-
-  if (typeof fileOrUrl === 'string' && fileOrUrl) {
-    if (
-      fileOrUrl.includes('/video/upload/') ||
-      /\.(mp4|webm|ogg|mov|m4v)(\?|$)/i.test(fileOrUrl)
-    ) {
-      return 'Video';
-    }
-    if (
-      fileOrUrl.includes('/image/upload/') ||
-      /\.(jpe?g|png|gif|webp|bmp|svg)(\?|$)/i.test(fileOrUrl)
-    ) {
-      return 'Photo';
-    }
-    if (allowAllFiles) return 'File';
-  }
-
-  return 'Photo';
-}
-
-export function isImageMediaType(type, url = '') {
-  if (type === 'File' || isVideoMedia(type)) return false;
-  if (type === 'Photo') return true;
-  if (typeof url === 'string' && url) {
-    return (
-      url.includes('/image/upload/') ||
-      /\.(jpe?g|png|gif|webp|bmp|svg)(\?|$)/i.test(url)
-    );
-  }
-  return false;
-}
-
-export function isVideoMedia(type) {
-  return type === 'Video' || String(type || '').toLowerCase() === 'video';
-}
+export { detectMediaType, isImageMediaType, isVideoMedia, normalizeMediaTypeLabel };
 
 /**
  * Upload a File to /api/upload. Returns the CDN/url string.
@@ -124,7 +82,7 @@ export async function uploadMediaAttachments(items = [], { allowAllFiles = false
       const url = await uploadMediaFile(item.file);
       attachments.push({
         url,
-        fileName: item.file.name,
+        fileName: item.fileName || item.file.name,
         mediaType:
           item.mediaType || detectMediaType(item.file, { allowAllFiles }),
       });
@@ -220,6 +178,13 @@ export default function MediaUpload({
   className = '',
 }) {
   const inputRef = useRef(null);
+  const itemsRef = useRef(items);
+  const inputId = useId();
+
+  useEffect(() => {
+    itemsRef.current = items;
+  }, [items]);
+
   const maxBytes = maxSizeMB * 1024 * 1024;
   const resolvedLabel =
     label ||
@@ -290,7 +255,9 @@ export default function MediaUpload({
     if (!selectedFiles.length) return;
 
     if (multiple) {
-      const nextItems = [...items];
+      const nextItems = [...itemsRef.current];
+      let added = false;
+
       for (const file of selectedFiles) {
         const validated = validateFile(file);
         if (!validated) continue;
@@ -299,9 +266,13 @@ export default function MediaUpload({
           file: validated.file,
           previewUrl: validated.previewUrl,
           mediaType: validated.mediaType,
+          fileName: validated.file.name,
         });
+        added = true;
       }
-      if (nextItems.length !== items.length) {
+
+      if (added) {
+        itemsRef.current = nextItems;
         onItemsChange?.(nextItems);
       }
       return;
@@ -320,6 +291,7 @@ export default function MediaUpload({
   const clearMedia = () => {
     onClear?.();
     if (multiple) {
+      itemsRef.current = [];
       onItemsChange?.([]);
       return;
     }
@@ -331,7 +303,9 @@ export default function MediaUpload({
   };
 
   const removeItem = (itemId) => {
-    onItemsChange?.(items.filter((item) => item.id !== itemId));
+    const nextItems = itemsRef.current.filter((item) => item.id !== itemId);
+    itemsRef.current = nextItems;
+    onItemsChange?.(nextItems);
   };
 
   const handleRemove = (item) => {
@@ -421,14 +395,18 @@ export default function MediaUpload({
           {required && <span className="text-red-500"> *</span>}
         </label>
 
-        <div className="flex border-2 border-[#b9d1ffab] border-dashed bg-[#fffef5] p-4 justify-center group relative cursor-pointer">
+        <label
+          htmlFor={inputId}
+          className="flex border-2 border-[#b9d1ffab] border-dashed bg-[#fffef5] p-4 justify-center group relative cursor-pointer min-h-[140px]"
+        >
           <input
             ref={inputRef}
+            id={inputId}
             type="file"
             onChange={handleFileSelect}
             accept={accept}
             multiple={multiple}
-            className="absolute left-0 right-0 top-0 bottom-0 opacity-0 cursor-pointer"
+            className="sr-only"
           />
           <div className="text-center">
             <Image
@@ -444,15 +422,14 @@ export default function MediaUpload({
             <p className="text-[0.750rem] xl:text-[0.625vw] text-[#6C768B] font-semibold mb-4">
               {hint}
             </p>
-            <button
-              type="button"
+            <span
               className="text-white text-[0.750rem] xl:text-[0.625vw] bg-[#4FB155] border border-[#4FB155] rounded xl:py-[0.417vw] py-2 xl:px-[0.417vw] px-2 inline-block group-hover:bg-[#3f8643] group-hover:border-[#3f8643] transition duration-300 ease-in-out"
             >
               <i className="rdmark-table-search mr-2"></i>
-              Browse File
-            </button>
+              Browse File{multiple ? 's' : ''}
+            </span>
           </div>
-        </div>
+        </label>
 
         {error ? <span className="text-red-500 text-sm">{error}</span> : null}
       </div>
@@ -462,7 +439,12 @@ export default function MediaUpload({
           {items.map((item, index) => (
             <div key={item.id} className="p-2 border flex gap-3 items-start">
               <div className="min-w-0">
-                {renderPreview(item.previewUrl, item.mediaType, `Uploaded image ${index + 1}`)}
+                {renderPreview(
+                  item.previewUrl,
+                  item.mediaType,
+                  `Uploaded file ${index + 1}`,
+                  item.fileName || item.file?.name || ''
+                )}
                 {showTypeBadge ? (
                   <div className="text-sm text-[#494E5F]">
                     Type:{' '}

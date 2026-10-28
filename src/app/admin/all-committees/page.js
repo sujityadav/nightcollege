@@ -7,6 +7,7 @@ import { format } from 'date-fns';
 import { Toast } from 'primereact/toast';
 import { confirmDialog, ConfirmDialog } from 'primereact/confirmdialog';
 import CommonDataTable from '@/app/components/common/DataTable';
+import { formatMasterYearLabel, normalizeMasterYearId } from '@/app/lib/committeeData';
 
 const actionColumnStyle = {
   minWidth: '4rem',
@@ -28,6 +29,23 @@ export default function CommitteesList() {
     sortOrder: 1,
   });
   const toast = useRef(null);
+  const [yearLabelMap, setYearLabelMap] = useState({});
+
+  useEffect(() => {
+    const loadYears = async () => {
+      try {
+        const response = await axios.get('/api/master-years', { params: { page: 1, limit: 300 } });
+        const map = {};
+        (response.data.data || []).forEach((year) => {
+          map[String(year._id)] = formatMasterYearLabel(year);
+        });
+        setYearLabelMap(map);
+      } catch {
+        setYearLabelMap({});
+      }
+    };
+    loadYears();
+  }, []);
 
   const fetchEventList = useCallback(async () => {
     try {
@@ -119,6 +137,16 @@ export default function CommitteesList() {
         );
       },
       style: { minWidth: '12rem' },
+    },
+    {
+      header: 'Year',
+      sortable: true,
+      sortField: 'CommitiesData.data.masterYearId',
+      body: (rowData) => {
+        const yearId = normalizeMasterYearId(rowData?.CommitiesData?.data?.masterYearId);
+        return yearLabelMap[yearId] || '—';
+      },
+      style: { minWidth: '8rem' },
     },
     {
       header: 'Sort Order',

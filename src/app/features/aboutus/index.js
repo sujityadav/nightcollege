@@ -10,7 +10,7 @@ export default function AboutUsPage() {
   const [activeKey, setActiveKey] = useState('about');
 
   return (
-    <div className="flex">
+    <div className="flex w-full min-w-0">
       <SubSidebar
         title="About Us"
         navItems={aboutUsNavItems}
@@ -18,7 +18,7 @@ export default function AboutUsPage() {
         onSelect={setActiveKey}
       />
 
-      <div className="flex-grow p-4">
+      <div className="min-w-0 flex-1 w-full p-4">
         {componentMap[activeKey] || <div>Component not found</div>}
       </div>
     </div>

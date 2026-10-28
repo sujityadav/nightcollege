@@ -19,6 +19,7 @@ export async function GET(req) {
       success: true,
       data: {
         title: about.title || '',
+        designation: about.designation || '',
         content: about.content || '',
         photo: about.photo || '',
       },

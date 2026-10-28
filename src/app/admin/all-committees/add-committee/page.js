@@ -1,90 +1,168 @@
 'use client';
-import React, { useRef, useState, useEffect } from 'react';
+
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { useSelector } from 'react-redux';
 import axios from 'axios';
-
 import { InputText } from 'primereact/inputtext';
-import { Calendar } from 'primereact/calendar';
 import { Button } from 'primereact/button';
+import { Dropdown } from 'primereact/dropdown';
 import { Toast } from 'primereact/toast';
 import Link from 'next/link';
-import Image from 'next/image';
 import TextEditor from '@/app/components/common/editor';
+import MediaUpload, {
+  DEFAULT_MAX_MEDIA_SIZE_MB,
+  detectMediaType,
+  uploadMediaFile,
+} from '@/app/components/common/MediaUpload';
 
-import 'primereact/resources/themes/lara-light-blue/theme.css';
-import 'primereact/resources/primereact.min.css';
+function formatMasterYearOption(year) {
+  return `${year.fromYear} – ${year.toYear}`;
+}
 
-export default function AddEvents() {
+export default function AddCommitteePage() {
   const { register, handleSubmit, setValue, formState: { errors }, reset } = useForm();
-  const [fromDate, setFromDate] = useState(null);
-  const [toDate, setToDate] = useState(null);
   const [editorContent, setEditorContent] = useState('');
-  const [isUpdateMode, setIsUpdateMode] = useState(false);
+  const [masterYearId, setMasterYearId] = useState('');
+  const [yearOptions, setYearOptions] = useState([]);
+  const [yearError, setYearError] = useState('');
+  const [mediaFile, setMediaFile] = useState(null);
+  const [previewUrl, setPreviewUrl] = useState('');
+  const [fileName, setFileName] = useState('');
+  const [mediaType, setMediaType] = useState('File');
+  const [mediaError, setMediaError] = useState('');
   const [loading, setLoading] = useState(false);
 
   const user = useSelector((state) => state.auth.user);
   const toast = useRef(null);
   const router = useRouter();
   const searchParams = useSearchParams();
-  const comityId = searchParams.get('id'); // <-- read id from query
+  const committeeId = searchParams.get('id');
+  const isUpdateMode = Boolean(committeeId);
 
-  // Sync editor content manually
   const handleEditorChange = (value) => {
     setEditorContent(value);
     setValue('largeDescription', value);
   };
 
-  // Fetch data if in update mode
   useEffect(() => {
-    if (comityId) {
-      setIsUpdateMode(true);
-      fetchEventData(comityId);
-    }
-  }, [comityId]);
+    const loadYears = async () => {
+      try {
+        const response = await axios.get('/api/master-years', { params: { page: 1, limit: 200 } });
+        const activeYears = (response.data.data || []).filter((year) => year.status !== false);
+        setYearOptions(
+          activeYears.map((year) => ({
+            label: formatMasterYearOption(year),
+            value: year._id,
+          }))
+        );
+      } catch {
+        toast.current?.show({
+          severity: 'error',
+          summary: 'Error',
+          detail: 'Could not load master years',
+          life: 3000,
+        });
+      }
+    };
+    loadYears();
+  }, []);
 
-  const fetchEventData = async (id) => {
-    try {
-      setLoading(true);
-      
-      const res = await axios.get(`/api/commities/getbyId`, {
-        params:{id:id},
-        headers: {
-          Authorization: `Bearer ${user.token}`,
-        },
-      });
+  useEffect(() => {
+    if (!committeeId) return;
 
-      const event = res.data.data;
-      reset({
-        title: event[0]?.CommitiesData?.data?.title,
-        sortOrder: event[0]?.CommitiesData?.data?.sortOrder ?? '',
-        smallDescription: event[0]?.CommitiesData?.data?.smallDescription,
-        largeDescription: event[0]?.CommitiesData?.data?.largeDescription,
-      });
-      setEditorContent(event[0]?.CommitiesData?.data?.largeDescription);
-      
-    } catch (err) {
-      console.error('Failed to fetch event:', err);
-    } finally {
-      setLoading(false);
-    }
-  };
+    const fetchCommittee = async () => {
+      try {
+        setLoading(true);
+        const res = await axios.get('/api/commities/getbyId', {
+          params: { id: committeeId },
+          headers: { Authorization: `Bearer ${user?.token}` },
+        });
 
-  const onSubmit = async (formData) => {
-    formData.sortOrder = Number(formData.sortOrder);
-    formData.fromDate = fromDate;
-    formData.toDate = toDate;
-    formData.largeDescription = editorContent;
+        const event = res.data.data?.[0];
+        const data = event?.CommitiesData?.data || {};
 
-    const payload = {
-      data: formData,
-      ...(comityId && { _id: comityId }),
+        reset({
+          title: data.title || '',
+          sortOrder: data.sortOrder ?? '',
+          smallDescription: data.smallDescription || '',
+          largeDescription: data.largeDescription || '',
+        });
+        setEditorContent(data.largeDescription || '');
+        setMasterYearId(data.masterYearId?._id || data.masterYearId || '');
+        setPreviewUrl(data.fileUrl || '');
+        setFileName(data.fileName || '');
+        setMediaType(detectMediaType(data.fileUrl || '', { allowAllFiles: true }));
+        setMediaFile(null);
+        setMediaError('');
+      } catch {
+        toast.current?.show({
+          severity: 'error',
+          summary: 'Error',
+          detail: 'Could not load committee',
+          life: 3000,
+        });
+      } finally {
+        setLoading(false);
+      }
     };
 
+    fetchCommittee();
+  }, [committeeId, reset, user?.token]);
+
+  const handleMediaChange = useCallback(({ file, previewUrl: nextPreview, mediaType: nextType }) => {
+    setMediaFile(file);
+    setPreviewUrl(nextPreview);
+    if (file?.name) setFileName(file.name);
+    if (nextType) setMediaType(nextType);
+    setMediaError('');
+  }, []);
+
+  const handleMediaClear = useCallback(() => {
+    setMediaFile(null);
+    setPreviewUrl('');
+    setFileName('');
+    setMediaType('File');
+    setMediaError('');
+  }, []);
+
+  const onSubmit = async (formData) => {
+    if (!masterYearId) {
+      setYearError('Year is required');
+      return;
+    }
+    setYearError('');
+
+    if (!previewUrl && !mediaFile) {
+      setMediaError('File is required');
+      return;
+    }
+
+    setLoading(true);
     try {
-      const url = comityId ? `/api/commities/${comityId}` : `/api/commities`;
-      const method = comityId ? 'put' : 'post';
+      const uploadedUrl = await uploadMediaFile(mediaFile, previewUrl);
+      if (!uploadedUrl) {
+        setMediaError('File is required');
+        setLoading(false);
+        return;
+      }
+
+      const payload = {
+        data: {
+          title: formData.title.trim(),
+          sortOrder: Number(formData.sortOrder),
+          smallDescription: formData.smallDescription.trim(),
+          largeDescription: editorContent,
+          masterYearId,
+          fileUrl: uploadedUrl,
+          fileName: mediaFile?.name || fileName || '',
+          mediaType: mediaType || detectMediaType(uploadedUrl, { allowAllFiles: true }),
+        },
+      };
+
+      const url = committeeId ? `/api/commities/${committeeId}` : '/api/commities';
+      const method = committeeId ? 'put' : 'post';
 
       const response = await axios({
         method,
@@ -92,42 +170,70 @@ export default function AddEvents() {
         data: payload,
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${user.token}`,
+          Authorization: `Bearer ${user?.token}`,
         },
       });
 
       if (response?.data?.success) {
         toast.current.show({
           severity: 'success',
-          summary: comityId ? 'Updated' : 'Saved',
-          detail: `Content ${comityId ? 'updated' : 'saved'} successfully ✅`,
+          summary: committeeId ? 'Updated' : 'Saved',
+          detail: `Committee ${committeeId ? 'updated' : 'saved'} successfully`,
           life: 3000,
         });
-        router.push("/admin/all-committees");
+        router.push('/admin/all-committees');
       }
     } catch (err) {
-      console.error('Failed to submit:', err);
+      const message =
+        err.response?.data?.message ||
+        (err.response?.status === 409
+          ? 'A committee already exists for the selected year.'
+          : 'Could not save committee');
+      toast.current?.show({
+        severity: 'error',
+        summary: 'Error',
+        detail: message,
+        life: 4000,
+      });
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
     <div className="flex w-full">
       <Toast ref={toast} />
-      <div className='p-[20px] xl:p-[25px] 3xl:p-[1.563vw] w-full'>
-        <h2 className='text-[#19212A] text-[22px] font-[700] mb-3'>
+      <div className="w-full p-[20px] xl:p-[25px]">
+        <h2 className="mb-3 text-[22px] font-[700] text-[#19212A]">
           {isUpdateMode ? 'Update Committee' : 'Add Committee'}
         </h2>
 
-        <form onSubmit={handleSubmit(onSubmit)} className='bg-white card-shadow p-[25px]'>
-          <div className='px-4 sm:px-6 md:px-10 lg:px-20 xl:px-[250px] space-y-3'>
-
-            <div className='flex flex-col gap-1'>
+        <form onSubmit={handleSubmit(onSubmit)} className="bg-white card-shadow p-[25px]" noValidate>
+          <div className="space-y-4 px-4 sm:px-6 md:px-10 lg:px-20 xl:px-[250px]">
+            <div className="flex flex-col gap-1">
               <label>Committee Title <span className="text-red-500">*</span></label>
-              <InputText {...register('title', { required: true })} placeholder="Enter your title" />
-              {errors.title && <span className="text-red-500 text-sm">This field is required</span>}
+              <InputText {...register('title', { required: true })} placeholder="Enter committee title" />
+              {errors.title && <span className="text-sm text-red-500">This field is required</span>}
             </div>
 
-            <div className='flex flex-col gap-1'>
+            <div className="flex flex-col gap-1">
+              <label>Year <span className="text-red-500">*</span></label>
+              <Dropdown
+                value={masterYearId}
+                options={yearOptions}
+                optionLabel="label"
+                optionValue="value"
+                onChange={(e) => {
+                  setMasterYearId(e.value);
+                  setYearError('');
+                }}
+                placeholder="Select year"
+                className="w-full border rounded-none"
+              />
+              {yearError && <span className="text-sm text-red-500">{yearError}</span>}
+            </div>
+
+            <div className="flex flex-col gap-1">
               <label>Sort Order <span className="text-red-500">*</span></label>
               <InputText
                 type="number"
@@ -139,36 +245,51 @@ export default function AddEvents() {
                 placeholder="Enter sort order"
               />
               {errors.sortOrder && (
-                <span className="text-red-500 text-sm">{errors.sortOrder.message || 'This field is required'}</span>
+                <span className="text-sm text-red-500">{errors.sortOrder.message || 'This field is required'}</span>
               )}
             </div>
 
-            <div className='flex flex-col gap-1'>
+            <div className="flex flex-col gap-1">
               <label>Small Description <span className="text-red-500">*</span></label>
               <InputText {...register('smallDescription', { required: true })} placeholder="Enter short description" />
-              {errors.smallDescription && <span className="text-red-500 text-sm">This field is required</span>}
+              {errors.smallDescription && <span className="text-sm text-red-500">This field is required</span>}
             </div>
 
-            <div className='flex flex-col gap-1'>
+            <div className="flex flex-col gap-1">
               <label>Large Description <span className="text-red-500">*</span></label>
               <TextEditor value={editorContent} setEditorContent={setEditorContent} onChange={handleEditorChange} />
               <input type="hidden" {...register('largeDescription', { required: true })} />
-              {errors.largeDescription && <span className="text-red-500 text-sm">This field is required</span>}
+              {errors.largeDescription && <span className="text-sm text-red-500">This field is required</span>}
             </div>
 
-           
+            <MediaUpload
+              required
+              allowAllFiles
+              label="File Upload"
+              maxSizeMB={DEFAULT_MAX_MEDIA_SIZE_MB}
+              previewUrl={previewUrl}
+              mediaType={mediaType}
+              file={mediaFile}
+              fileName={fileName}
+              error={mediaError}
+              onChange={handleMediaChange}
+              onClear={handleMediaClear}
+              onError={(message) => {
+                setMediaError(message);
+                toast.current?.show({ severity: 'warn', summary: 'Upload', detail: message, life: 3000 });
+              }}
+            />
 
-            <div className='mt-6 flex justify-center gap-6'>
-              <Link href="/admin/all-committees" className='cancelbtn px-4 py-2'>Cancel</Link>
+            <div className="mt-6 flex justify-center gap-6">
+              <Link href="/admin/all-committees" className="cancelbtn px-4 py-2">Cancel</Link>
               <Button
-                type='submit'
-                className='text-white bg-primarycolor border-[#af251c] px-4 py-2 rounded-none'
+                type="submit"
+                className="rounded-none border-[#af251c] bg-primarycolor px-4 py-2 text-white"
                 loading={loading}
               >
                 {isUpdateMode ? 'Update' : 'Save'}
               </Button>
             </div>
-
           </div>
         </form>
       </div>

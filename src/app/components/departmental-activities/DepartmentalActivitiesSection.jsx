@@ -108,11 +108,7 @@ export default function DepartmentalActivitiesSection({
       ) : error ? (
         <p className="text-sm text-red-600">{error}</p>
       ) : (
-        <DepartmentalActivitiesList
-          key={filter}
-          activities={activities}
-          applyExpiryDimming
-        />
+        <DepartmentalActivitiesList key={filter} activities={activities} />
       )}
     </div>
   );

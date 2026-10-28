@@ -4,10 +4,9 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import axios from 'axios';
 import { Roboto_Slab } from 'next/font/google';
 import {
-  ACTIVITY_FILTER_ALL,
   DEPARTMENTAL_ACTIVITIES_BROWSE_PAGE_SIZE,
   getBrowseDepartmentActivityFilterOptions,
-  isDepartmentalActivityWithinToDate,
+  getDefaultDepartmentActivityYearFilter,
 } from '@/app/lib/departmentActivityFilters';
 import DepartmentalActivitiesFilterSelect from './DepartmentalActivitiesFilterSelect';
 import DepartmentalActivityCard from './DepartmentalActivityCard';
@@ -30,7 +29,7 @@ export default function DepartmentalActivitiesInfiniteBrowse({
   title = 'Departmental Activities',
 }) {
   const [activities, setActivities] = useState([]);
-  const [filter, setFilter] = useState(ACTIVITY_FILTER_ALL);
+  const [filter, setFilter] = useState(getDefaultDepartmentActivityYearFilter());
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -148,11 +147,7 @@ export default function DepartmentalActivitiesInfiniteBrowse({
         <>
           <div className={gridClass}>
             {activities.map((activity) => (
-              <DepartmentalActivityCard
-                key={activity.id}
-                activity={activity}
-                dimmed={!isDepartmentalActivityWithinToDate(activity.toDate)}
-              />
+              <DepartmentalActivityCard key={activity.id} activity={activity} />
             ))}
           </div>
 

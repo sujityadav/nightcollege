@@ -7,12 +7,107 @@ import 'primereact/resources/themes/lara-light-blue/theme.css';
 import 'primereact/resources/primereact.min.css';
 import 'primeicons/primeicons.css';
 import CollegeBanner from "../college-banner";
+import { getPublicAboutUsNavLinks } from "@/app/lib/publicAboutUsSections";
 
-type MegaLink = { label: string; href: string };
-type MegaSection = { title: string; links: MegaLink[] };
+type MegaLink = { label: string; href: string; disabled?: boolean };
+type MegaSection = { title: string; links: MegaLink[]; disabled?: boolean };
+
+type NavLink = { label: string; href: string };
 
 export default function WebsiteTop() {
   const [departmentMegaSections, setDepartmentMegaSections] = useState<MegaSection[]>([]);
+  const [infrastructureLinks, setInfrastructureLinks] = useState<NavLink[]>([]);
+  const [publicationLinks, setPublicationLinks] = useState<NavLink[]>([]);
+  const [studentCornerLinks, setStudentCornerLinks] = useState<NavLink[]>([]);
+  const [committeeLinks, setCommitteeLinks] = useState<NavLink[]>([]);
+
+  useEffect(() => {
+    const loadCommitteesMenu = async () => {
+      try {
+        const response = await axios.get("/api/commities/public");
+        if (!response.data?.success) return;
+
+        const links: NavLink[] = (response.data.data || []).map(
+          (item: { title: string; slug: string; id: string }) => ({
+            label: item.title,
+            href: `/committees/${item.slug}?id=${item.id}`,
+          })
+        );
+
+        setCommitteeLinks(links);
+      } catch (error) {
+        console.error("Failed to load committees navigation:", error);
+      }
+    };
+
+    loadCommitteesMenu();
+  }, []);
+
+  useEffect(() => {
+    const loadStudentCornerMenu = async () => {
+      try {
+        const response = await axios.get("/api/student-corner/public");
+        if (!response.data?.success) return;
+
+        const links: NavLink[] = (response.data.data || []).map(
+          (item: { id: string; title: string }) => ({
+            label: item.title,
+            href: `/student-corner/${item.id}`,
+          })
+        );
+
+        setStudentCornerLinks(links);
+      } catch (error) {
+        console.error("Failed to load student corner navigation:", error);
+      }
+    };
+
+    loadStudentCornerMenu();
+  }, []);
+
+  useEffect(() => {
+    const loadPublicationMenu = async () => {
+      try {
+        const response = await axios.get("/api/college-publication/public");
+        if (!response.data?.success) return;
+
+        const links: NavLink[] = (response.data.data || []).map(
+          (item: { id: string; title: string }) => ({
+            label: item.title,
+            href: `/college-publication/${item.id}`,
+          })
+        );
+
+        setPublicationLinks(links);
+      } catch (error) {
+        console.error("Failed to load college publication navigation:", error);
+      }
+    };
+
+    loadPublicationMenu();
+  }, []);
+
+  useEffect(() => {
+    const loadInfrastructureMenu = async () => {
+      try {
+        const response = await axios.get("/api/infrastructure-facilities/public");
+        if (!response.data?.success) return;
+
+        const links: NavLink[] = (response.data.data || []).map(
+          (item: { id: string; title: string }) => ({
+            label: item.title,
+            href: `/infrastructure/${item.id}`,
+          })
+        );
+
+        setInfrastructureLinks(links);
+      } catch (error) {
+        console.error("Failed to load infrastructure navigation:", error);
+      }
+    };
+
+    loadInfrastructureMenu();
+  }, []);
 
   useEffect(() => {
     const loadDepartmentsMenu = async () => {
@@ -44,12 +139,7 @@ export default function WebsiteTop() {
     {
       label: "About",
       type: "dropdown",
-      links: [
-        { label: "College About Us", href: "/about-us" },
-        { label: "Vision and Mission", href: "/vision-mission" },
-        { label: "Principal Massage", href: "/principal-massage" },
-      
-      ],
+      links: getPublicAboutUsNavLinks(),
     },
     
     {
@@ -59,28 +149,35 @@ export default function WebsiteTop() {
         {
           title: "Staff",
           links: [
-            { label: "Teaching Staff", href: "/teaching-staff" },
-            { label: "Non Teaching Staff", href: "/teaching-staff" },
-            { label: "Anti Ragging Cell ", href: "/anti-ragging-cell " },
-            // { label: "Custom logo", href: "/design/custom-logo" },
+            { label: "Teaching Staff", href: "/staff?type=teaching" },
+            { label: "Non Teaching Staff", href: "/staff?type=non-teaching" },
           ],
         },
         {
           title: "About Management",
+          disabled: true,
           links: [
-          { label: "Founder", href: "/founder" },
-          { label: "Governing Council", href: "/governing-council" },
-          { label: "NCI Organograme", href: "/nci-Organograme" },
-          { label: "Code of Conduct and Quality Policy", href: "/nci-Organograme" },
-          { label: "Institutional Distinctiveness", href: "/institutional-distinctiveness" },
+            { label: "Founder", href: "/founder", disabled: true },
+            { label: "Governing Council", href: "/governing-council", disabled: true },
+            { label: "NCI Organograme", href: "/nci-Organograme", disabled: true },
+            {
+              label: "Code of Conduct and Quality Policy",
+              href: "/nci-Organograme",
+              disabled: true,
+            },
+            {
+              label: "Institutional Distinctiveness",
+              href: "/institutional-distinctiveness",
+              disabled: true,
+            },
           ],
         },
         {
           title: "Info",
+          disabled: true,
           links: [
-            { label: "Administrative Calendar", href: "/security/site-seal" },
-            { label: "Admin Policies", href: "/security/vps" },
-           
+            { label: "Administrative Calendar", href: "/security/site-seal", disabled: true },
+            { label: "Admin Policies", href: "/security/vps", disabled: true },
           ],
         },
       ],
@@ -92,71 +189,26 @@ export default function WebsiteTop() {
       sections: departmentMegaSections,
     },
     {
-      label: "Courses",
-      type: "dropdown",
-      links: [
-        { label: "Arts Faculty", href: "/dropdown/menu1" },
-        { label: "Commerce Faculty", href: "/dropdown/menu2" },
-      
-      ],
-    },
-    {
       label: "Infrastructure",
       type: "dropdown",
-      links: [
-        { label: "College Infrastructure", href: "/dropdown/menu1" },
-        { label: "Library", href: "/dropdown/menu2" },
-        { label: "Health Centre", href: "/dropdown/menu2" },
-        { label: "ICT facilities", href: "/dropdown/menu2" },
-        { label: "IT Infrastructure", href: "/dropdown/menu2" },
-        { label: "Campus Flora", href: "/dropdown/menu2" },
-      
-      ],
+      links: infrastructureLinks.length
+        ? infrastructureLinks
+        : [{ label: "No facilities listed", href: "#" }],
     },
-      {
-      label: "Research",
-      type: "mega",
-      sections: [
-        {
-          title: "Arts Department",
-          links: [
-            { label: "Marathi", href: "/teaching-staff" },
-            { label: "Hindi", href: "/teaching-staff" },
-            { label: "English", href: "/anti-ragging-cell " },
-            { label: "History", href: "/anti-ragging-cell " },
-            { label: "Geography", href: "/anti-ragging-cell " },
-            { label: "Sociology", href: "/anti-ragging-cell " },
-            { label: "Economics", href: "/anti-ragging-cell " },
-            { label: "Political Science", href: "/anti-ragging-cell " },
-            { label: "English", href: "/anti-ragging-cell " },
-            
-          ],
-        },
-        {
-          title: "Commerce  Department",
-          links: [
-           { label: "Marathi", href: "/teaching-staff" },
-            { label: "Hindi", href: "/teaching-staff" },
-            { label: "English", href: "/anti-ragging-cell " },
-            { label: "History", href: "/anti-ragging-cell " },
-            { label: "Geography", href: "/anti-ragging-cell " },
-            { label: "Sociology", href: "/anti-ragging-cell " },
-            { label: "Economics", href: "/anti-ragging-cell " },
-            { label: "Political Science", href: "/anti-ragging-cell " },
-            { label: "English", href: "/anti-ragging-cell " },
-          ],
-        },
-        {
-          title: "Science Department",
-          links: [
-           { label: "Geography", href: "/anti-ragging-cell " },
-            { label: "Sociology", href: "/anti-ragging-cell " },
-           
-          ],
-        },
-      ],
+    {
+      label: "College Publication",
+      type: "dropdown",
+      links: publicationLinks.length
+        ? publicationLinks
+        : [{ label: "No publications listed", href: "/college-publication" }],
     },
-
+    {
+      label: "Committees",
+      type: "dropdown",
+      links: committeeLinks.length
+        ? committeeLinks
+        : [{ label: "No committees listed", href: "#" }],
+    },
      {
       label: "NAAC/IQAC",
       type: "dropdown",
@@ -174,26 +226,16 @@ export default function WebsiteTop() {
       ],
     },
     
-     {
+    {
       label: "Student Corner",
       type: "dropdown",
-      links: [
-        { label: "Prospectus   ", href: "/dropdown/menu1" },
-        { label: "Admission Form  ", href: "/dropdown/menu2" },
-        { label: "Syllabus", href: "/dropdown/menu2" },
-        { label: "Study Material ", href: "/dropdown/menu2" },
-        { label: "Freeship / Scholarship  ", href: "/dropdown/menu2" },
-        { label: "Bonafide Certificate Application Format ", href: "/dropdown/menu2" },
-        { label: "T.C / L.C. Application Format  ", href: "/dropdown/menu2" },
-        { label: "Code of Conduct  ", href: "/dropdown/menu2" },
-        { label: "Academic Calendar  ", href: "/dropdown/menu2" },
-        { label: "Time Table ", href: "/dropdown/menu2" },
-      
-      ],
+      links: studentCornerLinks.length
+        ? studentCornerLinks
+        : [{ label: "No items listed", href: "/student-corner" }],
     },
   
     { label: "Contact Us", href: "/contact-us" },
-  ], [departmentMegaSections]);
+  ], [departmentMegaSections, infrastructureLinks, publicationLinks, studentCornerLinks, committeeLinks]);
 
   return (
     <>
@@ -243,13 +285,25 @@ export default function WebsiteTop() {
                       <div className={`mega-box${nav.megaVariant === "departments" ? " mega-box--departments" : ""}`}>
                         <div className={`content${nav.megaVariant === "departments" ? " mega-box-content--scroll" : ""}`}>
                           {nav?.sections && nav?.sections.map((section, i) => (
-                            <div className="row" key={section.title || i}>
-                              <header>{section.title}</header>
+                            <div
+                              className={`row${section.disabled ? " mega-row--disabled" : ""}`}
+                              key={section.title || i}
+                            >
+                              <header className={section.disabled ? "mega-header--disabled" : ""}>
+                                {section.title}
+                              </header>
                               <ul className="mega-links mt-2 mega-links--scroll">
                                 {section.links?.length ? (
                                   section.links.map((link, j) => (
-                                    <li key={`${link.label}-${j}`}>
-                                      <Link href={link.href}>{link.label}</Link>
+                                    <li
+                                      key={`${link.label}-${j}`}
+                                      className={link.disabled || section.disabled ? "mega-link--disabled" : ""}
+                                    >
+                                      {link.disabled || section.disabled ? (
+                                        <span aria-disabled="true">{link.label}</span>
+                                      ) : (
+                                        <Link href={link.href}>{link.label}</Link>
+                                      )}
                                     </li>
                                   ))
                                 ) : (

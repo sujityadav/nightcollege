@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
@@ -14,8 +14,9 @@ import TextEditor from '@/app/components/common/editor';
 import MediaUpload, {
   DEFAULT_MAX_MEDIA_SIZE_MB,
   detectMediaType,
-  uploadMediaFile,
+  uploadMediaAttachments,
 } from '@/app/components/common/MediaUpload';
+import { normalizeStudentCornerAttachments } from '@/app/lib/studentCornerData';
 import { usePageBreadcrumbs } from '@/app/hooks/usePageBreadcrumbs';
 
 const fieldLabelClass = 'text-[#212325] text-[14px] xl:text-[14px] 3xl:text-[0.729vw] font-[500]';
@@ -30,17 +31,21 @@ export default function StudentCornerFormPage() {
   const [masterYearId, setMasterYearId] = useState('');
   const [yearOptions, setYearOptions] = useState([]);
   const [yearError, setYearError] = useState('');
-  const [mediaFile, setMediaFile] = useState(null);
-  const [previewUrl, setPreviewUrl] = useState('');
-  const [fileName, setFileName] = useState('');
+  const [mediaItems, setMediaItems] = useState([]);
+  const mediaItemsRef = useRef([]);
   const [mediaError, setMediaError] = useState('');
-  const [mediaType, setMediaType] = useState('Photo');
   const [status, setStatus] = useState(true);
   const [loading, setLoading] = useState(false);
   const toast = useRef(null);
   const router = useRouter();
   const id = useSearchParams().get('id');
   const isEditMode = Boolean(id);
+
+  const handleMediaItemsChange = useCallback((items) => {
+    mediaItemsRef.current = items;
+    setMediaItems(items);
+    setMediaError('');
+  }, []);
 
   usePageBreadcrumbs({
     pageTitle: isEditMode ? 'Update Student Corner' : 'Add Student Corner',
@@ -76,10 +81,14 @@ export default function StudentCornerFormPage() {
   useEffect(() => {
     if (!id) return;
 
+    let cancelled = false;
+
     const loadItem = async () => {
       try {
         setLoading(true);
         const response = await axios.get(`/api/student-corner/${id}`);
+        if (cancelled) return;
+
         const item = response.data.data;
         reset({
           title: item.title || '',
@@ -88,46 +97,40 @@ export default function StudentCornerFormPage() {
         setDescription(item.description || '');
         setValue('description', item.description || '');
         setMasterYearId(item.masterYearId?._id || item.masterYearId || '');
-        setPreviewUrl(item.fileUrl || '');
-        setFileName(item.fileName || '');
-        setMediaType(detectMediaType(item.fileUrl || '', { allowAllFiles: true }));
-        setMediaFile(null);
+        const attachments = normalizeStudentCornerAttachments(item);
+        const hydratedItems = attachments.map((att, index) => ({
+          id: `existing-${index}-${att.url}`,
+          previewUrl: att.url,
+          file: null,
+          mediaType: att.mediaType || detectMediaType(att.url, { allowAllFiles: true }),
+          fileName: att.fileName || '',
+        }));
+        mediaItemsRef.current = hydratedItems;
+        setMediaItems(hydratedItems);
+        setMediaError('');
         setStatus(item.status ?? true);
       } catch {
-        toast.current?.show({
-          severity: 'error',
-          summary: 'Error',
-          detail: 'Could not load student corner item',
-          life: 3000,
-        });
+        if (!cancelled) {
+          toast.current?.show({
+            severity: 'error',
+            summary: 'Error',
+            detail: 'Could not load student corner item',
+            life: 3000,
+          });
+        }
       } finally {
-        setLoading(false);
+        if (!cancelled) {
+          setLoading(false);
+        }
       }
     };
 
     loadItem();
-  }, [id, reset, setValue]);
 
-  const handleMediaChange = ({ file, previewUrl: nextPreview, mediaType: nextType }) => {
-    setMediaFile(file);
-    setPreviewUrl(nextPreview);
-    if (file?.name) setFileName(file.name);
-    if (nextType) setMediaType(nextType);
-    setMediaError('');
-  };
-
-  const handleMediaClear = () => {
-    setMediaFile(null);
-    setPreviewUrl('');
-    setFileName('');
-    setMediaType('Photo');
-    setMediaError('');
-  };
-
-  const handleMediaError = (message) => {
-    setMediaError(message);
-    toast.current?.show({ severity: 'warn', summary: 'Upload', detail: message, life: 3000 });
-  };
+    return () => {
+      cancelled = true;
+    };
+  }, [id]);
 
   const submit = async (formData) => {
     if (!masterYearId) {
@@ -136,16 +139,18 @@ export default function StudentCornerFormPage() {
     }
     setYearError('');
 
-    if (!previewUrl && !mediaFile) {
-      setMediaError('File is required');
+    const itemsToSave = mediaItemsRef.current.length ? mediaItemsRef.current : mediaItems;
+
+    if (!itemsToSave.length) {
+      setMediaError('At least one file is required');
       return;
     }
 
     setLoading(true);
     try {
-      const uploadedUrl = await uploadMediaFile(mediaFile, previewUrl);
-      if (!uploadedUrl) {
-        setMediaError('File is required');
+      const attachments = await uploadMediaAttachments(itemsToSave, { allowAllFiles: true });
+      if (!attachments.length) {
+        setMediaError('At least one file is required');
         setLoading(false);
         return;
       }
@@ -154,8 +159,7 @@ export default function StudentCornerFormPage() {
         title: formData.title.trim(),
         description,
         masterYearId,
-        fileUrl: uploadedUrl,
-        fileName: mediaFile?.name || fileName || '',
+        attachments,
         sortOrder: Number(formData.sortOrder),
         status,
       };
@@ -246,17 +250,21 @@ export default function StudentCornerFormPage() {
 
           <MediaUpload
             required
+            multiple
             label="File Upload"
             allowAllFiles
             maxSizeMB={DEFAULT_MAX_MEDIA_SIZE_MB}
-            previewUrl={previewUrl}
-            mediaType={mediaType}
-            file={mediaFile}
-            fileName={fileName}
+            items={mediaItems}
             error={mediaError}
-            onChange={handleMediaChange}
-            onClear={handleMediaClear}
-            onError={handleMediaError}
+            onItemsChange={handleMediaItemsChange}
+            onClear={() => {
+              setMediaItems([]);
+              setMediaError('');
+            }}
+            onError={(message) => {
+              setMediaError(message);
+              toast.current?.show({ severity: 'warn', summary: 'Upload', detail: message, life: 3000 });
+            }}
           />
 
           <div className="flex flex-col gap-1">

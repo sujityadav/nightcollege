@@ -15,7 +15,8 @@ function ensureCloudinaryConfig() {
 
 function sanitizePublicId(fileName: string) {
   const base = fileName.replace(/\.[^/.]+$/, "");
-  return `${Date.now()}-${base}`
+  const unique = `${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
+  return `${unique}-${base}`
     .replace(/[^a-zA-Z0-9_-]/g, "-")
     .replace(/-+/g, "-")
     .replace(/^-|-$/g, "");

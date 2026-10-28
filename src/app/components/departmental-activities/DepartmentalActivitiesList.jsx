@@ -2,7 +2,6 @@
 
 import { useMemo, useState } from 'react';
 import DepartmentalActivityCard from './DepartmentalActivityCard';
-import { isDepartmentalActivityWithinToDate } from '@/app/lib/departmentActivityFilters';
 import {
   getDepartmentalActivitiesGridClass,
   getHomeDepartmentalActivitiesGridClass,
@@ -16,7 +15,6 @@ export default function DepartmentalActivitiesList({
   gridClassName,
   pageSize = DEFAULT_ROW_SIZE,
   enableViewMore = true,
-  applyExpiryDimming = false,
 }) {
   const [showAll, setShowAll] = useState(false);
 
@@ -44,15 +42,7 @@ export default function DepartmentalActivitiesList({
     <>
       <div className={gridClass}>
         {visibleActivities.map((activity) => (
-          <DepartmentalActivityCard
-            key={activity.id}
-            activity={activity}
-            dimmed={
-              applyExpiryDimming
-                ? !isDepartmentalActivityWithinToDate(activity.toDate)
-                : false
-            }
-          />
+          <DepartmentalActivityCard key={activity.id} activity={activity} />
         ))}
       </div>
 

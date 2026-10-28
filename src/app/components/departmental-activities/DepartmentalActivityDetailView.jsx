@@ -65,6 +65,18 @@ export default function DepartmentalActivityDetailView({ activity }) {
 
       <div className="space-y-6 p-5 sm:p-8 lg:p-10">
         <header className="border-b border-[#E7EDF7] pb-5">
+          {categoryList.length ? (
+            <div className="mb-3 flex flex-wrap gap-2">
+              {categoryList.map((item) => (
+                <span
+                  key={item}
+                  className="inline-block rounded-full border border-primarycolor/25 bg-[#FFF3F1] px-3 py-1 text-xs font-medium text-primarycolor"
+                >
+                  {item}
+                </span>
+              ))}
+            </div>
+          ) : null}
           <h1 className="font26 font-[700] leading-tight text-[#1B212F]">{activity?.title}</h1>
           {activity?.footerLabel ? (
             <p className="mt-2 text-sm font-medium text-primarycolor">{activity.footerLabel}</p>
@@ -89,30 +101,16 @@ export default function DepartmentalActivityDetailView({ activity }) {
             <span className="font-semibold text-[#183B6D]">Location: </span>
             <span>{location || '—'}</span>
           </p>
-          <div>
-            <span className="font-semibold text-[#183B6D]">Category: </span>
-            {categoryList.length ? (
-              <ul className="mt-2 flex flex-wrap gap-2 list-none p-0">
-                {categoryList.map((item) => (
-                  <li key={item}>
-                    <span
-                      className="inline-block rounded-full border border-primarycolor/25 bg-[#FFF3F1] px-3 py-1 text-xs font-medium text-primarycolor"
-                    >
-                      {item}
-                    </span>
-                  </li>
-                ))}
-              </ul>
-            ) : (
-              <span className="ml-1">—</span>
-            )}
-          </div>
         </div>
 
         {activity?.subjectPageHref ? (
           <div className="border-t border-[#E7EDF7] pt-5">
-            <Link href={activity.subjectPageHref} className="arrow-link">
-              Back to department<span className="arrow"></span>
+            <Link
+              href={activity.subjectPageHref}
+              className="arrow-link inline-flex items-center gap-2 no-underline"
+            >
+              <i className="pi pi-arrow-left text-[12px]" aria-hidden="true" />
+              Back to department
             </Link>
           </div>
         ) : null}

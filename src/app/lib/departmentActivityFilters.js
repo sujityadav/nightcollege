@@ -1,6 +1,6 @@
 export const ACTIVITY_FILTER_CURRENT = 'current';
 export const ACTIVITY_FILTER_ALL = 'all';
-export const ACTIVITY_YEAR_START = 2020;
+export const ACTIVITY_YEAR_START = 2023;
 export const DEPARTMENTAL_ACTIVITIES_BROWSE_PAGE_SIZE = 16;
 
 export function getActivityYearFilterEndYear(date = new Date()) {

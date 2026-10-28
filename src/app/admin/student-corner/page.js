@@ -9,6 +9,7 @@ import { ConfirmDialog, confirmDialog } from 'primereact/confirmdialog';
 import { Dialog } from 'primereact/dialog';
 import CommonDataTable from '@/app/components/common/DataTable';
 import { usePageBreadcrumbs } from '@/app/hooks/usePageBreadcrumbs';
+import { normalizeStudentCornerAttachments } from '@/app/lib/studentCornerData';
 
 function formatMasterYearLabel(masterYear) {
   if (!masterYear) return '-';
@@ -43,16 +44,19 @@ export default function StudentCornerPage() {
   const toast = useRef(null);
 
   const openImagePreview = (rowData) => {
-    const fileUrl = rowData?.fileUrl;
+    const attachments = normalizeStudentCornerAttachments(rowData);
+    const fileUrl = attachments[0]?.url;
     if (!fileUrl || !isPreviewableImageUrl(fileUrl)) return;
     setFilePreview({
       url: fileUrl,
-      title: rowData.title || rowData.fileName || 'Image preview',
+      title: rowData.title || attachments[0]?.fileName || 'Image preview',
     });
   };
 
   const filePreviewTemplate = (rowData) => {
-    const fileUrl = rowData.fileUrl;
+    const attachments = normalizeStudentCornerAttachments(rowData);
+    const fileUrl = attachments[0]?.url;
+    const fileCount = attachments.length;
 
     if (!fileUrl) {
       return <span className="text-gray-400 text-sm">No File</span>;
@@ -60,28 +64,42 @@ export default function StudentCornerPage() {
 
     if (isPreviewableImageUrl(fileUrl)) {
       return (
-        <button
-          type="button"
-          onClick={() => openImagePreview(rowData)}
-          className="block cursor-pointer border-0 bg-transparent p-0"
-          title="Preview image"
-        >
-          <img
-            src={fileUrl}
-            alt={rowData.title || rowData.fileName || 'Student corner file'}
-            className="h-14 w-24 rounded object-cover"
-          />
-        </button>
+        <div className="relative inline-block">
+          <button
+            type="button"
+            onClick={() => openImagePreview(rowData)}
+            className="block cursor-pointer border-0 bg-transparent p-0"
+            title="Preview image"
+          >
+            <img
+              src={fileUrl}
+              alt={rowData.title || attachments[0]?.fileName || 'Student corner file'}
+              className="h-14 w-24 rounded object-cover"
+            />
+          </button>
+          {fileCount > 1 ? (
+            <span className="absolute -right-1 -top-1 rounded-full bg-primarycolor px-1.5 py-0.5 text-[10px] font-semibold text-white">
+              {fileCount}
+            </span>
+          ) : null}
+        </div>
       );
     }
 
     return (
-      <div
-        className="flex h-14 w-24 items-center justify-center rounded border border-[#EAEDF3] bg-[#F9FAFB] text-primarycolor"
-        title="File attached"
-        aria-hidden
-      >
-        <i className="pi pi-file text-[22px]" />
+      <div className="relative inline-flex">
+        <div
+          className="flex h-14 w-24 items-center justify-center rounded border border-[#EAEDF3] bg-[#F9FAFB] text-primarycolor"
+          title="File attached"
+          aria-hidden
+        >
+          <i className="pi pi-file text-[22px]" />
+        </div>
+        {fileCount > 1 ? (
+          <span className="absolute -right-1 -top-1 rounded-full bg-primarycolor px-1.5 py-0.5 text-[10px] font-semibold text-white">
+            {fileCount}
+          </span>
+        ) : null}
       </div>
     );
   };

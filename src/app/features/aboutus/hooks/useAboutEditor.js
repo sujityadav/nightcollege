@@ -37,8 +37,8 @@ export const useAboutEditor = (type) => {
       setEditorContent(tableHtml || entry.Aboutusdata.content || '');
       setExistingId(entry._id || result.data._id || null);
 
-      if (type === 'desk' || type === 'about') {
-        if (type === 'desk') {
+      if (type === 'desk' || type === 'chairman_desk' || type === 'about') {
+        if (type === 'desk' || type === 'chairman_desk') {
           setDesignation(entry.Aboutusdata.designation || '');
         }
         setPhotoPreview(entry.Aboutusdata.photo || '');
@@ -97,7 +97,7 @@ export const useAboutEditor = (type) => {
         _id: existingId,
       };
 
-      if (saveType === 'desk' || saveType === 'about') {
+      if (saveType === 'desk' || saveType === 'chairman_desk' || saveType === 'about') {
         const photoUrl = await uploadMediaFile(photoFile, photoPreview);
         if (saveType === 'about' && !photoUrl) {
           setPhotoError('Photo is required');
@@ -106,7 +106,7 @@ export const useAboutEditor = (type) => {
         payload.photo = photoUrl || '';
       }
 
-      if (saveType === 'desk') {
+      if (saveType === 'desk' || saveType === 'chairman_desk') {
         payload.designation = designation.trim();
       }
 

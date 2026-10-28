@@ -8,18 +8,14 @@ import DepartmentalActivityDateOverlay from './DepartmentalActivityDateOverlay';
 
 const FALLBACK_IMAGE = '/images/evn-img-1.jpg';
 
-export default function DepartmentalActivityCard({ activity, dimmed = false }) {
+export default function DepartmentalActivityCard({ activity }) {
   const imageUrl = getFirstPhotoUrl(activity) || FALLBACK_IMAGE;
   const footerLabel =
     activity?.footerLabel?.trim() || activity?.location?.trim();
   const readMoreHref = getDepartmentalActivityDetailPath(activity?.id);
 
   return (
-    <div
-      className={`group h-full cursor-pointer border border-[#E7EDF7] transition-opacity ${
-        dimmed ? 'opacity-50 grayscale' : ''
-      }`}
-    >
+    <div className="group h-full cursor-pointer border border-[#E7EDF7]">
       <div className="img-block relative aspect-[4/3] overflow-hidden bg-[#F0F2F6]">
         <Image
           src={imageUrl}

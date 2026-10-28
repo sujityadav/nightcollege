@@ -2,14 +2,19 @@ import { NextResponse } from 'next/server';
 import { connectDB } from '../../lib/mongodb';
 import StudentCorner from '../../models/studentCorner';
 import MasterYear from '../../models/masterYear';
+import { normalizeStudentCornerAttachments } from '../../lib/studentCornerData';
 
 const validatePayload = async (data, isUpdate = false) => {
   if (!isUpdate) {
     if (!data.title?.trim()) return 'Title is required';
     if (!data.description?.trim()) return 'Description is required';
     if (!data.masterYearId) return 'Year is required';
-    if (!data.fileUrl?.trim()) return 'File is required';
     if (data.sortOrder === undefined || data.sortOrder === '') return 'Sort order is required';
+  }
+
+  const attachments = normalizeStudentCornerAttachments(data);
+  if (!attachments.length && !isUpdate) {
+    return 'At least one file is required';
   }
 
   if (data.sortOrder !== undefined && data.sortOrder !== '' && Number.isNaN(Number(data.sortOrder))) {
@@ -106,12 +111,16 @@ export async function POST(req) {
       return NextResponse.json({ success: false, message: validationError }, { status: 400 });
     }
 
+    const attachments = normalizeStudentCornerAttachments(data);
+    const first = attachments[0];
+
     const entry = await StudentCorner.create({
       title: data.title.trim(),
       description: data.description,
       masterYearId: data.masterYearId,
-      fileUrl: data.fileUrl.trim(),
-      fileName: data.fileName?.trim() || '',
+      attachments,
+      fileUrl: first?.url || '',
+      fileName: first?.fileName || '',
       sortOrder: Number(data.sortOrder),
       status: data.status ?? true,
     });

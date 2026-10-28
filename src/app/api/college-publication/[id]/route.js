@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { connectDB } from '../../../lib/mongodb';
 import CollegePublication from '../../../models/collegePublication';
+import { validatePublicationData } from '../../../lib/collegePublicationData';
 
 export async function GET(_req, { params }) {
   try {
@@ -19,8 +20,9 @@ export async function PUT(req, { params }) {
     const { id } = await params;
     await connectDB();
     const body = await req.json();
-    if (!body?.data?.title || !body?.data?.description) {
-      return NextResponse.json({ success: false, message: 'Title and description are required' }, { status: 400 });
+    const validationError = validatePublicationData(body?.data);
+    if (validationError) {
+      return NextResponse.json({ success: false, message: validationError }, { status: 400 });
     }
 
     const publication = await CollegePublication.findByIdAndUpdate(

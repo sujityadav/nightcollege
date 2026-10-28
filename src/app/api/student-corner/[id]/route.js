@@ -2,13 +2,17 @@ import { NextResponse } from 'next/server';
 import { connectDB } from '../../../lib/mongodb';
 import StudentCorner from '../../../models/studentCorner';
 import MasterYear from '../../../models/masterYear';
+import { normalizeStudentCornerAttachments } from '../../../lib/studentCornerData';
 
 const validatePayload = async (data) => {
   if (data.title !== undefined && !String(data.title).trim()) return 'Title is required';
   if (data.description !== undefined && !String(data.description).trim()) return 'Description is required';
-  if (data.fileUrl !== undefined && !String(data.fileUrl).trim()) return 'File is required';
   if (data.sortOrder !== undefined && data.sortOrder !== '' && Number.isNaN(Number(data.sortOrder))) {
     return 'Sort order must be a number';
+  }
+  const attachments = normalizeStudentCornerAttachments(data);
+  if (data.attachments !== undefined && !attachments.length && !data.fileUrl) {
+    return 'At least one file is required';
   }
   if (data.masterYearId) {
     const year = await MasterYear.findById(data.masterYearId);
@@ -56,10 +60,19 @@ export async function PUT(req, { params }) {
     if (payload.title !== undefined) update.title = String(payload.title).trim();
     if (payload.description !== undefined) update.description = payload.description;
     if (payload.masterYearId !== undefined) update.masterYearId = payload.masterYearId;
-    if (payload.fileUrl !== undefined) update.fileUrl = String(payload.fileUrl).trim();
-    if (payload.fileName !== undefined) update.fileName = String(payload.fileName).trim();
     if (payload.sortOrder !== undefined) update.sortOrder = Number(payload.sortOrder);
     if (payload.status !== undefined) update.status = Boolean(payload.status);
+
+    if (payload.attachments !== undefined) {
+      const attachments = normalizeStudentCornerAttachments(payload);
+      update.attachments = attachments;
+      const first = attachments[0];
+      update.fileUrl = first?.url || '';
+      update.fileName = first?.fileName || '';
+    } else if (payload.fileUrl !== undefined) {
+      update.fileUrl = String(payload.fileUrl).trim();
+      if (payload.fileName !== undefined) update.fileName = String(payload.fileName).trim();
+    }
 
     const data = await StudentCorner.findByIdAndUpdate(id, update, {
       new: true,
