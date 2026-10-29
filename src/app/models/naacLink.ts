@@ -13,6 +13,11 @@ export interface INaacLink extends Document {
   linkUrl?: string;
   documentUrl?: string;
   documentName?: string;
+  meetingDate?: Date | null;
+  minutesDocumentUrl?: string;
+  minutesDocumentName?: string;
+  actionTakenReportUrl?: string;
+  actionTakenReportName?: string;
 }
 
 const NaacLinkSchema = new Schema<INaacLink>(
@@ -31,6 +36,11 @@ const NaacLinkSchema = new Schema<INaacLink>(
     linkUrl: { type: String, default: '' },
     documentUrl: { type: String, default: '' },
     documentName: { type: String, default: '' },
+    meetingDate: { type: Date, default: null },
+    minutesDocumentUrl: { type: String, default: '' },
+    minutesDocumentName: { type: String, default: '' },
+    actionTakenReportUrl: { type: String, default: '' },
+    actionTakenReportName: { type: String, default: '' },
   },
   { timestamps: true }
 );

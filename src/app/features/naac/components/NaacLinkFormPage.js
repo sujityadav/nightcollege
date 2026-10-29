@@ -11,8 +11,13 @@ import { Button } from 'primereact/button';
 import { Toast } from 'primereact/toast';
 import { RadioButton } from 'primereact/radiobutton';
 import { InputSwitch } from 'primereact/inputswitch';
+import { Calendar } from 'primereact/calendar';
 import TextEditor from '@/app/components/common/editor';
-import { uploadDocumentFile, DEFAULT_MAX_MEDIA_SIZE_MB } from '@/app/components/common/MediaUpload';
+import MediaUpload, {
+  uploadDocumentFile,
+  DEFAULT_MAX_MEDIA_SIZE_MB,
+  detectMediaType,
+} from '@/app/components/common/MediaUpload';
 import {
   canViewNaacLinkDocumentOnSite,
   getNaacLinkDocumentViewPath,
@@ -21,6 +26,7 @@ import { slugify, validateSlug } from '@/app/utils/quickLinkSlug';
 import { usePageBreadcrumbs } from '@/app/hooks/usePageBreadcrumbs';
 import {
   isNaacQuickLinkSection,
+  isIqacMeetingsSection,
   NAAC_QUICK_LINK_SECTIONS,
 } from '@/app/features/naac/constants';
 
@@ -72,6 +78,18 @@ export default function NaacLinkFormPage() {
   const [linkError, setLinkError] = useState('');
   const [status, setStatus] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [meetingDate, setMeetingDate] = useState(null);
+  const [meetingDateError, setMeetingDateError] = useState('');
+  const [minutesFile, setMinutesFile] = useState(null);
+  const [minutesPreview, setMinutesPreview] = useState('');
+  const [minutesName, setMinutesName] = useState('');
+  const [minutesMediaType, setMinutesMediaType] = useState('File');
+  const [minutesError, setMinutesError] = useState('');
+  const [actionReportFile, setActionReportFile] = useState(null);
+  const [actionReportPreview, setActionReportPreview] = useState('');
+  const [actionReportName, setActionReportName] = useState('');
+  const [actionReportMediaType, setActionReportMediaType] = useState('File');
+  const [actionReportError, setActionReportError] = useState('');
 
   const toast = useRef(null);
   const slugAutoSyncRef = useRef(true);
@@ -85,6 +103,7 @@ export default function NaacLinkFormPage() {
     ? `/admin/naac?section=${section}`
     : '/admin/naac';
   const isEditMode = Boolean(id);
+  const isIqacMeetings = isIqacMeetingsSection(section);
   const titleValue = watch('title');
   const slugValue = watch('slug');
 
@@ -112,10 +131,16 @@ export default function NaacLinkFormPage() {
   }, [isEditMode, section, router]);
 
   useEffect(() => {
-    if (type === 'Content') {
+    if (isIqacMeetings) {
+      setType('Document');
+    }
+  }, [isIqacMeetings]);
+
+  useEffect(() => {
+    if (type === 'Content' && !isIqacMeetings) {
       applySlugFromTitle(titleValue);
     }
-  }, [titleValue, type, setValue]);
+  }, [titleValue, type, isIqacMeetings, setValue]);
 
   useEffect(() => {
     if (!id) return;
@@ -135,6 +160,19 @@ export default function NaacLinkFormPage() {
         setContent(item.content || '');
         setDocumentUrl(item.documentUrl || '');
         setDocumentName(item.documentName || '');
+        setMeetingDate(item.meetingDate ? new Date(item.meetingDate) : null);
+        setMinutesPreview(item.minutesDocumentUrl || item.documentUrl || '');
+        setMinutesName(item.minutesDocumentName || item.documentName || '');
+        setMinutesMediaType(
+          detectMediaType(item.minutesDocumentUrl || item.documentUrl || '', { allowAllFiles: true })
+        );
+        setMinutesFile(null);
+        setActionReportPreview(item.actionTakenReportUrl || '');
+        setActionReportName(item.actionTakenReportName || '');
+        setActionReportMediaType(
+          detectMediaType(item.actionTakenReportUrl || '', { allowAllFiles: true })
+        );
+        setActionReportFile(null);
         setStatus(item.status ?? true);
         setLoadedSection(item.section || sectionParam || '');
         slugAutoSyncRef.current = !(item.slug || '').trim();
@@ -189,6 +227,25 @@ export default function NaacLinkFormPage() {
   };
 
   const validateTypeFields = (formData) => {
+    if (isIqacMeetings) {
+      if (!meetingDate) {
+        setMeetingDateError('Meeting date is required');
+        return 'Meeting date is required';
+      }
+      setMeetingDateError('');
+      if (!minutesFile && !minutesPreview) {
+        setMinutesError('Minutes of action file is required');
+        return 'Minutes of action file is required';
+      }
+      setMinutesError('');
+      if (!actionReportFile && !actionReportPreview) {
+        setActionReportError('Action taken report file is required');
+        return 'Action taken report file is required';
+      }
+      setActionReportError('');
+      return null;
+    }
+
     if (type === 'Content') {
       const slugValidationError = validateSlug(formData.slug);
       if (slugValidationError) {
@@ -237,8 +294,19 @@ export default function NaacLinkFormPage() {
     try {
       let uploadedDocumentUrl = documentUrl;
       let uploadedDocumentName = documentName;
+      let minutesDocumentUrl = minutesPreview;
+      let minutesDocumentName = minutesName;
+      let actionTakenReportUrl = actionReportPreview;
+      let actionTakenReportName = actionReportName;
 
-      if (type === 'Document' && documentFile) {
+      if (isIqacMeetings) {
+        minutesDocumentUrl = await uploadDocumentFile(minutesFile, minutesPreview);
+        minutesDocumentName = minutesFile?.name || minutesName || '';
+        actionTakenReportUrl = await uploadDocumentFile(actionReportFile, actionReportPreview);
+        actionTakenReportName = actionReportFile?.name || actionReportName || '';
+        uploadedDocumentUrl = minutesDocumentUrl;
+        uploadedDocumentName = minutesDocumentName;
+      } else if (type === 'Document' && documentFile) {
         uploadedDocumentUrl = await uploadDocumentFile(documentFile, documentUrl);
         uploadedDocumentName = documentFile.name;
       }
@@ -253,15 +321,20 @@ export default function NaacLinkFormPage() {
 
       const payload = {
         title: formData.title.trim(),
-        type,
+        type: isIqacMeetings ? 'Document' : type,
         section,
         sortOrder: Number(formData.sortOrder),
         status,
         slug: type === 'Content' ? formData.slug.trim() : '',
         content: type === 'Content' ? content : '',
         linkUrl: type === 'Link' ? formData.linkUrl.trim() : '',
-        documentUrl: type === 'Document' ? uploadedDocumentUrl : '',
-        documentName: type === 'Document' ? uploadedDocumentName : '',
+        documentUrl: type === 'Document' || isIqacMeetings ? uploadedDocumentUrl : '',
+        documentName: type === 'Document' || isIqacMeetings ? uploadedDocumentName : '',
+        meetingDate: isIqacMeetings && meetingDate ? meetingDate.toISOString() : '',
+        minutesDocumentUrl: isIqacMeetings ? minutesDocumentUrl : '',
+        minutesDocumentName: isIqacMeetings ? minutesDocumentName : '',
+        actionTakenReportUrl: isIqacMeetings ? actionTakenReportUrl : '',
+        actionTakenReportName: isIqacMeetings ? actionTakenReportName : '',
       };
 
       const response = await axios[id ? 'put' : 'post'](
@@ -323,6 +396,9 @@ export default function NaacLinkFormPage() {
             <label className={fieldLabelClass}>
               Type <span className="text-red-500">*</span>
             </label>
+            {isIqacMeetings ? (
+              <p className="text-sm text-[#494E5F]">Document (Minutes &amp; Action Taken Report)</p>
+            ) : (
             <div className="flex flex-wrap gap-6">
               {TYPE_OPTIONS.map((option) => (
                 <div key={option} className="flex items-center gap-2">
@@ -352,9 +428,92 @@ export default function NaacLinkFormPage() {
                 </div>
               ))}
             </div>
+            )}
           </div>
 
-          {type === 'Content' && (
+          {isIqacMeetings && (
+            <>
+              <div className="flex flex-col gap-1">
+                <label className={fieldLabelClass}>
+                  Meeting Date <span className="text-red-500">*</span>
+                </label>
+                <Calendar
+                  value={meetingDate}
+                  onChange={(e) => {
+                    setMeetingDate(e.value);
+                    setMeetingDateError('');
+                  }}
+                  dateFormat="dd M yy"
+                  showIcon
+                  className="w-full border rounded-none"
+                  placeholder="Select meeting date"
+                />
+                {meetingDateError && <span className="text-red-500 text-sm">{meetingDateError}</span>}
+              </div>
+
+              <MediaUpload
+                required
+                allowAllFiles
+                label="Minutes of Action"
+                maxSizeMB={DEFAULT_MAX_MEDIA_SIZE_MB}
+                previewUrl={minutesPreview}
+                mediaType={minutesMediaType}
+                file={minutesFile}
+                fileName={minutesName}
+                error={minutesError}
+                onChange={({ file, previewUrl, mediaType }) => {
+                  setMinutesFile(file);
+                  setMinutesPreview(previewUrl);
+                  if (file?.name) setMinutesName(file.name);
+                  if (mediaType) setMinutesMediaType(mediaType);
+                  setMinutesError('');
+                }}
+                onClear={() => {
+                  setMinutesFile(null);
+                  setMinutesPreview('');
+                  setMinutesName('');
+                  setMinutesMediaType('File');
+                  setMinutesError('');
+                }}
+                onError={(message) => {
+                  setMinutesError(message);
+                  toast.current?.show({ severity: 'warn', summary: 'Upload', detail: message, life: 3000 });
+                }}
+              />
+
+              <MediaUpload
+                required
+                allowAllFiles
+                label="Action Taken Report"
+                maxSizeMB={DEFAULT_MAX_MEDIA_SIZE_MB}
+                previewUrl={actionReportPreview}
+                mediaType={actionReportMediaType}
+                file={actionReportFile}
+                fileName={actionReportName}
+                error={actionReportError}
+                onChange={({ file, previewUrl, mediaType }) => {
+                  setActionReportFile(file);
+                  setActionReportPreview(previewUrl);
+                  if (file?.name) setActionReportName(file.name);
+                  if (mediaType) setActionReportMediaType(mediaType);
+                  setActionReportError('');
+                }}
+                onClear={() => {
+                  setActionReportFile(null);
+                  setActionReportPreview('');
+                  setActionReportName('');
+                  setActionReportMediaType('File');
+                  setActionReportError('');
+                }}
+                onError={(message) => {
+                  setActionReportError(message);
+                  toast.current?.show({ severity: 'warn', summary: 'Upload', detail: message, life: 3000 });
+                }}
+              />
+            </>
+          )}
+
+          {type === 'Content' && !isIqacMeetings && (
             <div className="flex flex-col gap-1">
               <label className={fieldLabelClass}>
                 Slug <span className="text-red-500">*</span>
@@ -440,7 +599,7 @@ export default function NaacLinkFormPage() {
             </div>
           )}
 
-          {type === 'Document' && (
+          {type === 'Document' && !isIqacMeetings && (
             <div className="flex flex-col gap-1">
               <label className={fieldLabelClass}>
                 Document Upload <span className="text-red-500">*</span>

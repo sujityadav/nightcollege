@@ -294,18 +294,21 @@ export default function WebsiteTop() {
                               </header>
                               <ul className="mega-links mt-2 mega-links--scroll">
                                 {section.links?.length ? (
-                                  section.links.map((link, j) => (
+                                  section.links.map((link, j) => {
+                                    const linkDisabled = 'disabled' in link && Boolean(link.disabled);
+                                    return (
                                     <li
                                       key={`${link.label}-${j}`}
-                                      className={link.disabled || section.disabled ? "mega-link--disabled" : ""}
+                                      className={linkDisabled || section.disabled ? "mega-link--disabled" : ""}
                                     >
-                                      {link.disabled || section.disabled ? (
+                                      {linkDisabled || section.disabled ? (
                                         <span aria-disabled="true">{link.label}</span>
                                       ) : (
                                         <Link href={link.href}>{link.label}</Link>
                                       )}
                                     </li>
-                                  ))
+                                    );
+                                  })
                                 ) : (
                                   <li className="mega-links-empty">No subjects listed</li>
                                 )}

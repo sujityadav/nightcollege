@@ -1,6 +1,6 @@
 import NaacLink from '../../models/naacLink';
 import { normalizeSlug, validateSlug } from '../../utils/quickLinkSlug';
-import { isNaacQuickLinkSection } from '../../features/naac/constants';
+import { isNaacQuickLinkSection, isIqacMeetingsSection } from '../../features/naac/constants';
 
 const checkDuplicateSlug = async (slug, excludeId = null) => {
   const query = { slug: normalizeSlug(slug), type: 'Content' };
@@ -50,6 +50,19 @@ export const validateNaacLinkPayload = async (data, isUpdate = false, excludeId 
     }
   }
 
+  if (isIqacMeetingsSection(data.section)) {
+    if (!data.meetingDate) {
+      return 'Meeting date is required';
+    }
+    if (!data.minutesDocumentUrl?.trim()) {
+      return 'Minutes of action file is required';
+    }
+    if (!data.actionTakenReportUrl?.trim()) {
+      return 'Action taken report file is required';
+    }
+    return null;
+  }
+
   if (data.type === 'Document' && !data.documentUrl?.trim()) {
     return 'Document is required for Document type';
   }
@@ -58,15 +71,41 @@ export const validateNaacLinkPayload = async (data, isUpdate = false, excludeId 
 };
 
 export function buildNaacLinkWriteData(data) {
-  return {
+  const base = {
     title: data.title.trim(),
-    type: data.type,
+    type: isIqacMeetingsSection(data.section) ? 'Document' : data.type,
     section: data.section.trim(),
     slug: data.type === 'Content' ? normalizeSlug(data.slug) : '',
     sortOrder: Number(data.sortOrder),
     status: data.status ?? false,
     content: data.type === 'Content' ? data.content : '',
     linkUrl: data.type === 'Link' ? data.linkUrl.trim() : '',
+    documentUrl: '',
+    documentName: '',
+    meetingDate: null,
+    minutesDocumentUrl: '',
+    minutesDocumentName: '',
+    actionTakenReportUrl: '',
+    actionTakenReportName: '',
+  };
+
+  if (isIqacMeetingsSection(data.section)) {
+    const minutesUrl = data.minutesDocumentUrl?.trim() || '';
+    return {
+      ...base,
+      type: 'Document',
+      documentUrl: minutesUrl,
+      documentName: data.minutesDocumentName?.trim() || '',
+      meetingDate: data.meetingDate ? new Date(data.meetingDate) : null,
+      minutesDocumentUrl: minutesUrl,
+      minutesDocumentName: data.minutesDocumentName?.trim() || '',
+      actionTakenReportUrl: data.actionTakenReportUrl?.trim() || '',
+      actionTakenReportName: data.actionTakenReportName?.trim() || '',
+    };
+  }
+
+  return {
+    ...base,
     documentUrl: data.type === 'Document' ? data.documentUrl : '',
     documentName: data.type === 'Document' ? data.documentName || '' : '',
   };

@@ -10,3 +10,9 @@ export const NAAC_QUICK_LINK_SECTIONS = {
 export function isNaacQuickLinkSection(section) {
   return Boolean(section && NAAC_QUICK_LINK_SECTIONS[section]);
 }
+
+export const NAAC_IQAC_MEETINGS_SECTION = 'iqac-meetings';
+
+export function isIqacMeetingsSection(section) {
+  return section === NAAC_IQAC_MEETINGS_SECTION;
+}
